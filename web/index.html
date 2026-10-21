@@ -276,6 +276,8 @@ table.tree td small,table.tree th small{display:block;color:var(--mut);font-size
 #replayBar{position:fixed;left:50%;top:66px;transform:translateX(-50%);z-index:7;display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:4px 12px 4px 12px;background:rgba(14,13,11,.85);border:1px solid rgba(240,212,147,.3);pointer-events:auto}
 #replayBar b{color:var(--acc);letter-spacing:.12em;text-transform:uppercase;font-size:11px}#replayBar span{color:var(--mut);font-variant-numeric:tabular-nums;margin-right:6px}
 #replayBar select{background:#1b1915;color:var(--ink);border:1px solid rgba(240,212,147,.25);border-radius:6px;padding:4px}
+#powers{display:flex;flex-direction:column;gap:5px}#powers .qb.pw{padding:6px 10px;font-size:12px}#powers .qb.pw b{font-size:12px;color:var(--gold,#e2b84a)}#powers .qb.cd{opacity:.55}#powers .qb.poor b{color:var(--bad)}#powers .qb.on{border-color:#ff6a55;box-shadow:0 0 0 1px rgba(255,106,85,.5)}
+body.targeting #c3d{cursor:crosshair}
 </style>
 </head>
 <body>
@@ -318,6 +320,7 @@ table.tree td small,table.tree th small{display:block;color:var(--mut);font-size
   <button class="btn sm" id="tutSkip">Saltar tutorial</button>
  </div>
   <div id="quick">
+   <div id="powers"></div>
    <button class="panel qb zero" id="idleBig" title="Ir al siguiente aldeano sin trabajo  ( . )"><svg viewBox="0 0 16 16"><circle cx="8" cy="4.6" r="2.6" fill="#f0c35a"/><path fill="#f0c35a" d="M3 14c.3-3.3 2.2-5.3 5-5.3s4.7 2 5 5.3Z"/><path d="M12.2 1.6v3.2M12.2 6.3v.1" stroke="#f0c35a" stroke-width="1.4" stroke-linecap="round"/></svg><span>Aldeanos ociosos</span><b id="idleBigc">0</b></button>
    <button class="panel qb on" id="autoFarm" title="Cuando una granja se agota, el granjero la vuelve a plantar sola (cuesta la madera de siempre)"><svg viewBox="0 0 16 16"><path fill="#e2c15a" d="M7.4 15V6h1.2v9Z"/><path fill="#e2c15a" d="M8 1.2c1.2 1 1.2 2.6 0 3.6-1.2-1-1.2-2.6 0-3.6Zm-3.2 3c1.6 0 2.6 1.2 2.7 2.8-1.6 0-2.6-1.2-2.7-2.8Zm6.4 0c-.1 1.6-1.1 2.8-2.7 2.8.1-1.6 1.1-2.8 2.7-2.8ZM4.8 7.6c1.6 0 2.6 1.2 2.7 2.8-1.6 0-2.6-1.2-2.7-2.8Zm6.4 0c-.1 1.6-1.1 2.8-2.7 2.8.1-1.6 1.1-2.8 2.7-2.8Z"/></svg><span>Resembrar granjas</span><i id="autoFarmSt">Sí</i></button>
   </div>
@@ -346,7 +349,7 @@ table.tree td small,table.tree th small{display:block;color:var(--mut);font-size
    <button class="mb quit" data-go="quit" id="mQuit"><span>Salir</span><small>Cerrar Chronosvisor</small></button>
   </nav>
  </div>
- <div class="ver">CHRONOSVISOR 6.5</div>
+ <div class="ver">CHRONOSVISOR 6.6</div>
  <div class="card" id="mSetup" hidden>
   <div class="eyebrow">Estrategia en tiempo real</div>
   <h1>CHRONOSVISOR</h1>
@@ -361,6 +364,7 @@ table.tree td small,table.tree th small{display:block;color:var(--mut);font-size
    <div class="lab">Modo</div><div class="seg" id="s-teams"><button data-v="ffa">Todos contra todos</button><button data-v="teams">Por equipos</button></div>
    <div class="hintline" id="teamDesc"></div>
    <div class="lab">Población máx.</div><div class="seg" id="s-pop"><button data-v="150">150</button><button data-v="200">200</button><button data-v="250">250</button></div>
+   <div class="lab">Clima</div><div class="seg" id="s-wx"><button data-v="on">Variable</button><button data-v="off">Despejado</button></div>
    <div class="lab">Época inicial</div><div class="seg" id="s-age"></div>
    <div class="hintline" id="ageDesc"></div>
    <div class="lab">Dificultad</div><div class="seg" id="s-diff"></div>

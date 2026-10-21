@@ -159,7 +159,7 @@ function torch(k,x,y,z){k.add(cyl(.015,.015,.14,5),'planks',0x6a4a30,x,y,z);k.ad
 function cart(k,x,z,r){const c=Math.cos(r||0),s=Math.sin(r||0),P=(dx,dz)=>[x+dx*c-dz*s,z+dx*s+dz*c];let [a,b]=P(0,0);k.add(box(.5,.12,.3,3),'planks',0xd8b890,a,.14,b,-(r||0));
  for(const dz of[-.17,.17]){[a,b]=P(0,dz);k.add(new TH.CylinderGeometry(.11,.11,.03,12).rotateX(Math.PI/2),'planks',0x9a7a58,a,.11,b,-(r||0))}[a,b]=P(.4,0);k.add(box(.4,.03,.03),'planks',0xb09070,a,.18,b,-(r||0));
  [a,b]=P(-.05,0);k.add(sph(.1,8,6),'cloth',0xcdb58a,a,.3,b);[a,b]=P(.12,.05);k.add(sph(.08,8,6),'cloth',0xb8a070,a,.29,b)}
-function well(k,x,z){k.add(cyl(.2,.22,.24,14,2),'stone',0xffffff,x,0,z);k.add(cyl(.17,.17,.02,14),'matte',0x1c2c3a,x,.22,z);for(const dz of[-.19,.19])k.add(box(.04,.46,.04),'planks',0xffffff,x,.2,z+dz);k.add(gable(.2,.48,.16,.04,2),'thatch',0xffffff,x,.66,z,Math.PI/2);k.add(cylC(.02,.02,.38,6),'planks',0xffffff,x,.52,z,0,Math.PI/2)}
+function well(k,x,z){k.add(cyl(.2,.22,.24,16,2,true),'stone',0xffffff,x,0,z);k.add(cyl(.15,.15,.24,16,2,true),'stone',0xb0aaa0,x,0,z);k.add(new TH.RingGeometry(.15,.2,16).rotateX(-Math.PI/2),'stone',0xffffff,x,.241,z);k.add(new TH.CircleGeometry(.15,16).rotateX(-Math.PI/2),'matte',0x1c2c3a,x,.15,z);for(const dz of[-.19,.19])k.add(box(.04,.46,.04),'planks',0xffffff,x,.2,z+dz);for(const s of[1,-1])k.add(box(.2,.025,.3),'thatch',0xffffff,x+s*.075,.7,z,0,0,-s*.62);k.add(cylC(.02,.02,.38,6),'planks',0xffffff,x,.52,z,0,Math.PI/2);k.add(cylC(.006,.006,.3,4),'matte',0x8a7a5a,x,.38,z)}
 function win(k,x,y,z,ry,w,h){w=w||.14;h=h||.16;k.add(box(.03,h,w),'window',0xffffff,x,y,z,ry);k.add(box(.04,h+.04,.025,4),'timber',0xffffff,x,y-.02,z+w/2+.012,ry);k.add(box(.04,h+.04,.025,4),'timber',0xffffff,x,y-.02,z-w/2-.012,ry);k.add(box(.05,.025,w+.06,4),'timber',0xffffff,x,y-.03,z,ry)}
 function door(k,x,z,ry,w,h){w=w||.2;h=h||.34;k.add(box(.04,h,w,5),'planks',0x9a7a58,x,0,z,ry);k.add(box(.05,.03,w+.06,4),'timber',0xffffff,x,h,z,ry)}
 // muro de entramado: caja de revoco + vigas vistas (X = ancho, Z = fondo)
@@ -267,7 +267,7 @@ function building(type,o,tier,dir){const k=new Kit(),ud={};const tile=tier>0?'ti
   ud.doorGeo=true;break}
  }
  return{k,ud}}
-A.building=function(type,o,tier,dir){const {k,ud}=(tier>=3&&A.eraBuilding)?A.eraBuilding(type,o,tier,dir||0):building(type,o,tier||0,dir||0);const g=k.build();
+A.building=function(type,o,tier,dir){if(type==='airfield')tier=Math.max(5,tier||0);const {k,ud}=(tier>=3&&A.eraBuilding)?A.eraBuilding(type,o,tier,dir||0):building(type,o,tier||0,dir||0);const g=k.build();
  if(ud.doorGeo){const ry=dir?Math.PI/2:0;const d=new TH.Group();d.rotation.y=ry;const dk=new Kit();dk.add(box(.44,.9,.07,3),'planks',0xffffff,0,0,0);dk.add(box(.45,.05,.08),'metal',0x3a3632,0,.3,0);dk.add(box(.45,.05,.08),'metal',0x3a3632,0,.65,0);const dm=dk.build();d.add(dm);g.add(d);ud.door=d}
  if(tier>=3&&A.eraDecor)A.eraDecor(g,ud);g.userData=Object.assign(g.userData||{},ud);return g};
 

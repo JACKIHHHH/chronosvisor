@@ -17,7 +17,7 @@ const cv=$('c3d'),ov=$('ov'),oc=ov.getContext('2d'),mini=$('mini'),mc=mini.getCo
 let G=null,MW=88,MH=88,mode='menu',sel=[],bm=null,amode=false,pmode=false,page=0,speed=1,paused=false,groups={},last=0,dpr=1;
 let simAcc=0,REC=null,uiT=0,miniT=0,terT=0,ambT=0,pings=[],curCmds=[],cmdSig=null,tipCmd=null,delArm=0,lastGK={k:null,t:0},idleIx=0,menuA=0,lastToast='',wallDrag=null,fpsN=0,fpsT=0,rebinding=null,graphK='score',sayT=0;
 const AGESHORT=['Oscura','Feudal','Castillos','Imperial','Industrial','Mundial','Atómica','Información','Futuro'];
-const cfg={pop:'200',startAge:'0',civ:'iberos',map:'continental',size:'medium',nAI:1,teams:'ffa',diff:'normal',win:'standard',reveal:'normal'};
+const cfg={pop:'200',startAge:'0',civ:'iberos',map:'continental',size:'medium',nAI:1,teams:'ffa',diff:'normal',win:'standard',reveal:'normal',weather:'on'};
 const DEFKEYS={grid:'QWERTASDFGZXCVB'.split(''),idle:'.',tc:'H',army:'M',pause:'P',chat:'Enter',save:'F5'};
 const opts={quality:'high',music:55,sfx:80,cam:100,edge:true,day:false,fpsCap:60,fps:false,voices:true,cb:false,ui:100,name:'Jugador',keys:JSON.parse(JSON.stringify(DEFKEYS))};
 const tut={on:false,i:0,done:false};
@@ -91,11 +91,13 @@ function commands(){const o=own();if(!o.length)return[];const p=PME(),L=[],me=ME
   L.push({id:'stop',slot:11,icon:'x:stop',name:'Detener',desc:'Cancela la orden actual y las encadenadas.',act:()=>cmd({c:'stop',ids:sel})});L.push(del);return L}
  if(units.length){const mil=units.filter(isMil);
   if(mil.length)L.push({id:'amove',slot:5,icon:'x:amove',name:'Atacar y avanzar',desc:'Haz clic en el mapa: tus tropas avanzan en formación y atacan a todo enemigo que encuentren. Con Mayús encadenas puntos.',act:()=>{amode=true;bm=null;cmdSig=null}});
-  if(mil.length)L.push({id:'patrol',slot:8,icon:'x:patrol',name:'Patrullar',desc:'Haz clic en el mapa: tus tropas van y vienen entre su posición y ese punto, atacando a los enemigos que encuentren.',act:()=>{pmode=true;amode=false;pmode=false;bm=null;cmdSig=null}});
+  if(mil.length)L.push({id:'patrol',slot:8,icon:'x:patrol',name:'Patrullar',desc:'Haz clic en el mapa: tus tropas van y vienen entre su posición y ese punto, atacando a los enemigos que encuentren.',act:()=>{amode=false;bm=null;pmode=true;cmdSig=null}});
   L.push({id:'stop',slot:6,icon:'x:stop',name:'Detener',desc:'Cancela la orden actual y las encadenadas.',act:()=>cmd({c:'stop',ids:sel})});
   const tr=units.filter(u=>u.type==='transport'&&u.cargo&&u.cargo.length);
   if(tr.length)L.push({id:'unload',slot:7,icon:'x:unload',name:'Desembarcar',desc:'Haz clic derecho en la costa con el transporte seleccionado para desembarcar allí. Este botón desembarca en la orilla más cercana.',act:()=>{for(const s of tr)cmd({c:'right',ids:[s.id],x:s.x,y:s.y+T})}});
   if(mil.length){const st=mil[0].st||0,mk=(s,name,desc,slot)=>L.push({id:'st'+s,slot,icon:'x:st'+s,name,desc,on:mil.every(u=>(u.st||0)===s),act:()=>cmd({c:'stance',ids:sel,s})});
+   const FD={box:'Bloque compacto: la infantería delante y los arqueros y el asedio detrás.',line:'Línea ancha: todos disparan a la vez; ideal para tiradores.',column:'Columna estrecha: pasa por caminos y puentes sin atascarse.',wedge:'Cuña con la caballería y los blindados en punta para romper líneas.',spread:'Dispersa: separa las tropas para sufrir menos con la artillería y los bombardeos.'};
+   Object.keys(I.FORMS).forEach((f,i)=>L.push({id:'f_'+f,slot:i,icon:'x:f_'+f,name:'Formación: '+I.FORMS[f],desc:FD[f],on:mil.every(u=>(u.fm||'box')===f),act:()=>{cmd({c:'form',ids:sel,f});sfx('click')}}));
    mk(0,'Actitud agresiva','Persiguen a cualquier enemigo que vean.',10);mk(1,'Actitud defensiva','Combaten pero vuelven a su posición si se alejan demasiado.',11);mk(2,'Mantener posición','No se mueven: solo atacan lo que tengan a su alcance.',12)}
   L.push(del);return L}
  const b=o[0];
@@ -104,7 +106,7 @@ function commands(){const o=own();if(!o.length)return[];const p=PME(),L=[],me=ME
    I.trainsOf(b).forEach(t=>L.push({id:'u:'+t,slot:ki++,icon:'u:'+t,name:I.uName(t,me),desc:U[t].desc+' Mayús + clic entrena cinco.',cost:I.unitCost(me,t),time:Math.round(I.trainTime(me,b,t)),off:!I.unitAvail(p,t),req:U[t].age?'Requiere la '+AGES[U[t].age]:'',act:ev=>cmd({c:'queue',id:b.id,k:t,n:ev&&ev.shiftKey?5:1})}));
    if(b.type==='tc'&&p.age<I.MAXAGE)L.push({id:'age',slot:ki++,icon:'x:age'+(p.age+1),name:'Avanzar a la '+AGES[p.age+1]+' ('+I.AGEYEAR[p.age+1]+')',desc:AGEDESC[p.age],cost:AGECOST[p.age],time:AGETIME[p.age],off:p.aging,req:p.aging?'Ya estás avanzando de edad':'',act:()=>cmd({c:'queue',id:b.id,k:'age'})});
    for(const id of d.techs||[]){const st=I.techState(p,id);if(st==='done')continue;const t=TECH[id];
-    L.push({id:'t:'+id,slot:ki++,icon:'t:'+id,name:t.name,desc:t.desc,cost:t.cost,time:t.time,off:st!=='ok',req:st==='age'?'Requiere la '+AGES[t.age]:st==='queued'?'Investigación en curso':'',act:()=>cmd({c:'queue',id:b.id,k:'t:'+id})})}
+    L.push({id:'t:'+id,slot:ki++,icon:'t:'+id,name:t.name,desc:t.desc,cost:t.cost,time:t.time,off:st!=='ok',req:st==='age'?'Requiere la '+AGES[t.age]:st==='req'?'Requiere '+TECH[t.req].name.toLowerCase():st==='queued'?'Investigación en curso':'',act:()=>cmd({c:'queue',id:b.id,k:'t:'+id})})}
    if(d.market){const pr=G.price;RES.filter(r=>r!=='gold').forEach((r,i)=>{L.push({id:'buy:'+r,slot:5+i,icon:'x:buy_'+r,name:'Comprar 100 de '+RN[r].toLowerCase(),desc:'Precio actual: '+Math.round(pr[r])+' de oro. Cada compra encarece el recurso.',cost:{gold:Math.round(pr[r])},act:()=>cmd({c:'market',op:'buy',r})});
     L.push({id:'sell:'+r,slot:10+i,icon:'x:sell_'+r,name:'Vender 100 de '+RN[r].toLowerCase(),desc:'Recibes '+Math.round(pr[r]*.7)+' de oro. Cada venta abarata el recurso.',cost:{[r]:100},act:()=>cmd({c:'market',op:'sell',r})})})}
    if(GAR[b.type]&&b.gar.length)L.push({id:'ungar',slot:12,icon:'x:ungar',name:'Sacar la guarnición',desc:'Todas las unidades salen del edificio ('+b.gar.length+').',act:()=>cmd({c:'ungar',id:b.id})});
@@ -123,7 +125,7 @@ function refreshTop(){const p=PME();for(const r of RES)$('r-'+r).textContent=Mat
  let idle=0,army=0;for(const e of G.ul){if(e.dead||e.owner!==ME()||e.gar)continue;if(e.type==='villager'&&e.o.t==='idle')idle++;else if(isMil(e))army++}
  $('idlec').textContent=idle;$('idle').classList.toggle('zero',!idle);$('idleBigc').textContent=idle;$('idleBig').classList.toggle('zero',!idle);$('idleBig').classList.toggle('hot',idle>0);{const af=!!(G.players[ME()]&&G.players[ME()].autoFarm);$('autoFarm').classList.toggle('on',af);$('autoFarmSt').textContent=af?'Sí':'No'}$('armyc').textContent=army;$('armyBtn').classList.toggle('zero',!army);
  $('age').textContent=AGES[p.age];$('age').title=I.AGEYEAR[p.age];document.body.dataset.age=p.age;const tc=G.bl.find(e=>!e.dead&&e.owner===ME()&&e.q.length&&e.q[0].k==='age');$('aging').hidden=!tc;if(tc)$('aging').textContent='Avanzando de edad · '+Math.floor(tc.q[0].t/tc.q[0].tot*100)+'%';
- $('clock').textContent=fmtT(G.t);
+ $('clock').textContent=fmtT(G.t)+(G.wx&&G.wx!=='clear'?' · '+({rain:'🌧',snow:'❄',storm:'⛈',sand:'🌪'}[G.wx]||''):'');$('clock').title=G.wx&&G.wx!=='clear'?I.WX[G.wx].name:'';
  const pl=$('plist'),sig=G.players.map(q=>(q.out?1:0)+(q.ai?'a':'h')).join('');if(pl.dataset.s!==sig){pl.dataset.s=sig;pl.innerHTML=G.players.map(q=>`<span class="pl${q.out?' out':''}${q.i!==ME()&&I.isAlly(ME(),q.i)?' ally':''}" style="background:${PCOLORS[q.i]}" title="${esc(pName(q.i))} · ${CIVS[q.civ].name} · equipo ${q.team+1}${q.i!==ME()&&I.isAlly(ME(),q.i)?' · aliado':''}${q.out?' · derrotado':''}${mp()&&q.ai&&!q.out?' · IA':''}"></span>`).join('')}
  // cuentas atrás de victoria
  const vt=$('vict');let h='';if(G.cfg.win!=='conquest'){
@@ -180,7 +182,13 @@ function refreshCmds(){curCmds=commands();const p=PME(),el=$('cmds');
 function showTip(){const c=curCmds.find(x=>x.id===tipCmd),t=$('tip');if(!c){t.hidden=true;return}const p=PME();
  t.innerHTML=`<div class="tn">${esc(c.name)}<span class="tk">${c.id==='del'?'Supr':esc(keyName(gridKey(c.slot)))}</span></div>${c.cost?costHTML(c.cost,p):''}<div class="td">${c.desc||''}${c.time?` <span style="color:var(--dim)">· ${c.time} s</span>`:''}</div>${c.off&&c.req?`<div class="tr">${c.req}</div>`:''}`;
  t.hidden=false;const b=[...$('cmds').children].find(x=>x.dataset.id===tipCmd);if(!b)return;const r=b.getBoundingClientRect();t.style.left=Math.max(8,Math.min(innerWidth-268,r.left+r.width/2-130))+'px';t.style.top=(r.top-t.offsetHeight-10)+'px'}
-function refreshUI(){if(!G||mode!=='play')return;refreshTop();refreshInfo();refreshCmds();refreshGroups();
+// poderes de era: botones con recarga; clic y luego un punto del mapa
+let pwmode=null;
+function drawPowers(force){const el=$('powers');if(!el)return;const p=G&&G.players[ME()];if(!p||G.cfg.spec){el.innerHTML='';return}
+ const list=Object.entries(I.POWERS).filter(([k,W])=>W.age<=p.age);const html=list.map(([k,W])=>{const left=Math.max(0,Math.ceil(((p.pw||{})[k]||0)-G.t)),poor=!I.canAfford(p,W.cost);
+  return`<button class="panel qb pw${left?' cd':''}${poor?' poor':''}${pwmode===k?' on':''}" data-k="${k}" title="${esc(W.name)} · ${W.cost.gold} de oro · recarga ${W.cd} s. ${esc(W.desc)}"><span>${esc(W.name)}</span><b>${left?left+' s':W.cost.gold}</b></button>`}).join('');
+ if(force||el.dataset.h!==html){el.dataset.h=html;el.innerHTML=html}}
+function refreshUI(){if(!G||mode!=='play')return;drawPowers();refreshTop();refreshInfo();refreshCmds();refreshGroups();
  const o=own();R.setRally(o.length===1&&o[0].kind==='bld'&&o[0].rally?o[0].rally:null);
  let cur='default';if(bm||amode)cur='crosshair';else if(!mouse.down&&o.some(e=>e.kind==='unit')){const h=entAtScreen(mouse.x,mouse.y);if(h&&h.owner!=null&&I.isEnemy(ME(),h.owner))cur='crosshair';else if(h&&(h.kind==='res'||h.kind==='relic'||(h.kind==='bld'&&h.owner===ME())))cur='pointer'}cv.style.cursor=cur}
 
@@ -262,6 +270,7 @@ cv.addEventListener('mousedown',ev=>{AU.init();if(inputBlocked())return;mouse.x=
  if(ev.button===2||(ev.button===0&&ev.ctrlKey)){rightClick(ev);return}
  if(ev.button!==0)return;
  if(bm){if(B[bm].wall&&!B[bm].gate){wallDrag=tileAtMouse();return}place(ev.shiftKey);return}
+ if(pwmode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'power',k:pwmode,x:w.x*T,y:w.z*T});R.marker(w.x,w.z,0xff6a55)}pwmode=null;document.body.classList.remove('targeting');drawPowers(true);return}
  if(pmode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'patrol',ids:sel,x:w.x*T,y:w.z*T});R.marker(w.x,w.z,0x8fd0ff);sfx('cmd');ackFor('move')}pmode=false;cmdSig=null;return}
  if(amode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'amove',ids:sel,x:w.x*T,y:w.z*T,q:ev.shiftKey});R.marker(w.x,w.z,0xff6a55);sfx('cmd');ackFor('atk')}if(!ev.shiftKey){amode=false;pmode=false;cmdSig=null}return}
  mouse.down=true;mouse.sx=ev.clientX;mouse.sy=ev.clientY;mouse.drag=false});
@@ -286,7 +295,7 @@ window.addEventListener('keydown',ev=>{AU.init();
  if(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)){if(ev.key==='Escape')document.activeElement.blur();return}
  keys[ev.key]=true;const k=keyOf(ev),K=opts.keys;
  if(ev.key==='Escape'){ev.preventDefault();if(!$('tree').hidden){$('tree').hidden=true;return}if(!$('opts').hidden){closeOpts();return}if(!$('slots').hidden){$('slots').hidden=true;return}
-  if(mode!=='play'||G.over)return;if(bm){bm=null;wallDrag=null;R.setGhost(null);cmdSig=null}else if(amode||pmode){amode=false;pmode=false;cmdSig=null}else if(!$('pause').hidden)resume();else if(sel.length)setSel([]);else pause();return}
+  if(mode!=='play'||G.over)return;if(bm){bm=null;wallDrag=null;R.setGhost(null);cmdSig=null}else if(pwmode){pwmode=null;document.body.classList.remove('targeting');drawPowers(true)}else if(amode||pmode){amode=false;pmode=false;cmdSig=null}else if(!$('pause').hidden)resume();else if(sel.length)setSel([]);else pause();return}
  if(mode!=='play'||G.over||!$('pause').hidden)return;
  if((ev.key==='k'||ev.key==='K')&&!ev.metaKey&&!ev.ctrlKey&&!opts.keys.grid.includes('K')){if($('tree').hidden)showTree();else $('tree').hidden=true;return}
  if(k===K.chat&&mp()){ev.preventDefault();openChat();return}
@@ -398,6 +407,8 @@ function handleEvents(){for(const e of G.ev){switch(e.ev){
  case'hit':sfxAt(e.k==='ram'?'ram':'hit',e.x,e.y,.8);break;
  case'shoot':case'lob':R.onEvent(e,G);sfxAt(SHOTS[e.k]||e.ev,e.x,e.y,.8);break;
  case'boom':R.onEvent(e,G);sfxAt('boom',e.x,e.y,.8);break;
+ case'flyover':R.onEvent(e,G);sfx('alert');break;
+ case'emp':R.onEvent(e,G);sfxAt('boom',e.x,e.y,1);break;
  case'elim':pings.push({x:MW/2,z:MH/2,t:0,c:'240,212,147'});break;
  case'scnmsg':toast(e.text,false,'chatmsg');if(e.say)say(e.text,true);break;
  case'scnobj':scnT=0;break;
@@ -501,7 +512,7 @@ function renderLobby(){const L=Net.L;if(!L)return;const host=Net.role==='host',y
   const act=s.k!=='open'&&s.k!=='closed';
   return`<div class="lrow"><i style="background:${col}"></i><div class="lwho">${who}</div>${act?`<select data-civ="${i}" ${canEdit?'':'disabled'}>${civOpts(s.civ)}</select><select data-team="${i}" ${canEdit?'':'disabled'}>${teamOpts(s.team)}</select>`:'<span></span><span></span>'}${host&&s.k==='human'?`<button class="btn sm" data-kick="${i}">Expulsar</button>`:'<span></span>'}</div>`}).join('');
  const segH=(id,items,key)=>`<div class="lab">${id}</div><div class="seg lcfg" data-key="${key}">${items.map(([v,n])=>`<button data-v="${v}" class="${String(L.cfg[key])===v?'on':''}" ${host?'':'disabled'}>${n}</button>`).join('')}</div>`;
- $('lobCfg').innerHTML=segH('Mapa',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map')+segH('Tamaño',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size')+segH('IA',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff')+segH('Victoria',[['standard','Estándar'],['conquest','Conquista']],'win')+segH('Visibilidad',[['normal','Normal'],['explored','Explorado'],['all','Todo visible']],'reveal')+segH('Época inicial',AGESHORT.map((n,i)=>[String(i),n]),'startAge')+segH('Población',[['150','150'],['200','200'],['250','250']],'pop');
+ $('lobCfg').innerHTML=segH('Mapa',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map')+segH('Tamaño',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size')+segH('IA',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff')+segH('Victoria',[['standard','Estándar'],['conquest','Conquista']],'win')+segH('Visibilidad',[['normal','Normal'],['explored','Explorado'],['all','Todo visible']],'reveal')+segH('Época inicial',AGESHORT.map((n,i)=>[String(i),n]),'startAge')+segH('Población',[['150','150'],['200','200'],['250','250']],'pop')+segH('Clima',[['on','Variable'],['off','Despejado']],'weather');
  $('lobSlots').insertAdjacentHTML('beforeend',L.specs&&L.specs.length?`<div class="qnote">Espectadores: ${L.specs.map(esc).join(', ')}</div>`:'');
  $('lobStart').hidden=!host}
 $('lobSlots').onchange=ev=>{const t=ev.target;if(t.dataset.k!=null)Net.setSlot(+t.dataset.k,{k:t.value});else if(t.dataset.civ!=null)Net.setSlot(+t.dataset.civ,{civ:t.value});else if(t.dataset.team!=null)Net.setSlot(+t.dataset.team,{team:+t.value})};
@@ -547,7 +558,7 @@ function setupMenu(){
  marks.map=seg('s-map',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map',descs);
  marks.size=seg('s-size',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size');
  marks.nAI=seg('s-nai',null,'nAI',descs);marks.teams=seg('s-teams',null,'teams',descs);
- marks.pop=seg('s-pop',null,'pop');marks.startAge=seg('s-age',AGESHORT.map((n,i)=>[String(i),n]),'startAge',descs);marks.diff=seg('s-diff',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff');marks.win=seg('s-win',null,'win',descs);marks.reveal=seg('s-reveal',null,'reveal',descs);descs()}
+ if(!cfg.weather)cfg.weather='on';marks.pop=seg('s-pop',null,'pop');marks.weather=seg('s-wx',null,'weather');marks.startAge=seg('s-age',AGESHORT.map((n,i)=>[String(i),n]),'startAge',descs);marks.diff=seg('s-diff',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff');marks.win=seg('s-win',null,'win',descs);marks.reveal=seg('s-reveal',null,'reveal',descs);descs()}
 function descs(){{const a=+cfg.startAge||0;$('ageDesc').textContent=a?`Empiezas en la ${AGES[a]} (${AGEYEAR[a]}) con la aldea desarrollada, más aldeanos, edificios y recursos. Todos los jugadores igual.`:'Empiezas desde cero en la Edad Oscura, como siempre.'}$('civDesc').textContent=CIVS[cfg.civ].desc;$('mapDesc').textContent=MAPS[cfg.map].desc;
  const tb=$('s-teams').children[1];tb.disabled=cfg.nAI<2;if(cfg.nAI<2&&cfg.teams==='teams'){cfg.teams='ffa';marks.teams&&marks.teams()}
  {const n=cfg.nAI+1,a=Math.ceil(n/2);$('teamDesc').textContent=cfg.nAI===1?'Duelo uno contra uno.':cfg.teams==='ffa'?`${n} reinos, cada uno por su cuenta${n>5?' (el mapa crece para que quepan)':''}.`:`Tu equipo de ${a} contra ${n-a} rivales.`}
@@ -617,9 +628,12 @@ async function boot(){R.init(cv);resize();window.addEventListener('resize',resiz
  try{const s=JSON.parse(await Store.read('setup')||'null');if(s)for(const k in cfg)if(s[k]!=null&&(k!=='map'||MAPS[s[k]]))cfg[k]=s[k]}catch(e){}
  applyOpts();setupMenu();
  for(const t in U)R.icon('u:'+t);for(const t in B)R.icon('b:'+t);for(const t in RDEF)R.icon('r:'+t);R.icon('r:relic');for(const t in TECH)R.icon('t:'+t);
- ['stop','amove','patrol','age1','age2','age3','age4','age5','age6','age7','age8','del','page0','page1','st0','st1','st2','ungar','bell','unload','buy_food','buy_wood','buy_stone','sell_food','sell_wood','sell_stone'].forEach(t=>R.icon('x:'+t));
+ ['f_box','f_line','f_column','f_wedge','f_spread','stop','amove','patrol','age1','age2','age3','age4','age5','age6','age7','age8','del','page0','page1','st0','st1','st2','ungar','bell','unload','buy_food','buy_wood','buy_stone','sell_food','sell_wood','sell_stone'].forEach(t=>R.icon('x:'+t));
  showMenu();last=performance.now();requestAnimationFrame(t=>loop(t,chain));
  setTimeout(()=>{const l=$('loading');l.style.opacity=0;setTimeout(()=>l.remove(),700)},350)}
+$('powers').onclick=ev=>{const b=ev.target.closest('[data-k]');if(!b||mp()&&G.cfg.spec)return;const k=b.dataset.k,p=G.players[ME()],W=I.POWERS[k];
+ if(((p.pw||{})[k]||0)>G.t){toast(W.name+': todavía recargando',true);sfx('err');return}if(!I.canAfford(p,W.cost)){toast('Necesitas '+W.cost.gold+' de oro',true);sfx('err');return}
+ pwmode=pwmode===k?null:k;document.body.classList.toggle('targeting',!!pwmode);if(pwmode)toast(W.name+': haz clic en el objetivo');sfx('click');drawPowers(true)};
 window.__imperia={get G(){return G},start:startGame,R,setSel:ids=>setSel(ids),get mode(){return mode},save:saveSlot,load:loadSlot,cmd,Net,opts};
 boot();
 })();

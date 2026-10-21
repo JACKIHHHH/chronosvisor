@@ -24,6 +24,10 @@ En **[Releases](../../releases)**:
 - **Empieza en la época que quieras**: de la Edad Oscura a la del Futuro, con la aldea ya desarrollada.
 - **Civilizaciones con identidad en la era moderna**: cada una con su unidad única propia (legionarios, cañón de 75, ametralladoras Vickers, Panzer y Leopard, blindados ligeros) y bonificaciones.
 - **Multijugador por Internet** con código de sala, partidas públicas, reconexión automática, resincronización y espectadores (servidor en `online/`), además de la red local. Hasta **8 jugadores**.
+- **Guerra aérea y naval moderna**: aeródromo con cazas y bombarderos, antiaéreos, submarinos (invisibles si no hay barcos cerca) y acorazados, de la Edad Industrial al futuro.
+- **Poderes de época**: bombardeo de artillería, ataque aéreo, misil, pulso electromagnético y golpe orbital, con cráteres, ondas de choque y humo.
+- **Clima** variable por mapa (lluvia, nieve, tormenta con relámpagos, tormenta de arena) que afecta a la velocidad y la visión.
+- **Formaciones** (bloque, línea, columna, cuña y dispersa), mejoras de velocidad de aldeanos en el centro urbano (carro de mano, transporte motorizado) y mejor circulación de aldeanos por caminos compartidos.
 - **Repeticiones** de cada partida, **patrulla**, árbol de unidades y marcador en partida, población máxima configurable y tamaño de interfaz ajustable.
 - **IA** en tres niveles (fácil, normal y difícil), **red local** (hasta 4 jugadores, Mac y Windows juntos; búsqueda automática o por IP), tutorial, partidas guardadas, aldeanos ociosos, resembrado automático de granjas y límite de fotogramas para ahorrar batería.
 

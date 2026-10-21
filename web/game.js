@@ -54,21 +54,27 @@ const U={
  axeman:{name:'Lanzador de hachas',cls:'inf',hp:60,atk:8,armor:0,range:3,rof:2,speed:58,cost:{food:55,gold:25},time:14,sight:6,r:7,age:2,ranged:true,unique:true,bonus:{inf:2},desc:'Unidad única franca: infantería que lanza hachas a corta distancia.'},
  longbow:{name:'Arquero largo',cls:'arc',hp:35,atk:6,armor:0,range:8,rof:2,speed:52,cost:{wood:35,gold:40},time:16,sight:9,r:6,age:2,ranged:true,unique:true,bonus:{inf:2},desc:'Unidad única britana: el mayor alcance del juego.'},
  tknight:{name:'Caballero teutónico',cls:'inf',hp:100,atk:12,armor:5,range:.35,rof:2,speed:42,cost:{food:85,gold:40},time:18,sight:5,r:8,age:2,unique:true,bonus:{bld:6},desc:'Unidad única teutona: infantería lenta y casi indestructible.'},
+ fighter:{name:'Caza',cls:'air',air:true,hp:160,atk:14,armor:1,range:4.5,rof:1.1,speed:170,cost:{wood:80,gold:180},time:30,sight:10,r:8,age:5,ranged:true,proj:'bullet',aa:true,bonus:{air:10},desc:'Avión de combate: derriba aviones y ametralla tropas. Solo le alcanzan los antiaéreos, los cazas, los buques modernos y algunas defensas.'},
+ bomber:{name:'Bombardero',cls:'air',air:true,hp:280,atk:60,armor:2,range:.7,rof:4,speed:115,cost:{wood:120,gold:300},time:45,sight:8,r:10,age:5,ranged:true,proj:'bomb',splash:.9,fullBld:true,noAir:true,bonus:{bld:60},desc:'Suelta bombas sobre edificios y tropas. No puede atacar a otros aviones.'},
+ aagun:{name:'Cañón antiaéreo',cls:'siege',hp:150,atk:24,armor:1,range:8,rof:1.4,speed:46,cost:{wood:100,gold:120},time:25,sight:9,r:9,age:5,ranged:true,proj:'bullet',aa:true,airOnly:true,bonus:{air:20},desc:'Defensa antiaérea móvil: solo dispara a aviones.'},
+ sub:{name:'Submarino',cls:'ship',naval:true,sub:true,hp:200,atk:48,armor:2,range:5,rof:4,speed:78,cost:{wood:150,gold:200},time:40,sight:7,r:11,age:5,ranged:true,proj:'torpedo',shipOnly:true,bonus:{ship:25},desc:'El enemigo no lo ve salvo con barcos muy cerca. Hunde barcos con torpedos; no ataca a tierra.'},
+ battleship:{name:'Acorazado',cls:'ship',naval:true,hp:650,atk:42,armor:4,parmor:4,range:10,minr:2,rof:5,speed:52,cost:{wood:300,gold:350},time:60,sight:11,r:15,age:5,ranged:true,proj:'shell',splash:.9,fullBld:true,bonus:{bld:40},desc:'Buque pesado: bombardea la costa desde muy lejos.'},
  cataphract:{name:'Catafracto',cls:'cav',hp:110,atk:9,armor:2,parmor:1,range:.35,rof:1.7,speed:86,cost:{food:70,gold:75},time:20,sight:6,r:10,age:2,unique:true,bonus:{inf:9},desc:'Unidad única bizantina: caballería que arrasa a la infantería.'}
 };
 const B={
- tc:{name:'Centro urbano',size:3,hp:1500,armor:2,cost:{wood:275,stone:100},time:60,sight:8,pop:5,drop:true,trains:['villager'],techs:['wheel','plow'],atk:5,range:6,rof:2,arrows:1,gar:15,age:1,desc:'Entrena aldeanos, recibe recursos y permite avanzar de edad. Dispara flechas; más si hay aldeanos dentro.'},
+ tc:{name:'Centro urbano',size:3,hp:1500,armor:2,cost:{wood:275,stone:100},time:60,sight:8,pop:5,drop:true,trains:['villager'],techs:['wheel','handcart','motor','plow'],atk:5,range:6,rof:2,arrows:1,gar:15,age:1,desc:'Entrena aldeanos, recibe recursos y permite avanzar de edad. Dispara flechas; más si hay aldeanos dentro.'},
  house:{name:'Casa',size:2,hp:350,cost:{wood:30},time:12,sight:3,pop:5,desc:'Aumenta la población máxima en 5.'},
  farm:{name:'Granja',size:2,hp:100,cost:{wood:60},time:10,sight:2,farm:true,food:400,desc:'Fuente de comida estable: 400 por granja. Un aldeano por granja.'},
  store:{name:'Almacén',size:2,hp:600,cost:{wood:100},time:18,sight:4,drop:true,techs:['axe','pick'],desc:'Punto de entrega de recursos e investigaciones de recolección. Constrúyelo junto a bosques y minas.'},
  market:{name:'Mercado',size:3,hp:2100,cost:{wood:175},time:40,sight:5,trains:['trade'],market:true,age:1,desc:'Compra y vende recursos a cambio de oro y entrena carretas comerciales.'},
- dock:{name:'Muelle',size:3,hp:1800,cost:{wood:150},time:35,sight:6,trains:['fishship','galley','transport'],techs:['gillnets','u_galley'],drop:'fish',coast:true,desc:'Se construye en la costa. Recibe el pescado y construye barcos.'},
+ dock:{name:'Muelle',size:3,hp:1800,cost:{wood:150},time:35,sight:6,trains:['fishship','galley','sub','battleship','transport'],techs:['gillnets','u_galley'],drop:'fish',coast:true,desc:'Se construye en la costa. Recibe el pescado y construye barcos.'},
  barracks:{name:'Cuartel',size:3,hp:1000,cost:{wood:150},time:30,sight:5,trains:['militia','spear'],techs:['u_militia','u_spear'],desc:'Entrena hombres de armas y piqueros.'},
  range:{name:'Galería de tiro',size:3,hp:1000,cost:{wood:150},time:30,sight:5,trains:['archer'],techs:['u_archer'],age:1,desc:'Entrena arqueros.'},
  stable:{name:'Establo',size:3,hp:1000,cost:{wood:150},time:30,sight:5,trains:['scout','knight'],techs:['u_scout','u_knight'],age:1,desc:'Entrena exploradores y caballeros.'},
  smith:{name:'Herrería',size:3,hp:1100,cost:{wood:150},time:35,sight:4,techs:['forge','fletch','mail','masonry','barding'],age:1,desc:'Investiga mejoras de ataque y armadura para tu ejército y tus edificios.'},
  tower:{name:'Torre de vigilancia',size:2,hp:900,armor:1,cost:{wood:50,stone:125},time:35,sight:9,atk:7,range:7,rof:1.6,arrows:1,gar:5,age:1,desc:'Defensa: dispara flechas a los enemigos cercanos; más si hay unidades dentro.'},
- siege:{name:'Taller de asedio',size:3,hp:1000,cost:{wood:200},time:40,sight:4,trains:['ram','mangonel'],age:2,desc:'Construye arietes y mangoneles.'},
+ airfield:{name:'Aeródromo',size:4,hp:2400,armor:2,cost:{wood:300,gold:200},time:60,sight:7,trains:['fighter','bomber'],age:5,desc:'Construye cazas y bombarderos.'},
+ siege:{name:'Taller de asedio',size:3,hp:1000,cost:{wood:200},time:40,sight:4,trains:['ram','mangonel','aagun'],age:2,desc:'Construye arietes y mangoneles.'},
  monastery:{name:'Monasterio',size:3,hp:1100,cost:{wood:175},time:40,sight:5,trains:['monk'],techs:['fervor'],age:2,desc:'Forma monjes. Cada reliquia guardada aquí produce oro.'},
  castle:{name:'Castillo',size:4,hp:4800,armor:6,cost:{stone:650},time:150,sight:11,atk:11,range:8,rof:2,arrows:4,gar:20,pop:20,trains:['unique'],age:2,desc:'Fortaleza que dispara flechas, acoge 20 unidades y entrena la unidad única de tu civilización.'},
  wonder:{name:'Maravilla',size:5,hp:4800,armor:8,cost:{wood:1000,gold:1000,stone:1000},time:240,sight:6,wonder:true,age:2,desc:'Si resiste en pie cinco minutos tras terminarla, tu bando gana la partida.'},
@@ -76,10 +82,12 @@ const B={
  wall:{name:'Muralla de piedra',size:1,hp:1400,armor:4,cost:{stone:5},time:7,sight:2,wall:true,age:1,desc:'Muro de piedra muy resistente. Arrastra para trazar una línea; 5 de piedra por tramo.'},
  gate:{name:'Puerta',size:1,hp:1100,armor:3,cost:{stone:25},time:15,sight:2,wall:true,gate:true,age:1,desc:'Deja pasar a tus unidades y a las de tus aliados; bloquea al enemigo.'}
 };
-const BPAGES=[['house','farm','store','tc','market','dock','tower','palisade','wall','gate'],['barracks','range','stable','smith','siege','monastery','castle','wonder']];
+const BPAGES=[['house','farm','store','tc','market','dock','tower','palisade','wall','gate'],['barracks','range','stable','smith','siege','monastery','castle','wonder','airfield']];
 const GAR={tc:{n:15,cls:['vil','inf','arc','monk']},tower:{n:5,cls:['vil','inf','arc','monk']},castle:{n:20,cls:['vil','inf','arc','monk','cav']},transport:{n:10,cls:['vil','inf','arc','monk','cav','siege','trade']}};
 const TECH={
  wheel:{name:'Carretilla',at:'tc',cost:{food:175,wood:50},time:30,age:1,desc:'Aldeanos un 10 % más rápidos; cargan 5 recursos más.'},
+ handcart:{name:'Carro de mano',at:'tc',req:'wheel',cost:{food:300,wood:200},time:45,age:2,desc:'Aldeanos otro 10 % más rápidos; cargan 5 recursos más. Requiere la carretilla.'},
+ motor:{name:'Transporte motorizado',at:'tc',req:'handcart',cost:{food:450,gold:300},time:50,age:4,desc:'Aldeanos un 20 % más rápidos; cargan 10 recursos más. Requiere el carro de mano.'},
  plow:{name:'Arado',at:'tc',cost:{food:125,wood:75},time:25,age:1,desc:'Las granjas producen un 20 % más rápido y tienen 100 de comida más.'},
  axe:{name:'Hacha doble',at:'store',cost:{food:100,wood:50},time:20,age:1,desc:'Los aldeanos talan un 20 % más rápido.'},
  pick:{name:'Minería',at:'store',cost:{food:100,wood:75},time:25,age:1,desc:'Los aldeanos extraen oro y piedra un 20 % más rápido.'},
@@ -103,10 +111,17 @@ const RDEF={tree:{r:'wood',amt:100,name:'Árbol'},gold:{r:'gold',amt:750,name:'M
 const ALLT=Object.keys(TECH);
 const DIFF={
  easy:{name:'Fácil',tick:2,vil:20,bar:12,ageV:18,first:720,interval:300,wave:4,towers:0,techs:['wheel','forge','axe','gillnets'],counter:false,maxAge:3,siege:false,raid:false,monks:0,fish:2,galleys:2,castle:false,market:false,wonder:false,relics:false,bell:false},
- normal:{name:'Normal',tick:1,vil:28,bar:10,ageV:20,first:480,interval:220,wave:7,towers:1,techs:['wheel','plow','axe','pick','gillnets','forge','fletch','mail','masonry','u_militia','u_archer','u_galley'],counter:true,maxAge:6,siege:true,raid:false,monks:1,fish:4,galleys:5,castle:true,market:true,wonder:false,relics:true,bell:true},
+ normal:{name:'Normal',tick:1,vil:28,bar:10,ageV:20,first:480,interval:220,wave:7,towers:1,techs:['wheel','handcart','plow','axe','pick','gillnets','forge','fletch','mail','masonry','u_militia','u_archer','u_galley'],counter:true,maxAge:6,siege:true,raid:false,monks:1,fish:4,galleys:5,castle:true,market:true,wonder:false,relics:true,bell:true},
  hard:{name:'Difícil',tick:.6,vil:34,bar:8,ageV:22,first:380,interval:170,wave:9,towers:2,techs:ALLT,counter:true,maxAge:8,siege:true,raid:true,monks:3,fish:6,galleys:8,castle:true,market:true,wonder:true,relics:true,bell:true}
 };
 const CONVT=4.5;
+// poderes de era: ataques especiales con coste en oro y tiempo de recarga (s)
+const POWERS={
+ art:{name:'Bombardeo de artillería',age:3,cost:{gold:200},cd:150,r:3,desc:'Ocho proyectiles caen en la zona elegida a los 3 segundos.'},
+ air:{name:'Ataque aéreo',age:5,cost:{gold:300},cd:180,r:2.5,desc:'Una escuadrilla bombardea en línea recta sobre el punto elegido.'},
+ mis:{name:'Misil de crucero',age:6,cost:{gold:400},cd:240,r:1.6,desc:'Un impacto devastador contra edificios; daña también a las tropas cercanas.'},
+ emp:{name:'Pulso electromagnético',age:7,cost:{gold:350},cd:240,r:5,desc:'Paraliza 15 s los vehículos, barcos, aviones y edificios enemigos de la zona.'},
+ orb:{name:'Bombardeo orbital',age:8,cost:{gold:600},cd:300,r:2.5,desc:'Un rayo desde el espacio arrasa todo lo que hay en la zona.'}};
 
 let G=null,seed=1;
 function rnd(){seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^(seed>>>15),1|seed);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}
@@ -172,6 +187,11 @@ const GEN={
  galley:{3:{name:'Galeón',hp:170,atk:10,range:7,proj:'ball',fullBld:true},4:{name:'Fragata acorazada',hp:240,atk:13,armor:2,range:7.5},
   5:{name:'Destructor',hp:300,atk:15,range:8,speed:85,proj:'shell',cost:{wood:120,gold:80}},6:{name:'Crucero lanzamisiles',hp:360,atk:18,range:9,proj:'rocket'},
   7:{name:'Fragata furtiva',hp:400,atk:21,range:9.5},8:{name:'Hidroala de plasma',hp:460,atk:25,range:10,proj:'plasma'}},
+ fighter:{6:{name:'Caza a reacción',hp:200,atk:18,speed:210,proj:'rocket'},7:{name:'Caza furtivo',hp:240,atk:22,range:6,speed:230},8:{name:'Interceptor orbital',hp:290,atk:27,armor:3,speed:260,proj:'laser'}},
+ bomber:{6:{name:'Bombardero estratégico',hp:340,atk:75,speed:140},7:{name:'Bombardero furtivo',hp:380,atk:90,armor:3,speed:150},8:{name:'Bombardero orbital',hp:440,atk:110,armor:4,speed:170,proj:'plasma'}},
+ aagun:{6:{name:'Antiaéreo autopropulsado',hp:220,atk:30,armor:3,speed:60},7:{name:'Batería tierra-aire',hp:240,atk:40,range:10,rof:2,speed:62,proj:'rocket'},8:{name:'Láser antiaéreo',hp:280,atk:46,armor:4,range:11,rof:1.2,proj:'laser'}},
+ sub:{6:{name:'Submarino nuclear',hp:280,atk:60,speed:88},7:{name:'Submarino furtivo',hp:320,atk:70,range:6,speed:94},8:{name:'Dron submarino',hp:340,atk:82,armor:4,speed:110}},
+ battleship:{6:{name:'Crucero de batalla',hp:760,atk:48,range:11,proj:'rocket',aa:true},7:{name:'Buque arsenal',hp:840,atk:56,range:12,aa:true},8:{name:'Acorazado de plasma',hp:960,atk:66,armor:6,range:12.5,proj:'plasma',aa:true}},
  transport:{3:{name:'Carraca',hp:130},4:{name:'Vapor de transporte',hp:160,speed:84},5:{name:'Lancha de desembarco',hp:200,speed:92},7:{name:'Aerodeslizador anfibio',hp:240,speed:105}}
 };
 // nombres de edificios que cambian con la edad
@@ -180,13 +200,13 @@ const BGEN={
  castle:{3:'Fortaleza abaluartada',4:'Fuerte',5:'Búnker de mando',6:'Complejo fortificado',7:'Centro de mando',8:'Ciudadela de energía'},
  wall:{3:'Muralla abaluartada',4:'Muro de ladrillo',5:'Muro de hormigón',7:'Muro inteligente',8:'Barrera de energía'},
  palisade:{5:'Alambrada'},gate:{5:'Puesto de control',8:'Compuerta de energía'},
- stable:{5:'Fábrica de vehículos'},siege:{4:'Fundición de artillería',6:'Fábrica de artillería'},monastery:{5:'Hospital de campaña',7:'Centro de influencia'},
+ airfield:{7:'Base aérea',8:'Puerto orbital'},stable:{5:'Fábrica de vehículos'},siege:{4:'Fundición de artillería',6:'Fábrica de artillería'},monastery:{5:'Hospital de campaña',7:'Centro de influencia'},
  smith:{4:'Fábrica de armamento',7:'Laboratorio de armamento'},dock:{5:'Puerto'},market:{4:'Lonja',7:'Bolsa de valores'},range:{5:'Campo de tiro'},barracks:{5:'Cuartel militar'},
  store:{4:'Almacén industrial',7:'Centro logístico'},house:{4:'Vivienda',6:'Bloque de viviendas',8:'Hábitat'},farm:{4:'Granja mecanizada',7:'Granja hidropónica'}
 };
 const BPROJ=['arrow','arrow','arrow','ball','ball','bullet','rocket','laser','laser'];
-const PK={arrow:[400,1],javelin:[400,1],axe:[400,1],bullet:[1600,0],laser:[3200,0],plasma:[1100,0],rocket:[700,.35],grenade:[300,1.6],ball:[520,.7],shell:[420,1.4],stone:[260,1]};
-const EXPL={rocket:1,shell:1,grenade:1,ball:1,plasma:1};
+const PK={bomb:[220,.2],torpedo:[260,0],arrow:[400,1],javelin:[400,1],axe:[400,1],bullet:[1600,0],laser:[3200,0],plasma:[1100,0],rocket:[700,.35],grenade:[300,1.6],ball:[520,.7],shell:[420,1.4],stone:[260,1]};
+const EXPL={rocket:1,shell:1,grenade:1,ball:1,plasma:1,bomb:1,torpedo:1};
 const gdC={};
 function ageOf(o){return o!=null&&G&&G.players[o]?G.players[o].age:0}
 function gdAt(t,a){if(a<3&&!(a>=0&&GEN[t]&&GEN[t][a]))return U[t];const k=t+'|'+a;let d=gdC[k];if(d)return d;d=Object.assign({},U[t]);const g=GEN[t];
@@ -217,8 +237,8 @@ function uArmor(u,ranged){const o=u.owner,d=gd(u.type,o);let a=d.armor+(genUp(o,
  if(d.cls==='cav'&&tech(o,'barding'))a+=2;if(d.cls==='inf'&&civ(o)==='teutones')a+=1;if(ranged&&d.parmor)a+=d.parmor;return a}
 function uRange(u,o){const t=u.type||u;o=o??u.owner;const d=gd(t,o);let r=d.range+(genUp(o,t)&&UPG[t].range||0);if(d.cls==='arc'||t==='galley'){if(tech(o,'fletch'))r+=1;if(civ(o)==='britanos'&&d.cls==='arc')r+=1}if(ageOf(o)>=4){const c=civ(o);if(c==='francos'&&d.cls==='siege'&&d.ranged)r+=1;if(c==='britanos'&&d.cls==='ship'&&d.atk>0)r+=1}return r}
 function uBonus(t,o,cls){const b=gd(t,o).bonus;let v=b&&b[cls]||0;if(t==='spear'&&cls==='cav'&&genUp(o,t))v+=UPG.spear.bcav;return v}
-function uSpeed(u){const d=gd(u.type,u.owner);let s=d.speed;if(u.type==='villager'&&tech(u.owner,'wheel'))s*=1.1;if(u.type==='monk'&&tech(u.owner,'fervor'))s*=1.15;if((d.cls==='inf'||d.cls==='arc')&&civ(u.owner)==='iberos'&&ageOf(u.owner)>=4)s*=1.15;const g=u.o&&u.o.gs;return g?Math.min(s,g):s}
-function carryCap(o,type){return type==='fishship'?15:CAP+(tech(o,'wheel')?5:0)}
+function uSpeed(u){const d=gd(u.type,u.owner);let s=d.speed;{const w=wxK();s*=U[u.type].air?(w.air||1):U[u.type].naval?(w.sea||1):w.sp}if(u.type==='villager'){if(tech(u.owner,'wheel'))s*=1.1;if(tech(u.owner,'handcart'))s*=1.1;if(tech(u.owner,'motor'))s*=1.2}if(u.type==='monk'&&tech(u.owner,'fervor'))s*=1.15;if((d.cls==='inf'||d.cls==='arc')&&civ(u.owner)==='iberos'&&ageOf(u.owner)>=4)s*=1.15;const g=u.o&&u.o.gs;return g?Math.min(s,g):s}
+function carryCap(o,type){return type==='fishship'?15:CAP+(tech(o,'wheel')?5:0)+(tech(o,'handcart')?5:0)+(tech(o,'motor')?10:0)}
 function gatherRate(o,rt,farm,fish){const p=P(o);let r=fish?GR.fish:farm?GR.farm:GR[rt];
  if(fish){if(tech(o,'gillnets'))r*=1.25}
  else if(farm){if(tech(o,'plow'))r*=1.2;if(p.civ==='francos')r*=1.25}
@@ -268,7 +288,7 @@ function pay(p,c){for(const k in c)p.res[k]-=c[k]}
 function refund(p,c){for(const k in c)p.res[k]+=c[k]}
 const unitAvail=(p,t)=>(U[t].age||0)<=p.age;
 const bldAvail=(p,t)=>(B[t].age||0)<=p.age;
-function techState(p,t){if(p.tech[t])return'done';if(p.tq[t])return'queued';if(TECH[t].age>p.age)return'age';return'ok'}
+function techState(p,t){if(p.tech[t])return'done';if(p.tq[t])return'queued';if(TECH[t].age>p.age)return'age';if(TECH[t].req&&!p.tech[TECH[t].req])return'req';return'ok'}
 
 // ---------- mapa
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -449,7 +469,9 @@ function pathTo(u,tx,ty,rect,inside){if(G.pb<=0||G.nb<1500)return false;G.pb--;
  if(lab){const src=lab[idx(sx,sy)];if(src>=0){let reach=false;const [x0,y0,x1,y1]=rect||[tx,ty,tx,ty];
   for(let y=y0-1;y<=y1+1&&!reach;y++)for(let x=x0-1;x<=x1+1;x++)if(inb(x,y)&&lab[idx(x,y)]===src){reach=true;break}
   if(!reach)maxN=Math.min(maxN,500)}}
- u.path=astar(sx,sy,test,hx,hy,maxN,o,nav);G.nb-=lastN;u.pi=0;return true}
+ u.path=astar(sx,sy,test,hx,hy,maxN,o,nav);G.nb-=lastN;u.pi=0;
+ // sin volver atrás al centro de la casilla de salida: se empieza por la siguiente (evita tirones al recalcular el camino)
+ if(u.path.length>1&&u.path[0]===idx(sx,sy))u.pi=1;return true}
 function stallCheck(u,ox,oy,dt){const mv=Math.hypot(u.x-(u.lx??ox),u.y-(u.ly??oy));u.lx=u.x;u.ly=u.y;
  if(mv<uSpeed(u)*dt*.35)u.stall=(u.stall||0)+dt;else u.stall=Math.max(0,(u.stall||0)-dt*2);
  if(u.stall>1.2&&u.pi<u.path.length){u.pi++;u.stall=.3}}
@@ -460,7 +482,8 @@ function step(u,dt){let sp=uSpeed(u)*dt;u.walk=true;const ox=u.x,oy=u.y,nav=!!U[
   else if(d<(last?T*.28:T*.42)&&(u.stall||0)>.25){u.pi++}
   else{u.x+=dx/d*sp;u.y+=dy/d*sp;u.dir=Math.atan2(dy,dx);sp=0}}
  stallCheck(u,ox,oy,dt)}
-function travel(u,dt,key,tx,ty,rect,inside,fx,fy){
+function flyTo(u,dt,x,y,near){const dx=x-u.x,dy=y-u.y,d=Math.hypot(dx,dy);if(d<=near)return true;const s=Math.min(d,uSpeed(u)*dt);u.x+=dx/d*s;u.y+=dy/d*s;u.x=Math.max(2,Math.min(MW*T-2,u.x));u.y=Math.max(2,Math.min(MH*T-2,u.y));u.dir=Math.atan2(dy,dx);u.walk=true;return false}
+function travel(u,dt,key,tx,ty,rect,inside,fx,fy){if(U[u.type].air){let x,y;if(rect){x=(rect[0]+rect[2]+1)/2*T;y=(rect[1]+rect[3]+1)/2*T}else if(fx!=null){x=fx;y=fy}else{x=(tx+.5)*T;y=(ty+.5)*T}return flyTo(u,dt,x,y,rect?T*.4:6)}
  if(u.gk!==key){if(!pathTo(u,tx,ty,rect,inside))return false;u.gk=key;u.fx=fx;u.fy=fy}
  if(u.pi<u.path.length){step(u,dt);return false}
  if(u.fx!=null){const dx=u.fx-u.x,dy=u.fy-u.y,d=Math.hypot(dx,dy);if(d>1.5&&!(d<T*.35&&(u.stall||0)>.5)&&(u.stall||0)<1.6){stallCheck(u,u.x,u.y,dt);const s=Math.min(d,uSpeed(u)*dt),nx=u.x+dx/d*s,ny=u.y+dy/d*s;if(!freeAtPx(nx,ny,u.owner,U[u.type].naval)){u.fx=null;return true}u.x=nx;u.y=ny;u.dir=Math.atan2(dy,dx);u.walk=true;return false}}
@@ -485,36 +508,47 @@ function workerOn(r){const w=G.ents.get(r.wk);return w&&!w.dead&&w.o.t==='gather
 function openNb(tx,ty){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const x=tx+dx,y=ty+dy;if(inb(x,y)&&!G.block[idx(x,y)])return true}return false}
 function findRes(rt,x,y,maxD,owner,farms,ex,fish){const hum=!P(owner).ai,exp=hum?expOf(owner):null;fish=!!fish;
  const lab=fish?G.sea:G.land,src=lab?lab[idx(clampT(x/T,MW),clampT(y/T,MH))]:-1;
- let best=ringSearch(rgrid(),x,y,maxD,e=>{if(e.dead||e.amt<=0||e.id===ex||fish!==(e.type==='fish')||RDEF[e.type].r!==rt)return -1;const i=idx(e.tx,e.ty);if(exp&&!exp[i])return -1;if(src>=0&&lab[i]!==src)return -1;if(!fish&&!openNb(e.tx,e.ty))return -1;return Math.hypot(e.x-x,e.y-y)});
+ let best=ringSearch(rgrid(),x,y,maxD,e=>{if(e.dead||e.amt<=0||e.id===ex||fish!==(e.type==='fish')||RDEF[e.type].r!==rt)return -1;const i=idx(e.tx,e.ty);if(exp&&!exp[i])return -1;if(src>=0&&lab[i]!==src)return -1;if(!fish&&!openNb(e.tx,e.ty))return -1;const c=(G.gc&&G.gc.get(e.id))||0;return Math.hypot(e.x-x,e.y-y)+(c>=2?c*1.6*T:0)});
  if(farms&&rt==='food'){let bd=best?Math.hypot(best.x-x,best.y-y):maxD;for(const e of G.bl){if(e.dead||e.owner!==owner||!B[e.type].farm||e.bp<1||e.id===ex)continue;if(e.wk&&workerOn(e))continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;best=e}}}
  return best}
 function nearestDrop(owner,a,fish){let best=null,bd=1e9;for(const e of G.bl){if(e.dead||e.kind!=='bld'||e.owner!==owner||e.bp<1)continue;const dr=B[e.type].drop;if(!dr||(fish?dr!=='fish':dr!==true))continue;const d=entDist(a,e);if(d<bd){bd=d;best=e}}return best}
-function canHit(s,e){if(e.kind!=='unit')return true;const sn=s.kind==='unit'?!!U[s.type].naval:false,tn=!!U[e.type].naval;if(s.kind!=='unit')return true;const rg=gd(s.type,s.owner).ranged;if(tn&&!sn&&!rg)return false;if(sn&&!rg)return false;return true}
+// quién puede atacar a quién: aviones solo con antiaéreo; submarinos solo con barcos y de cerca
+function canAA(s){if(s.kind==='bld')return(s.type==='tower'||s.type==='castle'||s.type==='tc')&&ageOf(s.owner)>=5;const d=gd(s.type,s.owner),a=ageOf(s.owner),t=d.base||s.type;return!!d.aa||(t==='archer'&&a>=5)||(t==='spear'&&a>=6)||(t==='galley'&&a>=5)}
+function subSeen(e,team){for(const u of G.ul){if(u.dead||u.gar||P(u.owner).team!==team||!U[u.type].naval)continue;if(Math.abs(u.x-e.x)<4.5*T&&Math.abs(u.y-e.y)<4.5*T&&Math.hypot(u.x-e.x,u.y-e.y)<4.5*T)return true}return false}
+function canHit(s,e){const sd=s.kind==='unit'?gd(s.type,s.owner):null;
+ if(sd&&(sd.airOnly||sd.shipOnly)&&e.kind!=='unit')return false;
+ if(e.kind==='unit'){const ed=gd(e.type,e.owner);
+  if(ed.air){if(!canAA(s))return false;return true}
+  if(sd&&sd.airOnly)return false;
+  if(sd&&sd.shipOnly&&!U[e.type].naval)return false;
+  if(U[e.type].sub){if(s.kind!=='unit'||!U[s.type].naval)return false;if(Math.hypot(e.x-s.x,e.y-s.y)>4.6*T)return false}}
+ if(e.kind!=='unit')return true;const sn=s.kind==='unit'?!!U[s.type].naval:false,tn=!!U[e.type].naval;if(s.kind!=='unit')return true;const rg=gd(s.type,s.owner).ranged;if(tn&&!sn&&!rg)return false;if(sn&&!rg)return false;return true}
 function nearestEnemy(s,range,mode){let bu=null,bd=range,bb=null,bbd=range;const hum=!P(s.owner).ai,vis=hum?visOf(s.owner):null;
  if(mode!=='bld')gridEach(ugrid(),s.x,s.y,range+T,e=>{if(e.dead||e.gar||!isEnemy(s.owner,e.owner))return;const d=Math.hypot(e.x-s.x,e.y-s.y);if(d<bd){if(vis&&!vis[tidx(e)])return;if(!canHit(s,e))return;bd=d;bu=e}});
- if(mode!=='units'&&!bu)gridEach(bgrid(),s.x,s.y,range+3*T,e=>{if(e.dead||!isEnemy(s.owner,e.owner))return;const d=entDist(s,e)+(B[e.type].wall?3*T:0);if(d<bbd){bbd=d;bb=e}});
+ if(mode!=='units'&&!bu)gridEach(bgrid(),s.x,s.y,range+3*T,e=>{if(e.dead||!isEnemy(s.owner,e.owner)||!canHit(s,e))return;const d=entDist(s,e)+(B[e.type].wall?3*T:0);if(d<bbd){bbd=d;bb=e}});
  return bu||bb}
 
 // ---------- combate
 function unitDmg(u,t){const d=gd(u.type,u.owner);let a=uAtk(u);
  if(d.bonus||u.type==='spear'){if(t.kind==='unit')a+=uBonus(u.type,u.owner,gd(t.type,t.owner).cls);if(t.kind==='bld')a+=uBonus(u.type,u.owner,'bld')}
  const arm=t.kind==='unit'?uArmor(t,!!d.ranged):bArmor(t.type,t.owner);
- let dmg=Math.max(1,a-arm);if(t.kind==='bld'){if(d.ranged&&!d.fullBld&&!d.splash&&u.type!=='galley')dmg=Math.max(1,dmg*.3);if(u.type==='villager')dmg=1.5}return dmg*elevK(u,t)}
+ let dmg=Math.max(1,a-arm);if(t.kind==='unit'&&U[t.type].air&&!d.aa&&!(d.base==='fighter'))dmg*=.5;if(t.kind==='bld'){if(d.ranged&&!d.fullBld&&!d.splash&&u.type!=='galley')dmg=Math.max(1,dmg*.3);if(u.type==='villager')dmg=1.5}return dmg*elevK(u,t)}
 function visFor0(x,y){return G.vis[idx(clampT(x/T,MW),clampT(y/T,MH))]===1}
-function shoot(s,t,dmg){const h0=s.kind==='bld'?(s.type==='tower'?2.4:s.type==='castle'?2.2:1.7):.45;const d=Math.hypot(t.x-s.x,t.y-s.y),kind=u2k(s),pk=PK[kind]||PK.arrow;
- G.proj.push({k:0,kind,x:s.x,y:s.y,h:h0,sx:s.x,sy:s.y,h0,tid:t.id,tx:t.x,ty:t.y,dmg,owner:s.owner,src:s.id,dur:Math.max(pk[0]>1000?.08:.22,d/pk[0]),arc:(.2+d/T*.07)*pk[1],vx:0,vy:0,vh:0});
+const airH=e=>e&&e.kind==='unit'&&U[e.type].air?(U[e.type].type==='bomber'||e.type==='bomber'?2.4:1.9):null;
+function shoot(s,t,dmg){const h0=airH(s)??(s.kind==='bld'?(s.type==='tower'?2.4:s.type==='castle'?2.2:1.7):.45);const d=Math.hypot(t.x-s.x,t.y-s.y),kind=u2k(s),pk=PK[kind]||PK.arrow;
+ G.proj.push({k:0,kind,th:airH(t)??undefined,x:s.x,y:s.y,h:h0,sx:s.x,sy:s.y,h0,tid:t.id,tx:t.x,ty:t.y,dmg,owner:s.owner,src:s.id,dur:Math.max(pk[0]>1000?.08:.22,d/pk[0]),arc:(.2+d/T*.07)*pk[1],vx:0,vy:0,vh:0});
  if(isAlly(s.owner,ME())||visFor0(s.x,s.y))ev('shoot',{x:s.x,y:s.y,k:kind})}
 const u2k=s=>s.kind==='unit'?(gd(s.type,s.owner).proj||(s.type==='almogavar'?'javelin':s.type==='axeman'?'axe':'arrow')):BPROJ[ageOf(s.owner)]||'arrow';
 function lob(u,t){const d=Math.hypot(t.x-u.x,t.y-u.y),kind=gd(u.type,u.owner).proj||'stone',sp=kind==='rocket'?1.8:kind==='stone'?1:1.3;
- G.proj.push({k:0,kind,x:u.x,y:u.y,h:.7,sx:u.x,sy:u.y,h0:.7,tid:0,tx:t.x,ty:t.y,owner:u.owner,src:u.id,splash:U.mangonel.splash*T*(kind==='stone'?1:1.15),dur:Math.max(.5,d/(260*sp)),arc:(.8+d/T*.18)/sp,vx:0,vy:0,vh:0});
+ const ah=airH(u);G.proj.push({k:0,kind,x:u.x,y:u.y,h:ah??.7,sx:u.x,sy:u.y,h0:ah??.7,tid:0,tx:t.x,ty:t.y,owner:u.owner,src:u.id,splash:U.mangonel.splash*T*(kind==='stone'?1:1.15),dur:ah?.9:Math.max(.5,d/(260*sp)),arc:ah?0:(.8+d/T*.18)/sp,vx:0,vy:0,vh:0});
  if(isAlly(u.owner,ME())||visFor0(u.x,u.y))ev('lob',{x:u.x,y:u.y,k:kind})}
 function splash(p){const src={type:'mangonel',owner:p.owner,kind:'unit',id:p.src,x:p.tx,y:p.ty,dead:true},hit=[];
- const f=e=>{if(e.dead||inGar(e)||!isEnemy(p.owner,e.owner))return;const d=e.kind==='unit'?Math.hypot(e.x-p.tx,e.y-p.ty):entDist({x:p.tx,y:p.ty},e);if(d<=p.splash)hit.push([e,d])};
+ const f=e=>{if(e.dead||inGar(e)||!isEnemy(p.owner,e.owner)||(e.kind==='unit'&&U[e.type].air))return;const d=e.kind==='unit'?Math.hypot(e.x-p.tx,e.y-p.ty):entDist({x:p.tx,y:p.ty},e);if(d<=p.splash)hit.push([e,d])};
  gridEach(ugrid(),p.tx,p.ty,p.splash+T,f);gridEach(bgrid(),p.tx,p.ty,p.splash+3*T,f);
- for(const [e,d] of hit)damage(e,unitDmg(src,e)*(1-.45*d/p.splash),src)
+ for(const [e,d] of hit)damage(e,(p.fixd?p.fixd*(e.kind==='bld'?(p.bmul||1):1):unitDmg(src,e))*(1-.45*d/p.splash),src)
  ev('impact',{x:p.tx,y:p.ty,k:p.kind})}
-function updProj(dt){for(const p of G.proj){const t=p.tid?G.ents.get(p.tid):null;if(t&&!t.dead&&!inGar(t)){p.tx=t.x;p.ty=t.y}
- p.k+=dt/p.dur;const k=Math.min(1,p.k);const nx=p.sx+(p.tx-p.sx)*k,ny=p.sy+(p.ty-p.sy)*k,nh=p.h0*(1-k)+(p.splash?.1:.35)*k+Math.sin(k*Math.PI)*p.arc;
+function updProj(dt){for(const p of G.proj){if(p.k<0){p.k+=dt/p.dur;if(p.k<0)continue;p.k=0}const t=p.tid?G.ents.get(p.tid):null;if(t&&!t.dead&&!inGar(t)){p.tx=t.x;p.ty=t.y}
+ p.k+=dt/p.dur;const k=Math.min(1,p.k);const nx=p.sx+(p.tx-p.sx)*k,ny=p.sy+(p.ty-p.sy)*k,nh=p.h0*(1-k)+(p.th!=null?p.th:p.splash?.1:.35)*k+Math.sin(k*Math.PI)*p.arc;
  p.vx=nx-p.x;p.vy=ny-p.y;p.vh=nh-p.h;p.x=nx;p.y=ny;p.h=nh;
  if(p.k>=1){p.done=true;if(!p.splash&&EXPL[p.kind]&&(isAlly(p.owner,ME())||visFor0(p.tx,p.ty)))ev('boom',{x:p.tx,y:p.ty,k:p.kind});if(p.splash)splash(p);else if(t&&!t.dead&&!inGar(t))damage(t,p.dmg,G.ents.get(p.src)||{owner:p.owner,id:p.src,kind:'x',dead:true})}}
  G.proj=G.proj.filter(p=>!p.done)}
@@ -626,7 +660,7 @@ function onBuilt(b){b.bp=1;P(b.owner).stats.built++;ev('built',{id:b.id});
  if(B[b.type].wonder&&!G.wonder){G.wonder={id:b.id,owner:b.owner,t0:G.t};if(G.cfg.win!=='conquest')msg((b.owner===ME()?'Tu maravilla':'La maravilla de '+P(b.owner).name)+' está terminada: '+Math.round(WONDER_T/60)+' minutos para la victoria',!isAlly(b.owner,ME()));sfx('age')}
  if(!B[b.type].farm)for(const u of G.ul){if(!act(u)||U[u.type].naval)continue;const tx=clampT(u.x/T,MW),ty=clampT(u.y/T,MH);
   if(tx>=b.tx&&tx<b.tx+b.size&&ty>=b.ty&&ty<b.ty+b.size){if(B[b.type].gate&&isAlly(u.owner,b.owner))continue;const f=freeTileNear(b,tx+.5,ty+.5);if(f){u.x=(f[0]+.5)*T;u.y=(f[1]+.5)*T;u.gk=null}}}}
-function chase(u,dt,t,o){const pre='a'+t.id+':',tx=clampT(t.x/T,MW),ty=clampT(t.y/T,MH),key=pre+tx+','+ty,nav=!!U[u.type].naval;
+function chase(u,dt,t,o){if(U[u.type].air){flyTo(u,dt,t.x,t.y,4);return true}const pre='a'+t.id+':',tx=clampT(t.x/T,MW),ty=clampT(t.y/T,MH),key=pre+tx+','+ty,nav=!!U[u.type].naval;
  if(!u.gk||!u.gk.startsWith(pre)||(u.gk!==key&&u.rp<=0)){if(pathTo(u,tx,ty,null,false)){u.gk=key;u.rp=.5;u.fx=null}}
  if(u.pi<u.path.length)step(u,dt);
  else{const dx=t.x-u.x,dy=t.y-u.y,dd=Math.hypot(dx,dy)||1,s=uSpeed(u)*dt,nx=u.x+dx/dd*s,ny=u.y+dy/dd*s;
@@ -705,6 +739,7 @@ function updUnit(u,dt){
  u.cd=Math.max(0,u.cd-dt);u.atkAnim=Math.max(0,u.atkAnim-dt);if(u.hitT)u.hitT=Math.max(0,u.hitT-dt);u.walk=false;u.work=false;u.anim+=dt;
  if(u.type==='monk'&&u.faith<1)u.faith=Math.min(1,u.faith+dt/20);
  if(u.o.t==='idle'&&u.oq.length)order(u,u.oq.shift());
+ if(u.stunT&&u.stunT>G.t)return;
  const o=u.o;
  switch(o.t){
   case'idle':idle(u,dt);break;
@@ -729,13 +764,16 @@ function updUnit(u,dt){
 }
 function separate(){const us=[];for(const e of G.ul)if(!e.dead&&!e.gar)us.push(e);
  us.sort((a,b)=>a.x-b.x);const n=us.length;
- for(let i=0;i<n;i++){const a=us[i],an=!!U[a.type].naval;for(let j=i+1;j<n;j++){const b=us[j];const dx=b.x-a.x;if(dx>28)break;const dy=b.y-a.y;if(dy>28||dy<-28)continue;
-  if(an!==!!U[b.type].naval)continue;
-  const mind=(a.r+b.r)*.78,d2=dx*dx+dy*dy;if(d2>=mind*mind)continue;const d=Math.sqrt(d2)||.01,ov=(mind-d)*.5;
+ for(let i=0;i<n;i++){const a=us[i],an=!!U[a.type].naval,aa=!!U[a.type].air;for(let j=i+1;j<n;j++){const b=us[j];const dx=b.x-a.x;if(dx>28)break;const dy=b.y-a.y;if(dy>28||dy<-28)continue;
+  if(an!==!!U[b.type].naval||aa!==!!U[b.type].air)continue;
+  // aldeanos del mismo bando que caminan se cruzan sin empujarse (evita tirones en caminos compartidos)
+  const same=a.owner===b.owner;if(same&&(a.walk||b.walk)&&(a.type==='villager'||b.type==='villager'||a.type==='trade'||b.type==='trade'))continue;
+  const mind=(a.r+b.r)*.78,d2=dx*dx+dy*dy;if(d2>=mind*mind)continue;const d=Math.sqrt(d2)||.01;let ov=(mind-d)*.5;
+  if(same&&a.walk&&b.walk){const c=Math.cos(a.dir-b.dir);if(c>.4)ov*=.25;else if(c<-.3){const px=-Math.sin(a.dir)*ov*.35,py=Math.cos(a.dir)*ov*.35;if(freeAtPx(a.x+px,a.y+py,a.owner,an)){a.x+=px;a.y+=py}if(freeAtPx(b.x-px,b.y-py,b.owner,an)){b.x-=px;b.y-=py}continue}}
   const nx=d>.02?dx/d:rnd()-.5,ny=d>.02?dy/d:rnd()-.5;
   const wa=a.work?.15:(a.walk?.35:1),wb=b.work?.15:(b.walk?.35:1);
   const ax=a.x-nx*ov*wa,ay=a.y-ny*ov*wa,bx=b.x+nx*ov*wb,by=b.y+ny*ov*wb;
-  if(freeAtPx(ax,ay,a.owner,an)){a.x=ax;a.y=ay}if(freeAtPx(bx,by,b.owner,an)){b.x=bx;b.y=by}}}}
+  if(aa||freeAtPx(ax,ay,a.owner,an)){a.x=ax;a.y=ay}if(aa||freeAtPx(bx,by,b.owner,an)){b.x=bx;b.y=by}}}}
 
 // ---------- edificios, producción, investigación y mercado
 function enqueue(b,k,n){const p=P(b.owner),me=b.owner===ME(),err=t=>{if(me){msg(t,true);sfx('err')}return false};
@@ -744,7 +782,7 @@ function enqueue(b,k,n){const p=P(b.owner),me=b.owner===ME(),err=t=>{if(me){msg(
   if(b.q.length>=5)return ok||err('La cola está llena');
   if(k==='age'){if(b.type!=='tc'||p.aging||p.age>=MAXAGE)return ok;const c=AGECOST[p.age];if(!canAfford(p,c))return ok||err('Recursos insuficientes');
    pay(p,c);p.aging=true;b.q.push({k:'age',t:0,tot:AGETIME[p.age],cost:c});if(me)sfx('click');return true}
-  if(k.startsWith('t:')){const id=k.slice(2),t=TECH[id];if(!t||t.at!==b.type)return ok;const st=techState(p,id);if(st!=='ok')return st==='age'?err('Requiere la '+AGES[t.age]):ok;
+  if(k.startsWith('t:')){const id=k.slice(2),t=TECH[id];if(!t||t.at!==b.type)return ok;const st=techState(p,id);if(st!=='ok')return st==='age'?err('Requiere la '+AGES[t.age]):st==='req'?err('Requiere '+TECH[t.req].name.toLowerCase()):ok;
    if(!canAfford(p,t.cost))return ok||err('Recursos insuficientes');pay(p,t.cost);p.tq[id]=1;b.q.push({k,t:0,tot:t.time,cost:t.cost});if(me)sfx('click');return true}
   if(!trainsOf(b).includes(k)||!unitAvail(p,k))return ok;
   const c=unitCost(b.owner,k);if(!canAfford(p,c))return ok||err('Recursos insuficientes');
@@ -764,7 +802,7 @@ function spawnFrom(b,k){const p=P(b.owner),nav=!!U[k].naval;let gx=MW/2,gy=MH/2;
   else if(re&&!re.dead&&k==='fishship'&&re.type==='fish')order(u,{t:'gather',id:re.id,rt:'food',s:'go'});
   else order(u,{t:'move',x:b.rally.x,y:b.rally.y})}
  return u}
-function updBld(b,dt){if(b.hitT)b.hitT=Math.max(0,b.hitT-dt);if(b.bp<1)return;const p=P(b.owner),d=B[b.type];
+function updBld(b,dt){if(b.hitT)b.hitT=Math.max(0,b.hitT-dt);if(b.bp<1)return;if(b.stunT&&b.stunT>G.t)return;const p=P(b.owner),d=B[b.type];
  if(b.q.length){const q=b.q[0],unit=q.k!=='age'&&!q.k.startsWith('t:');
   if(unit&&p.pop>=p.cap){q.blocked=true;if(b.owner===ME())msgT('pop',p.cap>=POPMAX?'Población máxima alcanzada':'Población al límite: construye casas',true)}
   else{q.blocked=false;q.t+=dt;if(q.t>=q.tot){
@@ -788,22 +826,34 @@ function marketTrade(pl,op,r){const p=P(pl),me=pl===ME();if(!hasMarket(pl)||!G.p
  if(me)sfx('click');return true}
 
 // ---------- movimiento en formación
-const RANK={inf:0,cav:0,vil:1,arc:1,monk:2,siege:2,trade:2,ship:1};
+const RANK={inf:0,cav:0,vil:1,arc:1,monk:2,siege:2,trade:2,ship:1,air:0};
+// formaciones: bloque (por defecto), línea, columna, cuña y dispersa; la guarda cada unidad (u.fm)
+const FORMS={box:'Bloque',line:'Línea',column:'Columna',wedge:'Cuña',spread:'Dispersa'};
+function formSlots(f,n){const out=[];
+ if(f==='wedge'){let r=0,placed=0;while(placed<n){const k=Math.min(r*2+1,n-placed);for(let c=0;c<k;c++)out.push([(c-(k-1)/2),r]);placed+=k;r++}return out}
+ let cols=f==='line'?Math.max(1,Math.ceil(n/2)):f==='column'?Math.min(n,n>12?3:2):Math.max(1,Math.ceil(Math.sqrt(n*1.8)));
+ const rows=Math.ceil(n/cols);for(let i=0;i<n;i++){const r=(i/cols)|0,inRow=r<rows-1?cols:n-cols*(rows-1),c=i%cols;out.push([c-(inRow-1)/2,r])}return out}
 function formMove(us,wx,wy,am,q){const n=us.length;if(!n)return;
  let cx=0,cy=0;for(const u of us){cx+=u.x;cy+=u.y}cx/=n;cy/=n;
  let fx=wx-cx,fy=wy-cy;const fl=Math.hypot(fx,fy)||1;fx/=fl;fy/=fl;const px=-fy,py=fx;
- const cols=Math.max(1,Math.ceil(Math.sqrt(n*1.8))),sp=T*(us.some(u=>U[u.type].naval)?1.1:.74);
+ const cnt={};for(const u of us){const f=u.fm||'box';cnt[f]=(cnt[f]||0)+1}const f=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+ const sp=T*(us.some(u=>U[u.type].naval)?1.1:.74)*(f==='spread'?2:1);
  const gs=n>1?Math.min(...us.map(u=>uSpeed({type:u.type,owner:u.owner,o:{}}))):0;
- const sorted=us.slice().sort((a,b)=>(RANK[U[a.type].cls]-RANK[U[b.type].cls])||(((a.x-cx)*px+(a.y-cy)*py)-((b.x-cx)*px+(b.y-cy)*py)));
- const rows=Math.ceil(n/cols);
- sorted.forEach((u,i)=>{const r=(i/cols)|0,inRow=r<rows-1?cols:n-cols*(rows-1),c=i%cols;
-  const lat=(c-(inRow-1)/2)*sp,back=r*sp;let x=wx+px*lat-fx*back,y=wy+py*lat-fy*back;if(!freeAtPx(x,y,u.owner,U[u.type].naval)){x=wx;y=wy}
+ // delante la infantería y la caballería; detrás arqueros, asedio y apoyo (en cuña, la caballería en punta)
+ const rk=u=>{const c=gd(u.type,u.owner).cls;return f==='wedge'?(c==='cav'?0:c==='inf'?1:2):RANK[c]??1};
+ const sorted=us.slice().sort((a,b)=>(rk(a)-rk(b))||(((a.x-cx)*px+(a.y-cy)*py)-((b.x-cx)*px+(b.y-cy)*py)));
+ const slots=formSlots(f,n);
+ sorted.forEach((u,i)=>{const [lc,r]=slots[i];const lat=lc*sp,back=r*sp;let x=wx+px*lat-fx*back,y=wy+py*lat-fy*back;if(!U[u.type].air&&!freeAtPx(x,y,u.owner,U[u.type].naval)){x=wx;y=wy}
   const mil=U[u.type].atk>0&&u.type!=='villager';
   issue(u,am&&mil?{t:'amove',x,y,gs:gs&&n>1?gs:0}:{t:'move',x,y,gs:gs&&n>1?gs:0},q)})}
+function setForm(pl,ids,f){const us=selOwn(pl,ids).filter(e=>e.kind==='unit');for(const u of us)u.fm=f;
+ // se colocan en la nueva formación donde están, mirando hacia donde iban
+ const mil=us.filter(u=>u.type!=='villager');if(mil.length>1){let cx=0,cy=0;for(const u of mil){cx+=u.x;cy+=u.y}cx/=mil.length;cy/=mil.length;let dx=0,dy=0;for(const u of mil){dx+=Math.cos(u.dir||0);dy+=Math.sin(u.dir||0)}const l=Math.hypot(dx,dy)||1;formMove(mil,cx+dx/l*T*.6,cy+dy/l*T*.6,false,false)}
+ return us.length>0}
 
 // ---------- IA
 function aiUpdate(dt){for(const p of G.players){if(!p.ai||p.out)continue;const A=G.ai[p.i];A.tick-=dt;if(A.tick>0)continue;A.tick=DIFF[G.cfg.diff].tick;aiThink(p,A)}}
-function enemyComp(me){const c={inf:0,arc:0,cav:0,siege:0,monk:0,vil:0,ship:0,trade:0,towers:0,walls:0,n:0};
+function enemyComp(me){const c={inf:0,arc:0,cav:0,siege:0,monk:0,vil:0,ship:0,trade:0,air:0,towers:0,walls:0,n:0};
  for(const e of G.ul){if(e.dead||!isEnemy(me,e.owner))continue;c[gd(e.type,e.owner).cls]++;if(e.type!=='villager')c.n++}
  for(const e of G.bl){if(e.dead||!isEnemy(me,e.owner))continue;if(e.type==='tower'||e.type==='castle')c.towers++;if(B[e.type].wall)c.walls++}return c}
 function coastOK(tx,ty,s){let w=0;for(let y=ty-1;y<=ty+s;y++)for(let x=tx-1;x<=tx+s;x++){if(x>=tx&&x<tx+s&&y>=ty&&y<ty+s)continue;if(inb(x,y)&&G.ter[idx(x,y)]===1)w++}return w>=3}
@@ -847,7 +897,8 @@ function aiThink(p,A){
  const dock=has('dock').find(b=>b.bp>=1);
  if(dock){const wantF=Math.round(D.fish*(isl?1.5:1));if(fishers.length<wantF&&dock.q.length<2&&canAfford(p,U.fishship.cost)&&woodOK(U.fishship.cost))enqueue(dock,'fishship');
   for(const f of fishers)if(f.o.t==='idle'){const r=findRes('food',f.x,f.y,30*T,me,false,0,true);if(r)order(f,{t:'gather',id:r.id,rt:'food',s:'go'})}
-  if(p.age>=1&&(isl||galleys.length<2)&&galleys.length<(isl?D.galleys:2)&&dock.q.length<2&&canAfford(p,U.galley.cost)&&woodOK(U.galley.cost)&&!saving)enqueue(dock,'galley')}
+  if(p.age>=1&&(isl||galleys.length<2)&&galleys.length<(isl?D.galleys:2)&&dock.q.length<2&&canAfford(p,U.galley.cost)&&woodOK(U.galley.cost)&&!saving)enqueue(dock,'galley');
+  if(p.age>=5&&dock.q.length<2&&!saving){const ecn=enemyComp(me);if(isl||ecn.ship>2){const subs=ships.filter(u=>u.type==='sub').length,bs=ships.filter(u=>u.type==='battleship').length;const want=ecn.ship>subs*2&&subs<6?'sub':bs<(isl?3:1)?'battleship':null;if(want&&canAfford(p,U[want].cost))enqueue(dock,want)}}}
  if(p.age>=1){
   if(!has('range').length){if(!building('range'))aiBuild(p,'range',home,5,13,vills)}
   else if(!has('smith').length&&D.techs.length>4){if(!building('smith'))aiBuild(p,'smith',home,5,13,vills)}
@@ -857,6 +908,7 @@ function aiThink(p,A){
   else if(p.age>=2&&D.monks&&!has('monastery').length){if(!building('monastery'))aiBuild(p,'monastery',home,5,13,vills)}
   else if(p.age>=2&&D.castle&&!has('castle').length&&p.res.stone>=650){if(!building('castle')){const en=enemyBase(me,home);const at=en?{x:home.x+(en.x-home.x)*.15,y:home.y+(en.y-home.y)*.15}:home;aiBuild(p,'castle',at,4,12,vills)}}
   else if(has('tower').length<D.towers&&!building('tower')){const en=enemyBase(me,home);if(en){const tx=home.x+(en.x-home.x)*.12,ty=home.y+(en.y-home.y)*.12;aiBuild(p,'tower',{x:tx,y:ty},3,8,vills)}}
+  else if(p.age>=5&&!has('airfield').length&&vills.length>=18){if(!building('airfield'))aiBuild(p,'airfield',home,6,15,vills)}
   else if(p.age>=2&&D.wonder&&!has('wonder').length&&!G.wonder&&army.length>=18&&p.res.wood>=1100&&p.res.gold>=1100&&p.res.stone>=1100)aiBuild(p,'wonder',home,5,14,vills);
  }
  if(!findRes('food',home.x,home.y,13*T,me,false)){const farms=has('farm').length,fb=has('farm').filter(b=>b.bp<1).length;if(farms<Math.ceil(vills.length*.5)&&fb<2&&(farms<4||woodOK(B.farm.cost)))aiBuild(p,'farm',home,3,10,vills)}
@@ -879,7 +931,7 @@ function aiThink(p,A){
   let best=null,bw=-1;for(const t of opts){let w=1+rnd()*.6;
    if(D.counter){if(t==='spear')w+=ec.cav*1.4;if(t==='militia')w+=ec.arc*.8+ec.siege*1.2;if(t==='archer')w+=ec.inf*1.2+.5;if(t==='knight')w+=ec.arc*1.4+ec.siege*1.5+.8;
     if(t==='scout')w=D.raid&&cnt('scout')<3?1.5:.3;if(t==='ram')w=cnt('ram')<3?1+ec.towers+ec.walls*.1:0;if(t==='mangonel')w=cnt('mangonel')<2&&ec.n>12?2:0;if(t==='monk')w=cnt('monk')<D.monks?3:0;
-    if(U[t].unique)w=3+ec.n*.05}
+    if(U[t].unique)w=3+ec.n*.05;if(t==='aagun')w=ec.air>0?1+ec.air*1.5:.15;if(t==='fighter')w=1.2+ec.air*1.2;if(t==='bomber')w=1+ec.towers*.6+(cnt('bomber')<4?.6:0)}
    else if(t==='ram'||t==='mangonel'||t==='monk'||t==='scout')w=t==='scout'?.4:0;
    if(w>bw){bw=w;best=t}}
   if(best&&bw>0)enqueue(b,best)}
@@ -905,6 +957,12 @@ function aiThink(p,A){
    if(tgts){let n=null,nd=1e9;for(const e of tgts){if(U[a.type].bldOnly)break;const dd=Math.hypot(e.x-a.x,e.y-a.y);if(dd<nd){nd=dd;n=e}}if(n&&nd<30*T)order(a,a.type==='monk'?{t:'conv',id:n.id}:{t:'atk',id:n.id})}
    else order(a,{t:'amove',x:A.hit.x,y:A.hit.y})}
   return}
+ // poderes de era: contra el grupo enemigo más denso cerca de casa o contra su base
+ if(!A.passive&&p.age>=3&&G.t>Math.max(A.pwT||0,D===DIFF.easy?600:360)){A.pwT=G.t+15+rnd()*15+(D===DIFF.easy?40:D===DIFF.hard?0:15);const av=Object.keys(POWERS).filter(k=>POWERS[k].age<=p.age&&!(D===DIFF.easy&&(k==='mis'||k==='orb'))&&!((p.pw||{})[k]>G.t)&&canAfford(p,POWERS[k].cost)&&p.res.gold>POWERS[k].cost.gold+150);
+  if(av.length){const k=av[av.length-1],W=POWERS[k];let best=null,bs=0;
+   if(k==='mis'||k==='orb'){for(const b of G.bl){if(b.dead||!isEnemy(me,b.owner)||B[b.type].wall)continue;const ntc=b.type==='tc'?G.bl.filter(o=>!o.dead&&o.owner===b.owner&&o.type==='tc').length:0;const v=(b.type==='castle'?6:b.type==='tc'?(ntc>1||G.t>1500?4:.5):b.type==='wonder'?9:B[b.type].trains?2:1);if(v>bs){bs=v;best=b}}}
+   else{const en=G.ul.filter(e=>act(e)&&isEnemy(me,e.owner)&&e.type!=='villager'&&!U[e.type].air);for(const c of en){let n=0;for(const e of en)if(Math.abs(e.x-c.x)<W.r*T&&Math.abs(e.y-c.y)<W.r*T)n++;const near=Math.hypot(c.x-home.x,c.y-home.y)<25*T;const sc=n*(near?1.5:1);if(sc>bs){bs=sc;best=c}}if(bs<6)best=null}
+   if(best)usePower(me,k,best.x,best.y)}}
  if(A.passive)return;
  if(A.inv){aiInvasion(p,A,army,transports,dock,galleys);return}
  const idleArmy=army.filter(a=>a.o.t==='idle'||(a.o.t==='move'&&!A.attacking));
@@ -964,7 +1022,7 @@ function spotOK(type,tx,ty,o){const s=B[type].size;if(!canPlace(type,tx,ty,o))re
 function calcFog(){if(G.cfg.reveal==='all'){for(const t of G.humanTeams){G.visT[t].fill(1);G.expT[t].fill(1)}G.fogV++;return}
  for(const t of G.humanTeams)G.visT[t].fill(0);
  for(const L of[G.ul,G.bl])for(const e of L){if(e.dead||inGar(e))continue;const tm=P(e.owner).team,vis=G.visT[tm];if(!vis||!G.humanTeams.includes(tm))continue;const exp=G.expT[tm];
-  const s=e.kind==='unit'?U[e.type].sight+(hAt(e.x,e.y)>1?1:0):(e.bp>=1?B[e.type].sight:2)+e.size/2;
+  const s=Math.max(2,(e.kind==='unit'?U[e.type].sight+(hAt(e.x,e.y)>1?1:0):(e.bp>=1?B[e.type].sight:2)+e.size/2)+wxK().sight);
   const cx=e.x/T,cy=e.y/T,x0=Math.max(0,Math.floor(cx-s)),x1=Math.min(MW-1,Math.ceil(cx+s)),y0=Math.max(0,Math.floor(cy-s)),y1=Math.min(MH-1,Math.ceil(cy+s)),s2=s*s;
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const dx=x+.5-cx,dy=y+.5-cy;if(dx*dx+dy*dy<=s2){const i=y*MW+x;vis[i]=1;exp[i]=1}}}
  G.fogV++;updMemory()}
@@ -972,7 +1030,7 @@ function anyVis(e){const s=e.size||1;for(let y=e.ty;y<e.ty+s;y++)for(let x=e.tx;
 function updMemory(){if(!G.vis)return;const me=ME();
  for(const e of G.bl){if(e.dead||isAlly(e.owner,me))continue;if(anyVis(e))G.mem.set(e.id,{id:e.id,type:e.type,owner:e.owner,tx:e.tx,ty:e.ty,size:e.size,hp:e.hp,maxhp:e.maxhp,bp:e.bp,x:e.x,y:e.y})}
  for(const [id,m] of G.mem){const e=G.ents.get(id);if((!e||e.dead)&&anyVis(m))G.mem.delete(id)}}
-function isVisible(e){if(e.kind==='unit')return !e.gar&&(isAlly(e.owner,ME())||G.vis[tidx(e)]===1);if(e.kind==='relic')return G.exp[tidx(e)]===1&&!e.holder;if(e.kind==='res')return G.exp[idx(e.tx,e.ty)]===1;return isAlly(e.owner,ME())||anyVis(e)}
+function isVisible(e){if(e.kind==='unit')return !e.gar&&(isAlly(e.owner,ME())||G.vis[tidx(e)]===1&&(!U[e.type].sub||subSeen(e,P(ME()).team)));if(e.kind==='relic')return G.exp[tidx(e)]===1&&!e.holder;if(e.kind==='res')return G.exp[idx(e.tx,e.ty)]===1;return isAlly(e.owner,ME())||anyVis(e)}
 function canPlace(type,tx,ty,owner){const s=B[type].size;let hmin=99,hmax=-99;
  for(let y=ty;y<ty+s;y++)for(let x=tx;x<tx+s;x++){if(!inb(x,y))return false;const i=idx(x,y);if(G.ter[i]!==0)return false;if(G.occ[i]&&!(relaxH&&isTreeAt(i)))return false;if(!P(owner).ai&&!expOf(owner)[i])return false;const h=G.hgt?G.hgt[i]:0;if(h<hmin)hmin=h;if(h>hmax)hmax=h}
  if(hmax-hmin>(relaxH||.6)&&!B[type].wall)return false;
@@ -999,12 +1057,14 @@ function update(dt){if(!G||G.over)return;G.t+=dt;G.pb=40;G.nb=14000;G.ug=null;
  for(const e of G.ul)if(!e.dead)P(e.owner).pop++;
  for(const e of G.bl)if(!e.dead&&e.bp>=1&&B[e.type].pop)P(e.owner).cap+=B[e.type].pop;
  for(const p of G.players)p.cap=Math.min(POPMAX,p.cap);
+ // cuántos aldeanos van a por cada recurso: findRes reparte la gente entre árboles y minas en vez de amontonarla en uno
+ {const gc=G.gc||(G.gc=new Map());gc.clear();for(const e of G.ul)if(!e.dead&&e.o.t==='gather'&&e.o.id)gc.set(e.o.id,(gc.get(e.o.id)||0)+1)}
  const nu=G.ul.length;for(let i=0;i<nu;i++){const e=G.ul[i];if(!e.dead&&!e.gar)updUnit(e,dt)}
  const nb=G.bl.length;for(let i=0;i<nb;i++){const e=G.bl[i];if(!e.dead)updBld(e,dt)}
  for(const e of G.rel)if(e.holder){const h=G.ents.get(e.holder);if(!h||h.dead)e.holder=0;else if(h.kind==='unit'){e.x=h.x;e.y=h.y}}
  separate();updProj(dt);aiUpdate(dt);
  G.fogT-=dt;if(G.fogT<=0){G.fogT=.2;calcFog()}
- G.endT-=dt;if(G.endT<=0){G.endT=1;checkEnd();for(const r in G.price)G.price[r]+=(({food:100,wood:100,stone:130})[r]-G.price[r])*.004}
+ G.endT-=dt;if(G.endT<=0){G.endT=1;wxTick();checkEnd();for(const r in G.price)G.price[r]+=(({food:100,wood:100,stone:130})[r]-G.price[r])*.004}
  G.histT-=dt;if(G.histT<=0){G.histT=30;G.hist.push({t:Math.round(G.t),s:G.players.map(p=>{let army=0;for(const e of G.ul)if(!e.dead&&e.owner===p.i&&e.type!=='villager'&&U[e.type].atk>0)army++;return{pop:p.pop,army,res:p.stats.gathered,score:score(p)}})})}
  if(G.scnS){G.scnT-=dt;if(G.scnT<=0){G.scnT=1;scnTick()}}
  G.alertT-=dt;
@@ -1047,6 +1107,27 @@ function scnTick(){const M=scnDef();if(!M)return;const S=G.scnS,me=ME();
    if(src&&tg&&!P(W.owner).out){const us=[];const k=e.every?Math.min(3,Math.floor((S.ev[i]-(e.from||e.every))/e.every)):0;
     for(const [type,n] of W.units)for(let j=0;j<n+k*(W.grow||0);j++){const t=freeTileNear(src,tg.x/T,tg.y/T,!!U[type].naval);if(t)us.push(mkUnit(type,W.owner,(t[0]+.5)*T,(t[1]+.5)*T))}
     formMove(us,tg.x,tg.y,true);if(W.alert!==false){msg(W.alert||'¡Un ejército enemigo se dirige hacia ti!',true);sfx('alert')}}}})}
+function usePower(pl,k,x,y){const p=P(pl),W=POWERS[k],me=pl===ME();if(!W||!p||p.out)return false;const err=t=>{if(me){msg(t,true);sfx('err')}return false};
+ if(p.age<W.age)return err('Necesitas la '+AGES[W.age]);p.pw=p.pw||{};if((p.pw[k]||0)>G.t)return err(W.name+': listo en '+Math.ceil(p.pw[k]-G.t)+' s');if(!canAfford(p,W.cost))return err('No tienes oro suficiente');
+ pay(p,W.cost);p.pw[k]=G.t+W.cd;const a=p.age,mul=1+.15*Math.max(0,a-W.age),T2=T;
+ const drop=(kind,tx,ty,delay,dmg,bmul,rad,h0)=>G.proj.push({k:-delay/1.2,kind,x:tx,y:ty,h:h0,sx:tx,sy:ty,h0,tid:0,tx,ty,owner:pl,src:0,splash:rad*T2,fixd:dmg*mul,bmul,dur:1.2,arc:0,th:.1,vx:0,vy:0,vh:0,pw:1});
+ if(k==='art')for(let i=0;i<8;i++){const an=rnd()*6.283,r=Math.sqrt(rnd())*W.r*T;drop('shell',x+Math.cos(an)*r,y+Math.sin(an)*r,1.8+i*.2,70,1.2,1.1,7)}
+ else if(k==='air'){const an=rnd()*6.283;for(let i=0;i<7;i++){const t=(i-3)*.75*T;drop('bomb',x+Math.cos(an)*t,y+Math.sin(an)*t,1+i*.12,120,1.6,1.3,3.2)}ev('flyover',{x,y,a:an,owner:pl})}
+ else if(k==='mis')drop('rocket',x,y,3,260,4,W.r,14);
+ else if(k==='orb'){drop('plasma',x,y,1.5,420,4,W.r,30);for(let i=0;i<6;i++){const an=i*1.047;drop('plasma',x+Math.cos(an)*1.4*T,y+Math.sin(an)*1.4*T,1.8+i*.08,160,2,1.2,30)}}
+ else if(k==='emp'){const R=W.r*T;for(const e of G.list){if(e.dead||!isEnemy(pl,e.owner))continue;const d=e.kind==='unit'?Math.hypot(e.x-x,e.y-y):entDist({x,y},e);if(d>R)continue;
+   if(e.kind==='bld'||(['cav','siege','ship','air'].includes(gd(e.type,e.owner).cls)&&ageOf(e.owner)>=4)){e.stunT=G.t+15;if(e.kind==='unit'){e.path=[];e.pi=0}}}ev('emp',{x,y,r:W.r})}
+ ev('power',{k,x,y,owner:pl});
+ for(const q of G.players)if(q.i!==pl&&isEnemy(pl,q.i)&&q.i===ME())msg('¡'+W.name+' enemigo en camino!',true);
+ if(me){msg(W.name+' en camino');sfx('cmd')}return true}
+// ---------- clima: cambia cada pocos minutos según el mapa (determinista); frena a las tropas y recorta la visión
+const WX={clear:{name:'Despejado',sp:1,sight:0},rain:{name:'Lluvia',sp:.93,sight:-1},snow:{name:'Nieve',sp:.85,sight:-1},storm:{name:'Tormenta',sp:.9,sight:-2,air:.7,sea:.85},sand:{name:'Tormenta de arena',sp:.9,sight:-3}};
+const WXMAP={arabia:['clear','clear','sand'],africa:['clear','clear','sand','rain'],islas:['clear','rain','storm'],mediterraneo:['clear','clear','rain','storm'],oceania:['clear','rain','storm'],samerica:['clear','rain','rain','storm'],
+ europa:['clear','rain','snow','storm'],asia:['clear','rain','snow'],namerica:['clear','rain','snow','storm'],bosque:['clear','rain','snow'],iberia:['clear','clear','rain','storm'],continental:['clear','rain','snow','storm'],rio:['clear','rain','storm']};
+function wxTick(){if(G.cfg.weather==='off'){G.wx='clear';return}if(G.t<(G.wxT||0))return;const opts=WXMAP[G.cfg.map]||['clear','rain','storm'];const prev=G.wx||'clear';
+ let k=prev==='clear'||rnd()<.5?opts[Math.floor(rnd()*opts.length)]:'clear';if(G.t<120)k='clear';G.wx=k;G.wxT=G.t+(k==='clear'?240+rnd()*240:120+rnd()*150);
+ if(k!==prev&&G.t>1){msg('Cambio de tiempo: '+WX[k].name);ev('weather',{k})}}
+const wxK=()=>WX[G&&G.wx||'clear']||WX.clear;
 function score(p){return Math.round(p.stats.gathered*.1+p.stats.killed*6+p.stats.razed*25+Object.keys(p.tech).length*40+p.age*250+(p.stats.converted||0)*10)}
 function teamsFor(n,mode){if(mode!=='teams'||n<3)return Array.from({length:n},(_,i)=>i);return Array.from({length:n},(_,i)=>i<Math.ceil(n/2)?0:1)}
 function newGame(cfg,s){cfg=Object.assign({diff:'normal',map:'continental',size:'medium',civ:'iberos',nAI:1,teams:'ffa',tutorial:false,win:'standard',reveal:'normal',me:0,mp:false,startAge:0},cfg||{});
@@ -1075,7 +1156,7 @@ function spotsAround(b,n){const out=[],s=b.size,cx=b.tx+s/2,cy=b.ty+s/2;for(let 
  for(let y=Math.floor(cy-r);y<=Math.ceil(cy+r);y++)for(let x=Math.floor(cx-r);x<=Math.ceil(cx+r);x++){if(Math.max(Math.abs(x+.5-cx),Math.abs(y+.5-cy))<r-.5)continue;if(free(x,y)&&G.ter[idx(x,y)]===0)ring.push([x,y,Math.hypot(x-MW/2,y-MH/2)])}
  ring.sort((a,b)=>a[2]-b[2]);for(const t of ring){if(out.length>=n)break;out.push([t[0],t[1]])}}return out}
 function startAt(i,tc,a){const p=P(i),wasAI=p.ai;p.ai=true;p.age=a;p.res={food:200+250*a,wood:200+200*a,gold:100+250*a,stone:200+120*a};
- const techs=a>=3?['wheel','axe','pick','plow','gillnets','forge','fletch','mail','masonry','barding']:a>=2?['wheel','axe','pick','plow','gillnets','forge','fletch']:['wheel'];
+ const techs=a>=5?['wheel','handcart','motor','axe','pick','plow','gillnets','forge','fletch','mail','masonry','barding']:a>=3?['wheel','handcart','axe','pick','plow','gillnets','forge','fletch','mail','masonry','barding']:a>=2?['wheel','axe','pick','plow','gillnets','forge','fletch']:['wheel'];
  for(const t of techs)p.tech[t]=1;if(a>=2)for(const k of['militia','spear','archer','scout','knight','galley'])(p.up||(p.up={}))[k]=1;
  const cx=(tc.x/T)|0,cy=(tc.y/T)|0,put=(type,r0,r1,near)=>{const c=near||[cx,cy];const s=setupSpot(type,c[0],c[1],r0,r1,i);if(s)return mkBld(type,i,s[0],s[1],true);return null};
  const nv=SA_VILL[a]-3,army=[['militia',2],['spear',a>=2?2:0],['archer',a>=1?2:0],['knight',a>=3?1:0]];
@@ -1099,13 +1180,14 @@ const dec=s=>{const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s
 function serialize(){const ents=[];for(const e of G.list){if(e.dead)continue;const o=Object.assign({},e);delete o.path;delete o.gk;delete o.lx;delete o.ly;delete o.stall;ents.push(o)}
  const exps={};for(const t in G.expT)exps[t]=enc(G.expT[t]);
  return JSON.stringify({v:3,MW,MH,seed,cfg:G.cfg,t:G.t,nid:G.nid,players:G.players,ai:G.ai,bases:G.bases,ter:enc(G.ter),exps,hgt:Array.from(G.hgt,h=>Math.round(h*100)),ents,
-  price:G.price,wonder:G.wonder,relicHold:G.relicHold,relicN:G.relicN,hist:G.hist,mem:[...G.mem.values()],real:G.real||null,scnS:G.scnS||null})}
+  price:G.price,wx:G.wx||'clear',wxT:G.wxT||0,wonder:G.wonder,relicHold:G.relicHold,relicN:G.relicN,hist:G.hist,mem:[...G.mem.values()],real:G.real||null,scnS:G.scnS||null})}
 function deserialize(str){const d=JSON.parse(str);if(d.v!==3)throw new Error('Formato de partida no compatible con esta versión');
  MW=d.MW;MH=d.MH;NN=MW*MH;GW=Math.ceil(MW/GC);seed=d.seed;POPMAX=Math.max(50,Math.min(300,+(d.cfg&&d.cfg.pop)||200));
  G={t:d.t,ents:new Map(),list:[],nid:d.nid,proj:[],ev:[],cfg:d.cfg,over:false,win:null,dirty:false,fogT:0,endT:1,histT:30,alertT:0,msgT:{},fogV:0,pb:60,nb:30000,players:d.players,ai:d.ai,bases:d.bases,
   visT:{},expT:{},me:0,mp:false,ter:dec(d.ter),occ:new Int32Array(NN),block:new Uint8Array(NN),gate:new Uint8Array(NN),hgt:Float32Array.from(d.hgt,h=>h/100),
   price:d.price,wonder:d.wonder,relicHold:d.relicHold,relicN:d.relicN,hist:d.hist||[],mem:new Map((d.mem||[]).map(m=>[m.id,m])),real:d.real&&root.IMPERIA_MAPS&&root.IMPERIA_MAPS[d.real]?d.real:undefined};
  if(d.scnS){G.scnS=d.scnS;G.scnT=1}
+ G.wx=d.wx||'clear';G.wxT=d.wxT||0;
  for(const t in d.exps)G.expT[t]=dec(d.exps[t]);
  for(let i=0;i<NN;i++)G.block[i]=G.ter[i]===1||G.ter[i]===3?1:0;
  for(const e of d.ents){if(e.kind==='unit'){e.path=[];e.pi=0;e.gk=null}G.ents.set(e.id,e);G.list.push(e);if(e.kind==='bld'||e.kind==='res')setOcc(e,true)}
@@ -1136,7 +1218,12 @@ function cmdRight(pl,ids,wx,wy,tgt,q){const own=selOwn(pl,ids);if(!own.length)re
  if(tgt&&tgt.owner===pl&&tgt.type==='transport'){const out=[];for(const u of land){if(canEnter(u,tgt))issue(u,{t:'gar',id:tgt.id},q);else out.push(u)}formMove(out,wx,wy,false,q);return'gar'}
  const vills=rest.filter(u=>u.type==='villager'),carts=rest.filter(u=>u.type==='trade'),mil=rest.filter(u=>u.type!=='villager'&&u.type!=='trade');
  if(tgt&&tgt.type==='market'&&isAlly(pl,tgt.owner)&&tgt.bp>=1&&carts.length){let n=0;for(const c of carts){const home=nearestOwn(c,'market');if(home&&home.id!==tgt.id){issue(c,{t:'trade',a:home.id,b:tgt.id,leg:1},q);n++}}if(n&&!vills.length&&!mil.length&&!monks.length)return'gather'}
- if(tgt&&tgt.kind==='res'&&tgt.type!=='fish'&&vills.length){const rt=RDEF[tgt.type].r;for(const v of vills)issue(v,{t:'gather',id:tgt.id,rt,s:'go'},q);formMove(mil.concat(monks),wx,wy,false,q);return'gather'}
+ if(tgt&&tgt.kind==='res'&&tgt.type!=='fish'&&vills.length){const rt=RDEF[tgt.type].r;
+  // varios aldeanos: se reparten entre los recursos del mismo tipo de alrededor (máx. 2 por árbol o arbusto, 4 por mina)
+  const cap=tgt.type==='tree'||tgt.type==='berry'?2:4,used=new Map();const pool=[];
+  if(vills.length>cap)gridEach(rgrid(),tgt.x,tgt.y,5*T,e=>{if(!e.dead&&e.type===tgt.type&&e.amt>0&&(e===tgt||openNb(e.tx,e.ty)))pool.push(e)});
+  pool.sort((a,b)=>Math.hypot(a.x-tgt.x,a.y-tgt.y)-Math.hypot(b.x-tgt.x,b.y-tgt.y));
+  for(const v of vills){let r=tgt;if(pool.length){r=pool.find(e=>(used.get(e.id)||0)<cap)||tgt}used.set(r.id,(used.get(r.id)||0)+1);issue(v,{t:'gather',id:r.id,rt,s:'go'},q)}formMove(mil.concat(monks),wx,wy,false,q);return'gather'}
  if(tgt&&tgt.kind==='bld'&&tgt.owner===pl){
   if(tgt.type==='monastery'&&monks.some(m=>m.relic)){for(const m of monks)if(m.relic)issue(m,{t:'gar',id:tgt.id},q);return'gar'}
   if(vills.length&&(tgt.bp<1||tgt.hp<tgt.maxhp)){for(const v of vills)issue(v,{t:'build',id:tgt.id},q);formMove(mil.concat(monks),wx,wy,false,q);return'build'}
@@ -1181,6 +1268,8 @@ function validCmd(pl,c){if(!c||typeof c!=='object'||typeof c.c!=='string'||!int(
   case'ungar':return int(c.id);
   case'bell':case'resign':return true;
   case'autofarm':return typeof c.on==='boolean';
+  case'form':return Array.isArray(c.ids)&&typeof c.f==='string'&&!!FORMS[c.f];
+  case'power':return typeof c.k==='string'&&!!POWERS[c.k]&&fin(c.x)&&fin(c.y);
   case'market':return(c.op==='buy'||c.op==='sell')&&['food','wood','stone'].includes(c.r);
   case'patrol':return fin(c.x)&&fin(c.y)&&Array.isArray(c.ids);
   case'drop':return int(c.pl)&&!!G.players[c.pl];
@@ -1199,6 +1288,8 @@ function exec(pl,c){if(!validCmd(pl,c))return false;const e=c.id!=null?G.ents.ge
  case'cancel':if(e&&e.owner===pl)cancelQ(e,c.i);return;
  case'ungar':if(e&&e.owner===pl)ungarrison(e,e.x,e.y+T*(e.size||1));return;
  case'bell':return ringBell(pl);
+ case'power':return usePower(pl,c.k,Math.max(0,Math.min(MW*T,c.x)),Math.max(0,Math.min(MH*T,c.y)));
+ case'form':return setForm(pl,c.ids,c.f);
  case'autofarm':{const p=P(pl);if(p){p.autoFarm=c.on;if(pl===ME())msg(c.on?'Resembrado automático de granjas: activado':'Resembrado automático de granjas: desactivado')}return true}
  case'market':return marketTrade(pl,c.op,c.r);
  case'rejoin':{const p=P(c.pl);if(p&&!p.out&&p.ai){p.ai=false;delete G.ai[c.pl];msg(p.name+' ha vuelto a la partida')}return}
@@ -1218,7 +1309,7 @@ function stateText(u){if(u.gar){const c=G.ents.get(u.gar);return'Dentro de '+(c?
  case'heal':return'Curando';case'conv':return u.faith<1?'Recuperando fe para convertir':'Convirtiendo';case'gar':return u.relic?'Llevando la reliquia al monasterio':'Buscando refugio';
  case'relic':return'Yendo a por la reliquia';case'trade':return'Comerciando';case'unload':return'Navegando para desembarcar';default:return u.relic?'Lleva una reliquia':'Inactivo'}}
 
-root.Imperia={score,goSolo,scnStatus,scnDef,visType,UUM,T,get MW(){return MW},get MH(){return MH},get NN(){return NN},get POPMAX(){return POPMAX},CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
+root.Imperia={FORMS,WX,get wx(){return G&&G.wx||'clear'},POWERS,canHitT:(a,b)=>canHit(a,b),subSeen,canAA,score,goSolo,scnStatus,scnDef,visType,UUM,T,get MW(){return MW},get MH(){return MH},get NN(){return NN},get POPMAX(){return POPMAX},CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
  newGame,update,get G(){return G},exec,hash,setMe,canAfford,unitAvail,bldAvail,techState,canPlace,wallLine,pickAt,isVisible,stateText,entDist,idx:(x,y)=>y*MW+x,hAt,hAtT,realCells:()=>G&&G.real&&root.IMPERIA_MAPS&&root.IMPERIA_MAPS[G.real]?realCells(G.real,MW,MH):null,
  isAlly,isEnemy,uAtk,uArmor,uRange,uSpeed,uMaxHp,uName,bArmor,bAtk,bRange,unitCost,trainTime,carryCap,convTime,trainsOf,tradeGold,garCap,contents,canEnter,
  serialize,deserialize,formMove,_dbg:{mkUnit,mkBld,applyTech,order,enter,kill}};

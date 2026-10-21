@@ -208,6 +208,19 @@ function build(type,o,t,dir){const k=new Kit(),ud={};seed(311+type.length*7+t*31
    k.add(cyl(.2,.6,2.2,24),'poly',0xffffff,0,0,0);for(let i=0;i<3;i++)k.add(new TH.TorusGeometry(.45-i*.12,.02,6,40).rotateX(Math.PI/2),'neon',NEON[t],0,.6+i*.6,0);
    k.add(new TH.OctahedronGeometry(.22,0),'neon',0x9ff8ff,0,2.5,0);ud.holo=[0,2.5,0,.4];for(let i=0;i<3;i++){const a=i/3*Math.PI*2;k.add(cyl(.03,.05,.9,6),'poly',0xffffff,Math.cos(a)*.45,1.6,Math.sin(a)*.45,0,Math.cos(a)*.3,-Math.sin(a)*.3)}}
   break}
+ case'airfield':{pad(k,t,3.95,3.95,.04);const fut=t>=8,asph=fut?0x2a2e36:0x3a3c40;
+  k.add(box(3.9,.03,.95,4),'concrete',asph,0,.05,.95);for(let i=0;i<7;i++)k.add(box(.28,.012,.05),fut?'neon':'matte',fut?0x39f0ff:0xf0f0e8,-1.55+i*.52,.07,.95);
+  for(const x of[-1.9,1.9])k.add(box(.06,.012,.9),'matte',0xf0f0e8,x,.07,.95);
+  // hangar
+  if(t<=6){const hg=new TH.CylinderGeometry(.75,.75,1.6,18,1,false,0,Math.PI).rotateZ(Math.PI/2).rotateY(Math.PI/2);k.add(hg,t===5?'zinc':'panel',t===5?0x9aa2a8:0xb4bac2,-.7,.05,-.85);k.add(box(.04,.7,1.4,2),'steel',0x5a6068,.11,.05,-.85)}
+  else{k.add(box(1.6,.7,1.5,3),fut?'poly':'panel',fut?0xe8ecef:0x7c828a,-.7,.05,-.85);k.add(box(.04,.55,1.2,2),'glass',0x223040,.11,.1,-.85)}
+  // torre de control
+  k.add(box(.4,1.3,.4,2),fut?'poly':'concrete',fut?0xe8ecef:0xd8d4cc,1.15,.05,-1.15);k.add(box(.62,.3,.62,2),'glass',fut?0x39f0ff:0x6a9ab8,1.15,1.35,-1.15);k.add(box(.7,.05,.7,2),'steel',0x5a6068,1.15,1.65,-1.15);
+  k.add(cyl(.01,.01,.5,5),'metal',0x24262a,1.15,1.7,-1.15);k.add(cyl(.12,.12,.02,14),'metal',0xb4bac2,1.15,2.18,-1.15);
+  // manga de viento y bandera
+  k.add(cyl(.01,.01,.7,5),'metal',0xb4bac2,1.7,.05,.25);k.add(cone(.06,.3,8).rotateZ(Math.PI/2),'cloth',0xe86a2a,1.7,.68,.25);
+  for(const [x,z] of[[-1.7,1.55],[1.7,1.55],[-1.7,.35],[1.7,.35]])k.add(box(.06,.05,.06),fut?'neon':'glass',fut?0x39f0ff:0xffe08a,x,.08,z);
+  k.add(box(.3,.012,.3),'cloth',PC[o%PC.length],.5,.07,-1.5);ud.smoke=null;break}
  case'siege':{pad(k,t,2.95,2.95,.05);block(k,t,2.4,1.0,1.6,0,.05,-.4,{win:false});roofE(k,t,2.4,1.6,0,1.05,-.4,{ry:0,net:t===5});k.add(box(.03,.8,1.0,2),t<=4?'planks':'zinc',0x9aa2a8,1.205,.05,-.4);
   if(t>=4){k.add(box(.08,1.6,.08,2),'steel',0xd0a020,-1.2,.05,.9);k.add(box(1.4,.06,.06),'steel',0xd0a020,-.6,1.62,.9);k.add(cyl(.005,.005,.6,3),'steel',0x333333,-.1,1.02,.9)}
   if(t===3)cannon(k,.6,.12,.9,0,.5);else{k.add(cylC(.05,.07,.8,10),'metal',0x4a4e44,.4,.2,.9,0,0,Math.PI/2);k.add(box(.5,.15,.3,2),'steel',0x5a5e4a,.2,.05,.9)}flag(k,o,1.3,1.3,1.1);break}

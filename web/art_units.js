@@ -35,7 +35,7 @@ function hoverTank(parts,pc,big){parts.hover=true;const s=big?1.2:1;parts.body.a
  k.add(box(.5*s,.02,.4*s),'cloth',pc,-.1,.365,0);k.add(box(.04,.04,.2),'neon',CYAN,.1+.5*s,.45,0)}))}
 // ---------- blindados con perfiles reales (extrusiones de silueta en vez de cajas)
 function exG(shape,depth,bev){return new TH.ExtrudeGeometry(shape,{depth,bevelEnabled:!!bev,bevelThickness:bev||0,bevelSize:bev||0,bevelSegments:1,curveSegments:8})}
-function shapeOf(pts){const s=new TH.Shape();pts.forEach(([a,b],i)=>i?s.lineTo(a,b):s.moveTo(a,b));s.closePath();return s}
+function shapeOf(pts){if(TH.ShapeUtils.isClockWise(pts.map(([a,b])=>new TH.Vector2(a,b))))pts=pts.slice().reverse();const s=new TH.Shape();pts.forEach(([a,b],i)=>i?s.lineTo(a,b):s.moveTo(a,b));s.closePath();return s}
 // silueta lateral (x adelante, y arriba) extruida a lo ancho, centrada en z
 function sideG(pts,width,bev){const g=exG(shapeOf(pts),width,bev);g.translate(0,0,-width/2);return g}
 // planta (x adelante, z lateral) extruida hacia arriba; taper estrecha la parte alta (laterales inclinados)
@@ -204,8 +204,98 @@ function shipEra(parts,pc,type,tier){parts.ship=true;parts.legs=[];parts.body.ad
   if(tier===4)k.add(cyl(.05,.06,.3,8),'metal',DARK,-.3,.65,0);k.add(cyl(.015,.015,.7,5),'metal',LGREY,.2,.5,0);k.add(cyl(.01,.01,.6,4),'metal',LGREY,.35,.45,0,0,0,-.8);k.add(box(.2,.02,.2),'cloth',pc,-.25,.545,0);if(tier>=7)k.add(box(.3,.03,.3),'solar',0x223040,.05,.3,0)}
  }));if(type==='fishship'){const n=new TH.Mesh(new TH.IcosahedronGeometry(.1,1),new TH.MeshStandardMaterial({color:0xcfc4a8,transparent:true,opacity:.7}));n.position.set(.5,.02,0);parts.body.add(n);parts.net=n}}
 
+// ---------- aviación (6.6): cazas y bombarderos por edad; vuelan alto y se inclinan en los giros (render3d)
+function wingG(pts,t){return topG(pts,t||.025,0,0)}
+function propK(parts,k,x,y,z,r){const p=pivot(x,y,z);p.add(mesh(k2=>{k2.add(box(.008,r*2,.026),'metal',DARK,0,0,0);k2.add(box(.008,.026,r*2),'metal',DARK,0,0,0);k2.add(cone(.035,.08,8).rotateZ(-Math.PI/2),'steel',LGREY,.02,0,0)}));parts.body.add(p);(parts.props||(parts.props=[])).push(p)}
+function fighter(parts,pc,tier){parts.plane=true;parts.body.add(mesh(k=>{
+ if(tier===5){// caza de hélice (tipo Spitfire): ala elíptica, cabina de burbuja, deriva redondeada
+  const C1=0x5e6a4e;k.add(cylC(.065,.035,1.0,14).rotateZ(-Math.PI/2),'steel',C1,-.02,0,0);k.add(sph(.068,14,10).scale(1.25,1,1),'steel',C1,.47,0,0);
+  const el=[];for(let i=0;i<=12;i++){const a=Math.PI*i/12,z=-Math.cos(a)*.66,c=Math.sin(a);el.push([.3-.1*(1-c)+.0,z]);}for(let i=12;i>=0;i--){const a=Math.PI*i/12,z=-Math.cos(a)*.66,c=Math.sin(a);el.push([.3-.26*c-.02,z])}
+  k.add(wingG(el,.022),'steel',C1,-.04,-.035,0);
+  k.add(wingG([[-.38,-.2],[-.33,-.2],[-.3,0],[-.33,.2],[-.38,.2],[-.44,0]],.016),'steel',C1,0,.005,0);
+  k.add(sideG([[-.48,0],[-.34,0],[-.37,.1],[-.42,.16],[-.48,.15]],.018),'steel',C1,0,.01,0);
+  k.add(sph(.045,12,8).scale(2,.9,.9),'glass',0x9fc4d8,.12,.065,0);k.add(box(.12,.03,.06),'steel',C1,.0,.06,0);
+  for(const z of[.13,-.13]){k.add(cyl(.008,.008,.12,5),'metal',DARK,.18,-.08,z);k.add(cylC(.03,.03,.018,10).rotateX(Math.PI/2),'rubber',TIRE,.18,-.14,z)}
+  for(const z of[.48,-.48])k.add(cyl(.05,.05,.004,14),'cloth',pc,.18,-.01,z)}
+ else if(tier===6){// caza a reacción (tipo F-15/Su-27): biplaza de dos motores y dos derivas
+  const C1=0x8a929a;k.add(topG([[.85,0],[.55,-.05],[.25,-.1],[-.1,-.18],[-.62,-.18],[-.62,.18],[-.1,.18],[.25,.1],[.55,.05]],.1,.4,0),'steel',C1,0,-.04,0);
+  k.add(cone(.05,.22,12).rotateZ(-Math.PI/2),'steel',0x6a7078,.82,.005,0);
+  k.add(wingG([[.18,-.16],[-.28,-.66],[-.4,-.66],[-.36,-.16],[-.36,.16],[-.4,.66],[-.28,.66],[.18,.16]],.025),'steel',C1,0,-.02,0);
+  k.add(wingG([[-.48,-.17],[-.62,-.38],[-.7,-.38],[-.66,-.17],[-.66,.17],[-.7,.38],[-.62,.38],[-.48,.17]],.018),'steel',C1,0,-.01,0);
+  for(const z of[.13,-.13]){k.add(sideG([[-.62,0],[-.42,0],[-.55,.26],[-.66,.26]],.018),'steel',C1,0,.05,z);k.add(cylC(.05,.045,.08,12).rotateZ(-Math.PI/2),'metal',DARK,-.66,-.0,z*.55);k.add(box(.26,.08,.08),'steel',0x6a7078,.15,-.04,z*1.05)}
+  k.add(sph(.05,12,8).scale(2.4,.8,.85),'glass',0x2e4a60,.42,.06,0);for(const z of[.42,-.42])k.add(box(.1,.012,.08),'cloth',pc,-.25,.0,z)}
+ else if(tier===7){// furtivo (tipo F-22): facetas, derivas inclinadas, toberas planas
+  const C1=0x5a6068;k.add(topG([[.8,0],[.4,-.1],[.1,-.22],[-.55,-.22],[-.64,-.1],[-.64,.1],[-.55,.22],[.1,.22],[.4,.1]],.09,.55,0),'panel',C1,0,-.04,0);
+  k.add(wingG([[.18,-.2],[-.3,-.66],[-.46,-.66],[-.46,-.2],[-.46,.2],[-.46,.66],[-.3,.66],[.18,.2]],.024),'panel',C1,0,-.02,0);
+  k.add(wingG([[-.5,-.22],[-.62,-.42],[-.72,-.42],[-.7,-.22],[-.7,.22],[-.72,.42],[-.62,.42],[-.5,.22]],.016),'panel',C1,0,-.01,0);
+  for(const z of[.15,-.15]){const f=sideG([[-.62,0],[-.42,0],[-.52,.24],[-.64,.24]],.014);f.rotateX(z>0?-.45:.45);k.add(f,'panel',0x4a5058,0,.03,z)}
+  k.add(box(.06,.05,.24),'metal',DARK,-.66,-.01,0);k.add(sph(.05,12,8).scale(2.4,.75,.85),'glass',0xb8902a,.38,.055,0);k.add(box(.14,.012,.14),'cloth',pc,-.25,.055,0)}
+ else{// interceptor orbital
+  k.add(topG([[.85,0],[.25,-.1],[-.4,-.13],[-.58,0],[-.4,.13],[.25,.1]],.08,.3,0),'poly',WHITE,0,-.03,0);
+  k.add(wingG([[.0,-.12],[-.5,-.58],[-.6,-.52],[-.42,-.12],[-.42,.12],[-.6,.52],[-.5,.58],[.0,.12]],.025),'poly',LGREY,0,-.02,0);
+  k.add(box(.9,.012,.03),'neon',CYAN,0,0,.13);k.add(box(.9,.012,.03),'neon',CYAN,0,0,-.13);k.add(cylC(.05,.05,.05,10).rotateZ(-Math.PI/2),'neon',0xb06bff,-.6,0,0);
+  k.add(sph(.045,12,8).scale(2.2,.7,.8),'glass',0x223040,.35,.04,0);k.add(box(.12,.012,.12),'cloth',pc,-.15,.05,0)}}));
+ if(tier===5)propK(parts,null,.56,0,0,.17)}
+function bomber(parts,pc,tier){parts.plane=true;parts.big=true;parts.body.add(mesh(k=>{
+ if(tier===5){// cuatrimotor
+  k.add(cylC(.09,.06,1.5,12).rotateZ(-Math.PI/2),'steel',0x8a8e86,0,0,0);k.add(sph(.09,12,8).scale(1.3,1,1),'glass',0x9fc4d8,.74,0,0);
+  k.add(wingG([[.22,-1.0],[.36,-.98],[.38,0],[.36,.98],[.22,1.0],[.02,.3],[.02,-.3]]),'steel',0x8a8e86,0,-.02,0);
+  k.add(wingG([[-.62,-.38],[-.52,-.38],[-.5,.38],[-.62,.38]]),'steel',0x8a8e86,0,0,0);k.add(sideG([[-.72,0],[-.5,0],[-.6,.32],[-.74,.32]],.025),'steel',0x8a8e86,0,0,0);
+  for(const z of[.36,.7,-.36,-.7])k.add(cylC(.045,.04,.26,10).rotateZ(-Math.PI/2),'steel',0x6a6e66,.36,-.02,z);for(const z of[.75,-.75])k.add(box(.12,.03,.12),'cloth',pc,.28,-.0,z)}
+ else if(tier===6){// estratégico de reacción
+  k.add(cylC(.08,.07,1.6,12).rotateZ(-Math.PI/2),'steel',LGREY,0,0,0);k.add(cone(.08,.25,12).rotateZ(-Math.PI/2),'steel',LGREY,.8,0,0);
+  k.add(wingG([[.35,-.1],[-.25,-1.05],[-.38,-1.05],[-.1,-.1],[-.1,.1],[-.38,1.05],[-.25,1.05],[.35,.1]]),'steel',LGREY,0,.02,0);
+  k.add(sideG([[-.82,0],[-.6,0],[-.7,.38],[-.85,.38]],.025),'steel',LGREY,0,.02,0);for(const z of[.4,.65,-.4,-.65])k.add(cylC(.035,.035,.24,8).rotateZ(-Math.PI/2),'metal',DARK,-.05,-.06,z);
+  for(const z of[.8,-.8])k.add(box(.1,.03,.1),'cloth',pc,-.2,.02,z)}
+ else if(tier===7){// ala volante furtiva
+  k.add(topG([[.6,0],[-.1,-1.1],[-.3,-1.1],[-.2,-.8],[-.38,-.55],[-.22,-.3],[-.38,0],[-.22,.3],[-.38,.55],[-.2,.8],[-.3,1.1],[-.1,1.1]],.07,.6,0),'panel',0x3a3e44,0,-.03,0);
+  k.add(box(.3,.04,.2),'panel',0x2e3238,.25,.04,0);k.add(box(.14,.012,.14),'cloth',pc,-.05,.045,0)}
+ else{k.add(topG([[.75,0],[-.3,-1.0],[-.5,-.8],[-.4,0],[-.5,.8],[-.3,1.0]],.08,.5,0),'poly',WHITE,0,-.03,0);k.add(box(1.0,.012,.04),'neon',CYAN,0,.0,.3);k.add(box(1.0,.012,.04),'neon',CYAN,0,0,-.3);
+  for(const z of[.5,-.5])k.add(cylC(.07,.07,.08,12).rotateZ(-Math.PI/2),'neon',0xb06bff,-.42,0,z);k.add(box(.14,.012,.14),'cloth',pc,0,.05,0)}}));
+ if(tier===5)for(const z of[.36,.7,-.36,-.7])propK(parts,null,.5,-.02,z,.12)}
+// antiaéreos: cañón remolcado, blindado con radar, lanzamisiles y láser
+function aaGun(parts,pc,tier){parts.body.add(mesh(k=>{
+ if(tier===5){for(const z of[.22,-.22])k.add(cylC(.09,.09,.06,14).rotateX(Math.PI/2),'rubber',TIRE,-.15,.09,z);k.add(box(.5,.06,.3),'steel',OLIVE,0,.13,0);
+  for(const a of[0,1.57,3.14,4.71])k.add(box(.32,.03,.04),'steel',OLIVE2,Math.cos(a)*.15,.11,Math.sin(a)*.15,a);k.add(cyl(.1,.12,.12,12),'steel',OLIVE,0,.22,0)}
+ else if(tier===6){runningGear(k,{L:.95,h:.2,w:.1,z:.24,n:5,col:0x5a6448});k.add(topG([[.5,-.22],[.5,.22],[-.48,.22],[-.48,-.22]],.14,.15,0),'steel',0x6a7458,0,.18,0)}
+ else if(tier===7){for(const x of[.35,0,-.3])for(const z of[.2,-.2])k.add(cylC(.09,.09,.08,14).rotateX(Math.PI/2),'rubber',TIRE,x,.09,z);k.add(box(.95,.1,.4),'steel',SAND,0,.2,0);k.add(box(.25,.2,.38),'steel',SAND,.38,.34,0);k.add(box(.06,.1,.3),'glass',0x2a3a48,.5,.38,0)}
+ else{parts.hover=true;k.add(box(.8,.12,.5),'poly',WHITE,0,.18,0);k.add(box(.8,.02,.52),'neon',CYAN,0,.12,0)}
+ k.add(box(.12,.012,.12),'cloth',pc,-.3,tier===5?.17:.33,0)}));
+ const t=pivot(tier===7?-.12:0,tier===5?.28:tier===6?.33:tier===7?.26:.25,0);parts.body.add(t);parts.turret=t;
+ t.add(mesh(k=>{
+  if(tier===5){k.add(box(.2,.12,.2),'steel',OLIVE2,0,.04,0);for(const z of[.05,-.05])for(const y of[.06,.12])barrelK(k,.45,.016,.05,y,z,DARK)}
+  else if(tier===6){k.add(box(.32,.2,.3),'steel',0x6a7458,0,.08,0);for(const z of[.2,-.2])barrelK(k,.5,.02,.08,.12,z,DARK);k.add(cylC(.12,.12,.02,16).rotateZ(Math.PI/2),'metal',LGREY,-.12,.34,0);k.add(cyl(.012,.012,.12,4),'metal',DARK,-.12,.24,0)}
+  else if(tier===7){k.add(box(.5,.24,.36,1),'steel',0xa89a70,0,.14,0,0,0,.45);for(let i=0;i<2;i++)for(let j=0;j<2;j++)k.add(cylC(.05,.05,.02,10).rotateZ(Math.PI/2),'metal',DARK,.24,.18+i*.11-.05,-.08+j*.16)}
+  else{k.add(sph(.16,14,10),'poly',LGREY,0,.1,0);barrelK(k,.4,.04,.08,.12,0,0x9aa0a8,'poly');k.add(sph(.05,10,8),'neon',0xff5050,.5,.12,0)}}))}
+// submarinos (casi sumergidos: solo asoma la vela) y acorazados con torres triples, chimeneas y puente escalonado
+function subK(parts,pc,tier){parts.ship=true;parts.sub=true;parts.legs=[];parts.body.add(mesh(k=>{const col=tier>=7?0x2e3238:tier===6?0x1e2024:0x4a5058,L=tier>=6?2.2:1.9,R=tier>=6?.18:.15;
+ k.add(cylC(R,R,L*.62,18).rotateZ(-Math.PI/2),'steel',col,.05,0,0);k.add(sph(R,18,12).scale(1.6,1,1),'steel',col,.05+L*.31,0,0);
+ k.add(cylC(R,R*.25,L*.36,18).rotateZ(-Math.PI/2),'steel',col,.05-L*.31-L*.18,0,0);
+ const sx=tier===5?.2:.3,sh=tier>=7?.24:.3;k.add(topG([[.24,-.055],[.24,.055],[-.12,.07],[-.2,0],[-.12,-.07]],sh,tier>=7?.25:.08,.006),'steel',col,sx,R*.7,0);
+ for(const z of[.16,-.16])k.add(box(.1,.012,.14),'steel',col,sx+.04,R*.7+sh*.62,z);for(const [x,h] of[[.02,.18],[.08,.13],[-.04,.1]])k.add(cyl(.009,.009,h,5),'metal',DARK,sx+x,R*.7+sh+h/2,0);
+ const tx=.05-L*.62;for(const r of[0,Math.PI/2])k.add(box(.16,.012,.3).rotateX(r),'steel',col,tx+.08,0,0);k.add(cylC(.02,.02,.05,8).rotateZ(-Math.PI/2),'metal',BRASS,tx-.02,0,0);for(let i=0;i<4;i++)k.add(box(.006,.11,.03).rotateX(i*Math.PI/4),'metal',BRASS,tx-.05,0,0);
+ if(tier===5){k.add(box(.12,.05,.08),'metal',DARK,.75,R+.02,0);barrelK(k,.22,.014,.78,R+.05,0,DARK);k.add(box(L*.5,.012,.14),'planks',0x6a6458,.2,R-.005,0)}
+ if(tier===6)for(let i=0;i<6;i++)k.add(cyl(.025,.025,.01,8),'metal',DARK,-.35-i*.07,R,0);
+ if(tier===8)k.add(box(L*.7,.015,.03),'neon',CYAN,0,R+.01,0);k.add(box(.1,.012,.1),'cloth',pc,sx,R*.7+sh+.005,0)}))}
+function turretK(k,x,y,dir,n,col,big){const s=big?1:.75;k.add(cyl(.11*s,.13*s,.05,16),'steel',col,x,y,0);k.add(topG([[.14*s,-.1*s],[.14*s,.1*s],[-.12*s,.12*s],[-.16*s,0],[-.12*s,-.12*s]].map(([a,b])=>[a*dir,b]),.08*s,.15,0),'steel',col,x,y+.04,0);
+ for(let i=0;i<n;i++){const z=(i-(n-1)/2)*.05*s;const len=.42*s;k.add(new TH.CylinderGeometry(.012*s,.014*s,len,8).rotateZ(-Math.PI/2*dir),'metal',DARK,x+dir*(.12*s+len/2),y+.085*s,z)}}
+function battleship(parts,pc,tier){parts.ship=true;parts.legs=[];parts.body.add(mesh(k=>{const L=3.2,col=tier===8?0xe8ecef:tier===7?0x4a5058:0x78808a,deck=tier===5?0x8a7a5e:0x5a6068;
+ hullK(k,L,.62,.34,col,deck);k.add(box(L*.8,.012,.63),'metal',0x3a3e44,-.1,.06,0);
+ if(tier===5){// acorazado clásico: dos torres a proa, una a popa, puente escalonado, dos chimeneas
+  turretK(k,1.05,.36,1,3,col,true);turretK(k,.7,.46,1,3,col,true);k.add(cyl(.12,.14,.1,16),'steel',col,.7,.36,0);turretK(k,-1.1,.36,-1,3,col,true);
+  k.add(box(.8,.12,.46),'steel',col,0,.42,0);k.add(box(.5,.12,.36),'steel',col,.12,.54,0);k.add(box(.3,.14,.26),'steel',col,.22,.67,0);k.add(box(.16,.16,.18),'steel',col,.26,.82,0);k.add(box(.2,.04,.24),'glass',0x2a3a48,.27,.88,0);
+  k.add(cyl(.006,.01,.55,5),'metal',DARK,.28,1.1,0);k.add(box(.006,.006,.3),'metal',DARK,.28,1.18,0);for(const x of[-.12,-.38])k.add(cyl(.07,.08,.32,12),'steel',col,x,.6,0);k.add(cyl(.005,.012,.45,5),'metal',DARK,-.6,.7,0);
+  for(const x of[.3,0,-.3,-.6])for(const z of[.28,-.28]){k.add(cyl(.03,.035,.04,10),'steel',col,x,.4,z);barrelK(k,.1,.006,x+.02,.43,z,DARK)}}
+ else if(tier===6){// crucero lanzamisiles: un cañón, celdas de misiles y radares planos
+  turretK(k,1.1,.36,1,1,col,false);for(let i=0;i<4;i++)for(const z of[.1,-.1])k.add(box(.08,.012,.08),'metal',DARK,.75-i*.1,.355,z);
+  k.add(box(.9,.22,.44),'panel',col,-.1,.46,0);k.add(topG([[.25,-.18],[.25,.18],[-.2,.18],[-.2,-.18]],.3,.35,0),'panel',col,0,.56,0);for(const z of[.16,-.16])k.add(box(.1,.12,.01),'metal',0x4a5058,.12,.72,z);
+  k.add(cyl(.006,.01,.5,5),'metal',DARK,0,1.05,0);k.add(cyl(.07,.08,.24,12),'steel',col,-.45,.66,0);for(let i=0;i<6;i++)for(const z of[.1,-.1])k.add(box(.08,.012,.08),'metal',DARK,-.75-i*.1,.355,z)}
+ else if(tier===7){// buque arsenal: cubierta plana llena de celdas
+  k.add(box(2.1,.1,.5),'panel',col,-.1,.38,0);for(let i=0;i<12;i++)for(const z of[.14,-.14])k.add(box(.12,.012,.1),'metal',DARK,-1.0+i*.17,.435,z);k.add(topG([[.3,-.2],[.3,.2],[-.2,.2],[-.2,-.2]],.34,.4,0),'panel',col,.75,.43,0)}
+ else{k.add(box(1.5,.26,.42),'poly',WHITE,-.2,.44,0);k.add(box(1.7,.02,.44),'neon',CYAN,-.2,.32,0);for(const [x,d] of[[.95,1],[-1.05,-1]]){k.add(sph(.15,14,10),'poly',LGREY,x,.44,0);k.add(new TH.CylinderGeometry(.04,.045,.55,10).rotateZ(-Math.PI/2*d),'poly',0x9aa0a8,x+d*.38,.47,0)}}
+ flagK(k,pc,-1.45,.34,0,.4);k.add(box(.2,.012,.2),'cloth',pc,.45,.355,0)}))}
 // qué edad concreta usa cada tipo (null = modelo clásico)
-const STEPS={scout:[5,6,7,8],knight:[5,6,7,8],ram:[3,4,5,6,7,8],mangonel:[3,4,5,6,7,8],trade:[3,4,5,7,8],galley:[3,4,5,6,7,8],transport:[3,4,5,7],fishship:[4,5,7]};
+const STEPS={fighter:[5,6,7,8],bomber:[5,6,7,8],aagun:[5,6,7,8],sub:[5,6,7,8],battleship:[5,6,7,8],scout:[5,6,7,8],knight:[5,6,7,8],ram:[3,4,5,6,7,8],mangonel:[3,4,5,6,7,8],trade:[3,4,5,7,8],galley:[3,4,5,6,7,8],transport:[3,4,5,7],fishship:[4,5,7]};
 A.unitEraTier=function(type,age){const s=STEPS[type];if(!s)return null;let t=null;for(const v of s)if(age>=v)t=v;return t};
 A.unitEra=function(type,o,age){const tier=A.unitEraTier(type,age);if(tier==null)return null;const g=new TH.Group(),body=new TH.Group();g.add(body);const parts={body};const pc=PC[o%8];
  switch(type){
@@ -214,8 +304,13 @@ A.unitEra=function(type,o,age){const tier=A.unitEraTier(type,age);if(tier==null)
  case'ram':if(tier<=5)cannon(parts,pc,tier,'ram');else if(tier===6)spArt(parts,pc);else if(tier===7)rocketTruck(parts,pc,7);else railgun(parts,pc,false);break;
  case'mangonel':if(tier<=5)cannon(parts,pc,tier,'mangonel');else if(tier===6)rocketTruck(parts,pc,6);else if(tier===7)smartArt(parts,pc);else railgun(parts,pc,true);break;
  case'trade':if(tier<=4)wagon(parts,pc,tier);else if(tier<=7)truck(parts,pc,tier);else cargoDrone(parts,pc);break;
+ case'fighter':fighter(parts,pc,tier);break;
+ case'bomber':bomber(parts,pc,tier);break;
+ case'aagun':aaGun(parts,pc,tier);break;
+ case'sub':subK(parts,pc,tier);break;
+ case'battleship':battleship(parts,pc,tier);break;
  default:shipEra(parts,pc,type,tier)}
  const ring=new TH.Mesh(new TH.RingGeometry(.3,.37,32).rotateX(-Math.PI/2),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9,depthWrite:false}));ring.position.y=.03;ring.visible=false;ring.renderOrder=2;g.add(ring);parts.ring=ring;
- ring.scale.setScalar(type==='galley'||type==='transport'?2.3:type==='fishship'?1.6:1.6);
+ ring.scale.setScalar(type==='battleship'?3:type==='galley'||type==='transport'||type==='sub'||type==='bomber'?2.3:type==='fishship'||type==='fighter'?1.6:1.6);
  g.userData.parts=parts;g.userData.era=tier;return g};
 })(window);
