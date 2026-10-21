@@ -623,7 +623,7 @@ R.render=function(dt,G){frame++;dynRes(dt);ART.timeU.value+=dt;{const tr=tierOf(
   if(CHR&&CHR.ok)CHR.frame(view.dist>48);
   if(frame%6===0)natLod();if(falls.length&&frame%5===0){for(let k=0;k<2;k++){const f=falls[Math.floor(Math.random()*falls.length)];if(Math.abs(f[0]-view.tx)<view.dist&&Math.abs(f[2]-view.tz)<view.dist)puff(f[0],f[1]+.05,f[2],0xe8f2f4,1,{spread:.5,vy:.25,life:.9,grow:2.4,size:.9})}}
   drawProj(G);updFx(dt);updFx2(dt);
-  let ch=false;const n=MW*MH;for(let i=0;i<n;i++){const tgt=G.vis[i]?1:(G.exp[i]?.42:0),c=fogCur[i];if(c!==tgt){const d=tgt-c,s=dt*3.5;fogCur[i]=Math.abs(d)<s?tgt:c+Math.sign(d)*s;ch=true}}if(ch)writeFog();
+  let ch=false;const n=MW*MH;const rv=R.reveal;for(let i=0;i<n;i++){const tgt=rv||G.vis[i]?1:(G.exp[i]?.42:0),c=fogCur[i];if(c!==tgt){const d=tgt-c,s=dt*3.5;fogCur[i]=Math.abs(d)<s?tgt:c+Math.sign(d)*s;ch=true}}if(ch)writeFog();
   const a=flagGeo.attributes.position;for(let i=0;i<a.count;i++){const x=flagBase[i*3];a.setZ(i,Math.sin(x*9-frame*.12)*.05*x*2)}a.needsUpdate=true;
   if(waterMat){waterMat.normalMap.offset.x=(frame*.0004)%1;waterMat.normalMap.offset.y=(frame*.00025)%1}
  }

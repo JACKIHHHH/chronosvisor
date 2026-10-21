@@ -112,8 +112,14 @@ const ALLT=Object.keys(TECH);
 const DIFF={
  easy:{name:'Fácil',tick:2,vil:20,bar:12,ageV:18,first:720,interval:300,wave:4,towers:0,techs:['wheel','forge','axe','gillnets'],counter:false,maxAge:3,siege:false,raid:false,monks:0,fish:2,galleys:2,castle:false,market:false,wonder:false,relics:false,bell:false},
  normal:{name:'Normal',tick:1,vil:28,bar:10,ageV:20,first:480,interval:220,wave:7,towers:1,techs:['wheel','handcart','plow','axe','pick','gillnets','forge','fletch','mail','masonry','u_militia','u_archer','u_galley'],counter:true,maxAge:6,siege:true,raid:false,monks:1,fish:4,galleys:5,castle:true,market:true,wonder:false,relics:true,bell:true},
- hard:{name:'Difícil',tick:.6,vil:34,bar:8,ageV:22,first:380,interval:170,wave:9,towers:2,techs:ALLT,counter:true,maxAge:8,siege:true,raid:true,monks:3,fish:6,galleys:8,castle:true,market:true,wonder:true,relics:true,bell:true}
+ hard:{name:'Difícil',tick:.6,vil:34,bar:8,ageV:22,first:380,interval:170,wave:9,towers:2,techs:ALLT,counter:true,maxAge:8,siege:true,raid:true,monks:3,fish:6,galleys:8,castle:true,market:true,wonder:true,relics:true,bell:true},
+ expert:{name:'Muy difícil',tick:.4,vil:40,bar:7,ageV:24,first:330,interval:145,wave:10,towers:3,techs:ALLT,counter:true,maxAge:8,siege:true,raid:true,monks:3,fish:7,galleys:9,castle:true,market:true,wonder:true,relics:true,bell:true,gb:1.2}
 };
+for(const k in DIFF)DIFF[k].key=k;
+// personalidades de la IA: cambian el ritmo y el estilo de cada rival
+const PERS={bal:{name:'Equilibrado'},rush:{name:'Agresivo',first:.6,interval:.75,wave:-4,vil:-4,towers:-9,raid:true,rush:true},boom:{name:'Económico',first:1.35,interval:1.1,wave:4,vil:6,ageV:-2},turtle:{name:'Defensivo',first:1.25,wave:2,towers:3,castle:true,interval:1.15,turtle:true}};
+function persD(D,k){const P_=PERS[k];if(!P_||k==='bal')return D;const o=Object.assign({},D);if(P_.first)o.first=D.first*P_.first;if(P_.interval)o.interval=D.interval*P_.interval;
+ if(P_.wave)o.wave=Math.max(3,D.wave+P_.wave);if(P_.vil)o.vil=D.vil+P_.vil;if(P_.ageV)o.ageV=D.ageV+P_.ageV;if(P_.towers)o.towers=Math.max(0,D.towers+P_.towers);if(P_.raid&&D.key!=='easy')o.raid=true;if(P_.castle&&D.key!=='easy')o.castle=true;if(P_.turtle)o.turtle=true;if(P_.rush)o.rush=true;return o}
 const CONVT=4.5;
 // poderes de era: ataques especiales con coste en oro y tiempo de recarga (s)
 const POWERS={
@@ -239,7 +245,7 @@ function uRange(u,o){const t=u.type||u;o=o??u.owner;const d=gd(t,o);let r=d.rang
 function uBonus(t,o,cls){const b=gd(t,o).bonus;let v=b&&b[cls]||0;if(t==='spear'&&cls==='cav'&&genUp(o,t))v+=UPG.spear.bcav;return v}
 function uSpeed(u){const d=gd(u.type,u.owner);let s=d.speed;{const w=wxK();s*=U[u.type].air?(w.air||1):U[u.type].naval?(w.sea||1):w.sp}if(u.type==='villager'){if(tech(u.owner,'wheel'))s*=1.1;if(tech(u.owner,'handcart'))s*=1.1;if(tech(u.owner,'motor'))s*=1.2}if(u.type==='monk'&&tech(u.owner,'fervor'))s*=1.15;if((d.cls==='inf'||d.cls==='arc')&&civ(u.owner)==='iberos'&&ageOf(u.owner)>=4)s*=1.15;const g=u.o&&u.o.gs;return g?Math.min(s,g):s}
 function carryCap(o,type){return type==='fishship'?15:CAP+(tech(o,'wheel')?5:0)+(tech(o,'handcart')?5:0)+(tech(o,'motor')?10:0)}
-function gatherRate(o,rt,farm,fish){const p=P(o);let r=fish?GR.fish:farm?GR.farm:GR[rt];
+function gatherRate(o,rt,farm,fish){const p=P(o);let r=fish?GR.fish:farm?GR.farm:GR[rt];if(p.ai&&DIFF[G.cfg.diff]&&DIFF[G.cfg.diff].gb)r*=DIFF[G.cfg.diff].gb;
  if(fish){if(tech(o,'gillnets'))r*=1.25}
  else if(farm){if(tech(o,'plow'))r*=1.2;if(p.civ==='francos')r*=1.25}
  else if(rt==='wood'&&tech(o,'axe'))r*=1.2;else if((rt==='gold'||rt==='stone')&&tech(o,'pick'))r*=1.2;return r*(p.mult||1)*(1+.08*Math.max(0,p.age-2))}
@@ -865,7 +871,7 @@ function coastTarget(from,tg){// casilla de agua junto a la costa enemiga más c
   if(!adj)continue;const d=Math.hypot(x*T-tg.x,y*T-tg.y);if(d<bd){bd=d;best={wx:(x+.5)*T,wy:(y+.5)*T,lx:(adj[0]+.5)*T,ly:(adj[1]+.5)*T}}}
  return best}
 function aiThink(p,A){
- const me=p.i,D=DIFF[G.cfg.diff];
+ const me=p.i,D=persD(DIFF[G.cfg.diff],A.pers);
  const blds=G.bl.filter(e=>!e.dead&&e.owner===me),units=G.ul.filter(e=>!e.dead&&e.owner===me);
  const free_=units.filter(u=>!u.gar);
  const vills=free_.filter(u=>u.type==='villager'),army=free_.filter(u=>U[u.type].atk>0&&u.type!=='villager'&&!U[u.type].naval),monks=free_.filter(u=>u.type==='monk');
@@ -899,6 +905,7 @@ function aiThink(p,A){
   for(const f of fishers)if(f.o.t==='idle'){const r=findRes('food',f.x,f.y,30*T,me,false,0,true);if(r)order(f,{t:'gather',id:r.id,rt:'food',s:'go'})}
   if(p.age>=1&&(isl||galleys.length<2)&&galleys.length<(isl?D.galleys:2)&&dock.q.length<2&&canAfford(p,U.galley.cost)&&woodOK(U.galley.cost)&&!saving)enqueue(dock,'galley');
   if(p.age>=5&&dock.q.length<2&&!saving){const ecn=enemyComp(me);if(isl||ecn.ship>2){const subs=ships.filter(u=>u.type==='sub').length,bs=ships.filter(u=>u.type==='battleship').length;const want=ecn.ship>subs*2&&subs<6?'sub':bs<(isl?3:1)?'battleship':null;if(want&&canAfford(p,U[want].cost))enqueue(dock,want)}}}
+ if(D.turtle&&p.age>=1&&vills.length>=14&&has('tower').length<Math.min(D.towers,1+p.age*2)&&!building('tower')&&canAfford(p,B.tower.cost)){const en=enemyBase(me,home);if(en){const a=Math.atan2(en.y-home.y,en.x-home.x)+(rnd()-.5)*1.6,d=(7+rnd()*4)*T;aiBuild(p,'tower',{x:home.x+Math.cos(a)*d,y:home.y+Math.sin(a)*d},2,6,vills)}}
  if(p.age>=1){
   if(!has('range').length){if(!building('range'))aiBuild(p,'range',home,5,13,vills)}
   else if(!has('smith').length&&D.techs.length>4){if(!building('smith'))aiBuild(p,'smith',home,5,13,vills)}
@@ -925,7 +932,7 @@ function aiThink(p,A){
  const ec=enemyComp(me),cnt=t=>units.filter(u=>u.type===t).length;
  const rich=!saving||p.res.food>AGECOST[Math.min(1,p.age)].food+200;
  const invading=isl&&A.attacking;
- const capArmy=p.age===0&&!(A.hit&&G.t-A.hit.t<30)?(D.raid?5:3):1e9;
+ const capArmy=p.age===0&&!(A.hit&&G.t-A.hit.t<30)?(D.rush?A.wave+1:D.raid?5:3):1e9;
  for(const b of blds){const d=B[b.type];if(army.length>=capArmy)break;if(b.type==='tc'||b.type==='dock'||b.type==='market'||!d.trains||b.bp<1||b.q.length>=2)continue;
   const opts=trainsOf(b).filter(t=>unitAvail(p,t)&&afford(unitCost(me,t))&&(rich||!unitCost(me,t).food));if(!opts.length)continue;
   let best=null,bw=-1;for(const t of opts){let w=1+rnd()*.6;
@@ -952,13 +959,13 @@ function aiThink(p,A){
  const threat=intr.filter(e=>e.type!=='villager'&&gd(e.type,e.owner).atk>0).length;
  if(D.bell){if(threat>=3&&army.length<threat&&!p.bell&&G.t-(A.bellT||-99)>30){ringBell(me);A.bellT=G.t}
   else if(p.bell&&((threat<2||army.length>=threat)&&G.t-(A.bellT||0)>15||G.t-(A.bellT||0)>60)){ringBell(me);A.bellT=G.t}}
- if(intr.length||(recent&&A.hit.bld&&D!==DIFF.easy)){const tgts=intr.length?intr:null;
+ if(intr.length||(recent&&A.hit.bld&&D.key!=='easy')){const tgts=intr.length?intr:null;
   for(const a of army.concat(monks)){if(a.o.t==='atk'||a.o.t==='conv'||a.o.t==='gar')continue;
    if(tgts){let n=null,nd=1e9;for(const e of tgts){if(U[a.type].bldOnly)break;const dd=Math.hypot(e.x-a.x,e.y-a.y);if(dd<nd){nd=dd;n=e}}if(n&&nd<30*T)order(a,a.type==='monk'?{t:'conv',id:n.id}:{t:'atk',id:n.id})}
    else order(a,{t:'amove',x:A.hit.x,y:A.hit.y})}
   return}
  // poderes de era: contra el grupo enemigo más denso cerca de casa o contra su base
- if(!A.passive&&p.age>=3&&G.t>Math.max(A.pwT||0,D===DIFF.easy?600:360)){A.pwT=G.t+15+rnd()*15+(D===DIFF.easy?40:D===DIFF.hard?0:15);const av=Object.keys(POWERS).filter(k=>POWERS[k].age<=p.age&&!(D===DIFF.easy&&(k==='mis'||k==='orb'))&&!((p.pw||{})[k]>G.t)&&canAfford(p,POWERS[k].cost)&&p.res.gold>POWERS[k].cost.gold+150);
+ if(!A.passive&&p.age>=3&&G.t>Math.max(A.pwT||0,D.key==='easy'?600:360)){A.pwT=G.t+15+rnd()*15+(D.key==='easy'?40:D.key==='normal'?15:0);const av=Object.keys(POWERS).filter(k=>POWERS[k].age<=p.age&&!(D.key==='easy'&&(k==='mis'||k==='orb'))&&!((p.pw||{})[k]>G.t)&&canAfford(p,POWERS[k].cost)&&p.res.gold>POWERS[k].cost.gold+150);
   if(av.length){const k=av[av.length-1],W=POWERS[k];let best=null,bs=0;
    if(k==='mis'||k==='orb'){for(const b of G.bl){if(b.dead||!isEnemy(me,b.owner)||B[b.type].wall)continue;const ntc=b.type==='tc'?G.bl.filter(o=>!o.dead&&o.owner===b.owner&&o.type==='tc').length:0;const v=(b.type==='castle'?6:b.type==='tc'?(ntc>1||G.t>1500?4:.5):b.type==='wonder'?9:B[b.type].trains?2:1);if(v>bs){bs=v;best=b}}}
    else{const en=G.ul.filter(e=>act(e)&&isEnemy(me,e.owner)&&e.type!=='villager'&&!U[e.type].air);for(const c of en){let n=0;for(const e of en)if(Math.abs(e.x-c.x)<W.r*T&&Math.abs(e.y-c.y)<W.r*T)n++;const near=Math.hypot(c.x-home.x,c.y-home.y)<25*T;const sc=n*(near?1.5:1);if(sc>bs){bs=sc;best=c}}if(bs<6)best=null}
@@ -979,7 +986,7 @@ function aiThink(p,A){
   if(cav.length>=2){let tv=null,td=1e9;for(const e of G.ul){if(!act(e)||e.type!=='villager'||!isEnemy(me,e.owner)||!sameLand(cav[0],e))continue;const d=Math.hypot(e.x-home.x,e.y-home.y);if(d<td){td=d;tv=e}}
    if(tv){formMove(cav,tv.x,tv.y,true);A.raidT=G.t+150}}}
 }
-function aiInvasion(p,A,army,transports,dock,galleys){const I=A.inv,D=DIFF[G.cfg.diff];const homeL=G.land[tidx(G.bl.find(b=>!b.dead&&b.owner===p.i&&b.type==='tc')||dock)];army=army.filter(a=>a.gar||G.land[tidx(a)]===homeL);
+function aiInvasion(p,A,army,transports,dock,galleys){const I=A.inv,D=persD(DIFF[G.cfg.diff],A.pers);const homeL=G.land[tidx(G.bl.find(b=>!b.dead&&b.owner===p.i&&b.type==='tc')||dock)];army=army.filter(a=>a.gar||G.land[tidx(a)]===homeL);
  if(!transports.length||!dock||G.t-I.t0>150){A.inv=null;A.next=G.t+60;return}
  if(I.st==='load'){if(!I.wait){I.wait=shoreWait(dock,homeL);if(!I.wait){A.inv=null;return}for(const s of transports)order(s,{t:'move',x:(I.wait[0]+.5)*T,y:(I.wait[1]+.5)*T})}
   let k=0;for(const a of army){if(a.gar||a.o.t==='gar')continue;const s=transports[Math.floor(k/10)%transports.length];k++;if(canEnter(a,s))order(a,{t:'gar',id:s.id})}
@@ -1142,7 +1149,7 @@ function newGame(cfg,s){cfg=Object.assign({diff:'normal',map:'continental',size:
  spec.forEach((sp,i)=>{const c=sp.civ;used[c]=(used[c]||0)+1;
   G.players.push({i,name:sp.name||(CIVS[c].name+(used[c]>1?' II':'')),ai:!!sp.ai,team:sp.team,civ:c,mult:1,res:{food:200,wood:200,gold:100,stone:200},age:0,aging:false,pop:0,cap:0,tech:{},tq:{},up:{},bell:false,out:false,autoFarm:true,
    stats:{trained:0,killed:0,lost:0,razed:0,built:0,gathered:0,converted:0}});
-  if(sp.ai)G.ai[i]={tick:2+i*.37,next:D.first+rnd()*60,wave:D.wave,attacking:false,passive:!!cfg.tutorial}});
+  if(sp.ai){const pk=sp.pers&&PERS[sp.pers]?sp.pers:cfg.tutorial?'bal':['bal','rush','boom','turtle'][(((s|0)>>>0)%9973+i*7)%4],DP=persD(D,pk);G.ai[i]={pers:pk,tick:2+i*.37,next:DP.first+rnd()*60,wave:DP.wave,attacking:false,passive:!!cfg.tutorial};G.players[i].pers=pk}});
  initFogArrays();
  genMap(cfg.map,G.players.length,G.players.map(p=>p.team));
  const SA=Math.max(0,Math.min(MAXAGE,cfg.startAge|0));
@@ -1309,7 +1316,7 @@ function stateText(u){if(u.gar){const c=G.ents.get(u.gar);return'Dentro de '+(c?
  case'heal':return'Curando';case'conv':return u.faith<1?'Recuperando fe para convertir':'Convirtiendo';case'gar':return u.relic?'Llevando la reliquia al monasterio':'Buscando refugio';
  case'relic':return'Yendo a por la reliquia';case'trade':return'Comerciando';case'unload':return'Navegando para desembarcar';default:return u.relic?'Lleva una reliquia':'Inactivo'}}
 
-root.Imperia={FORMS,WX,get wx(){return G&&G.wx||'clear'},POWERS,canHitT:(a,b)=>canHit(a,b),subSeen,canAA,score,goSolo,scnStatus,scnDef,visType,UUM,T,get MW(){return MW},get MH(){return MH},get NN(){return NN},get POPMAX(){return POPMAX},CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
+root.Imperia={PERS,FORMS,WX,get wx(){return G&&G.wx||'clear'},POWERS,canHitT:(a,b)=>canHit(a,b),subSeen,canAA,score,goSolo,scnStatus,scnDef,visType,UUM,T,get MW(){return MW},get MH(){return MH},get NN(){return NN},get POPMAX(){return POPMAX},CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
  newGame,update,get G(){return G},exec,hash,setMe,canAfford,unitAvail,bldAvail,techState,canPlace,wallLine,pickAt,isVisible,stateText,entDist,idx:(x,y)=>y*MW+x,hAt,hAtT,realCells:()=>G&&G.real&&root.IMPERIA_MAPS&&root.IMPERIA_MAPS[G.real]?realCells(G.real,MW,MH):null,
  isAlly,isEnemy,uAtk,uArmor,uRange,uSpeed,uMaxHp,uName,bArmor,bAtk,bRange,unitCost,trainTime,carryCap,convTime,trainsOf,tradeGold,garCap,contents,canEnter,
  serialize,deserialize,formMove,_dbg:{mkUnit,mkBld,applyTech,order,enter,kill}};

@@ -294,6 +294,7 @@ window.addEventListener('keydown',ev=>{AU.init();
  if(rebinding){ev.preventDefault();finishRebind(ev);return}
  if(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)){if(ev.key==='Escape')document.activeElement.blur();return}
  keys[ev.key]=true;const k=keyOf(ev),K=opts.keys;
+ if(cine&&(ev.key==='Escape'||ev.key===' '||ev.key==='Enter')){ev.preventDefault();endCine();return}
  if(ev.key==='Escape'){ev.preventDefault();if(!$('tree').hidden){$('tree').hidden=true;return}if(!$('opts').hidden){closeOpts();return}if(!$('slots').hidden){$('slots').hidden=true;return}
   if(mode!=='play'||G.over)return;if(bm){bm=null;wallDrag=null;R.setGhost(null);cmdSig=null}else if(pwmode){pwmode=null;document.body.classList.remove('targeting');drawPowers(true)}else if(amode||pmode){amode=false;pmode=false;cmdSig=null}else if(!$('pause').hidden)resume();else if(sel.length)setSel([]);else pause();return}
  if(mode!=='play'||G.over||!$('pause').hidden)return;
@@ -371,7 +372,7 @@ function placeMenuArt(){const W=innerWidth,H=innerHeight,iw=2576,ih=1438,s=Math.
 window.addEventListener('resize',placeMenuArt);
 function menuStage(st){$('mTitle').hidden=st!=='title';$('mSetup').hidden=st!=='setup';$('menu').classList.remove('fade');$('menu').classList.toggle('insetup',st==='setup');placeMenuArt()}
 function quitApp(){try{window.webkit.messageHandlers.nativeApp.postMessage({cmd:'quit'})}catch(e){window.close()}}
-function showMenu(){menuStage('title');if(Net&&Net.role)Net.leave();mode='menu';paused=false;tut.on=false;$('tut').hidden=true;$('hud').hidden=true;hideScreens();$('menu').hidden=false;$('tip').hidden=true;
+function showMenu(){menuStage('title');if(cine){cine=null;R.reveal=false;document.body.classList.remove('cine');$('cine').classList.remove('on');$('cine').hidden=true}if(Net&&Net.role)Net.leave();mode='menu';paused=false;tut.on=false;$('tut').hidden=true;$('hud').hidden=true;hideScreens();$('menu').hidden=false;$('tip').hidden=true;
  if(!G||!G.menuDemo){G=I.newGame({map:'continental',size:'small',nAI:1,diff:'normal',civ:cfg.civ},Math.floor(Math.random()*1e9));G.menuDemo=true;MW=I.MW;MH=I.MH;G.vis.fill(1);G.exp.fill(1);R.build(G);R.view.tdist=R.view.dist=21}sel=[];R.setSelection([]);R.setGhost(null)}
 function showEnd(win,how){paused=true;if(!G.replay)recSave();sfx(win?'win':'lose');const M=G.cfg.scn&&campM(G.cfg.scn);say(M?(win?'Misión cumplida':'Misión fracasada'):win?'¡Victoria!':'Hemos sido derrotados',true);
  $('endEye').textContent='Fin de la partida · '+DIFF[G.cfg.diff].name+' · '+MAPS[G.cfg.map].name+(mp()?' · en red':'');
@@ -544,7 +545,24 @@ function renderCamp(){$('campList').innerHTML=CAMP.map((m,i)=>`<button class="cm
 $('campList').onclick=ev=>{const b=ev.target.closest('.cm');if(!b||b.disabled)return;sfx('click');campSel=CAMP[+b.dataset.i];renderCamp()};
 $('campPlay').onclick=()=>{sfx('click');playMission(campSel)};$('campBack').onclick=()=>{sfx('click');showMenu()};
 function playMission(m){campSel=m;$('menu').classList.add('fade');hideScreens();setTimeout(()=>{startGame({map:m.map,size:m.size,diff:m.diff,startAge:m.startAge,reveal:m.reveal,win:'scn',scn:m.id,players:m.players,civ:m.players[0].civ,tutorial:false});
- m.brief.forEach((p,i)=>setTimeout(()=>{if(mode==='play'&&G.cfg.scn===m.id)toast(p,false,'chatmsg')},400+i*4500));say(m.title+'. '+m.brief[1],true)},380)}
+ startCine(m)},380)}
+// cinemática de inicio de misión: vuelo de cámara sobre el mapa con franjas de cine y el texto de la crónica
+let cine=null;
+function startCine(m){const el=$('cine'),b=G.bases[G.me||0]||G.bases[0];if(!el||!b){return}
+ const v=R.view;cine={m,t:0,i:0,ch:0,lines:m.brief.slice(),cx:b.cx,cy:b.cy,yaw0:v.yaw,d0:v.tdist,line:''};
+ el.querySelector('.ttl small').textContent=m.year+' · '+AGES[m.startAge];el.querySelector('.ttl b').textContent=m.title;el.querySelector('.txt').textContent='';
+ R.reveal=true;el.hidden=false;document.body.classList.add('cine');requestAnimationFrame(()=>el.classList.add('on'));say(m.title+'. '+m.brief.join(' '),true)}
+function cineTick(dt){if(!cine)return;const c=cine,v=R.view;c.t+=dt;
+ // la cámara parte de lejos, gira alrededor de la base y baja hasta la vista de juego
+ const T_=Math.max(14,c.lines.join(' ').length*.055+6),k=Math.min(1,c.t/T_),e=k*k*(3-2*k);
+ const r=(1-e)*Math.min(MW,MH)*.22;const a=c.yaw0+(1-e)*2.2;R.centerOn(c.cx+Math.sin(a)*r,c.cy+1.5+Math.cos(a)*r);v.yaw=c.yaw0+(1-e)*1.4;v.tdist=v.dist=c.d0+(1-e)*36;
+ // texto a máquina
+ const txt=$('cine').querySelector('.txt');if(c.i<c.lines.length){const L=c.lines[c.i];c.ch+=dt*38;txt.textContent=L.slice(0,c.ch|0);if(c.ch>=L.length+38*Math.max(2.2,L.length*.028)){c.i++;c.ch=0}}
+ if(k>=1&&c.i>=c.lines.length)endCine()}
+function endCine(){if(!cine)return;const c=cine;cine=null;R.reveal=false;const el=$('cine');el.classList.remove('on');document.body.classList.remove('cine');setTimeout(()=>{el.hidden=true},700);
+ const b=G.bases[G.me||0]||G.bases[0];R.centerOn(b.cx,b.cy+1.5);R.view.yaw=c.yaw0;R.view.tdist=c.d0;
+ c.m.brief.forEach((p,i)=>setTimeout(()=>{if(mode==='play'&&G.cfg.scn===c.m.id)toast(p,false,'chatmsg')},400+i*4500))}
+$('cine').onclick=()=>endCine();
 function drawScn(){const el=$('scnObj'),st=G&&I.scnStatus?I.scnStatus():null;if(!st){if(!el.hidden)el.hidden=true;return}el.hidden=false;
  const M=campM(G.cfg.scn),tl=(M.lose||[]).find(l=>l.k==='time');
  const html=`<h4>${esc(M.title)}${tl?' · '+fmtT(Math.max(0,tl.t-G.t)):''}</h4>`+st.map(o=>{let pr='';if(!o.ok){if(o.n>1&&o.n!==300&&o.v>=0)pr=`${o.v} / ${o.n}`;if(o.n===300||(M.objectives[o.i].k==='survive'))pr=fmtT(Math.max(0,o.n-o.v))+' restantes';if(o.extra>1)pr=o.extra+' en pie'}
@@ -588,7 +606,7 @@ function showTree(){if(!G)return;const me=ME(),p=G.players[me],age=p.age,uu=CIVS
 let treeK='tree';
 function showScore(){const me=ME(),meT=G.players[me].team,vis=p=>p.team===meT||G.cfg.reveal==='all'||!!G.replay;
  const rows=G.players.map(p=>{const army=G.ul.filter(e=>!e.dead&&e.owner===p.i&&e.type!=='villager'&&U[e.type].atk>0).length,v=vis(p);
-  return`<tr><td class="row"><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${PCOLORS[p.i]};margin-right:6px"></i>${esc(pName(p.i))}</td><td>${CIVS[p.civ].name}</td><td>${p.out?'Derrotado':AGES[p.age]}</td><td>${v?p.pop:'?'}</td><td>${v?army:'?'}</td><td>${I.score(p)}</td><td>${p.stats.killed}</td><td>${p.stats.lost}</td><td>${p.team+1}</td></tr>`}).join('');
+  return`<tr><td class="row"><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${PCOLORS[p.i]};margin-right:6px"></i>${esc(pName(p.i))}</td><td>${CIVS[p.civ].name}${p.ai&&p.pers&&I.PERS[p.pers]?` <span style="opacity:.6">· ${I.PERS[p.pers].name}</span>`:''}</td><td>${p.out?'Derrotado':AGES[p.age]}</td><td>${v?p.pop:'?'}</td><td>${v?army:'?'}</td><td>${I.score(p)}</td><td>${p.stats.killed}</td><td>${p.stats.lost}</td><td>${p.team+1}</td></tr>`}).join('');
  $('treeTab').innerHTML='<tr><th>Jugador</th><th>Civilización</th><th>Edad</th><th>Población</th><th>Ejército</th><th>Puntos</th><th>Bajas causadas</th><th>Bajas sufridas</th><th>Equipo</th></tr>'+rows;
  for(const b of $('treeTabs').children)b.classList.toggle('on',b.dataset.k==='score');treeK='score'}
 $('treeTabs').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;sfx('click');if(b.dataset.k==='score')showScore();else showTree()};
@@ -608,8 +626,8 @@ function loop(now,id){if(id!=null&&id!==chain)return;
   if(G){
    if(menuArt()){}else if(mode==='menu'){I.update(dt);G.vis.fill(1);G.exp.fill(1);G.ev.length=0;menuA+=dt*.02;R.centerOn(MW/2+Math.cos(menuA)*MW*.1,MH/2+Math.sin(menuA)*MH*.1);R.view.yaw=Math.PI/4+menuA*.6}
    else if(mp()){if(!G.over)Net.pump(dt,runTurn)}
-   else if(!paused&&!G.over){simAcc+=dt*speed;let n=0;const lim=G.replay?40:16;while(simAcc>=1/30&&n<lim){if(G.replay)replayCmds();I.update(1/30);if(REC)REC.tick++;simAcc-=1/30;n++}if(n>=lim)simAcc=0}
-   if(mode==='play'){handleEvents();if(!paused||mp())camKeys(dt);
+   else if(!paused&&!G.over&&!cine){simAcc+=dt*speed;let n=0;const lim=G.replay?40:16;while(simAcc>=1/30&&n<lim){if(G.replay)replayCmds();I.update(1/30);if(REC)REC.tick++;simAcc-=1/30;n++}if(n>=lim)simAcc=0}
+   if(mode==='play'){handleEvents();if(cine)cineTick(dt);else if(!paused||mp())camKeys(dt);
     if(bm&&$('pause').hidden)R.setGhost(bm,ghostTiles());else R.setGhost(null)}
   }
   if(!document.hidden&&mode!=='menu'){R.render(dt,G);drawOverlay()}
