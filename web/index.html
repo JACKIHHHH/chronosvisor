@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Imperia</title>
+<title>Chronosvisor: La guerra de las eras</title>
 <style>
 :root{
  --panel:rgba(15,17,20,.8);--panel-2:rgba(24,27,31,.94);--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
@@ -220,6 +220,29 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
 @keyframes qpulse{50%{box-shadow:0 0 0 1px rgba(240,195,90,.8),0 0 26px rgba(240,195,90,.6)}}
 #autoFarm i{font-style:normal;font-size:11px;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--mut)}#autoFarm.on i{background:rgba(120,200,110,.25);color:#b8f0a8}
 @media (max-width:1150px){#quick{bottom:190px}#quick .qb{width:164px}}
+.logosub{font-family:var(--disp);font-size:clamp(15px,1.6vw,21px);letter-spacing:.32em;text-transform:uppercase;color:rgba(240,212,147,.82);margin-top:6px}
+.logo{font-size:clamp(40px,5.4vw,78px)!important;letter-spacing:.1em!important;white-space:nowrap}
+/* Menú principal con ilustración de fondo: el título va en la cartela del cuadro y los botones sobre la niebla */
+#menubg{position:fixed;inset:0;z-index:0;background:#07080a url(menu_bg.jpg) center/cover no-repeat;animation:bgin 1.4s ease both;transition:filter .5s}
+#menubg::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,transparent 58%,rgba(0,0,0,.42) 100%),linear-gradient(180deg,transparent 72%,rgba(6,7,9,.28))}
+@keyframes bgin{from{opacity:0;transform:scale(1.03)}}
+#menu.hasbg{background:none}
+#menu.hasbg>:where(:not(#menubg):not(.ver)){position:relative;z-index:1}
+#menu.hasbg #mSetup{margin-block:auto}
+#mSetup h1{font-size:clamp(30px,3.3vw,52px)!important;letter-spacing:.12em!important;white-space:nowrap}
+#menu.hasbg.insetup #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
+#menu.hasbg #mTitle{position:absolute;inset:0;width:auto;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;animation:none}
+#menu.hasbg #mTitle>.eyebrow,#menu.hasbg #mTitle>.lede,#menu.hasbg #mTitle>.logobar{display:none}
+#menu.hasbg #mLogoWrap{position:absolute;left:var(--bx,30%);top:var(--by,4%);width:var(--bw,40%);height:var(--bh,12%);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:mrise .9s .2s cubic-bezier(.2,.8,.2,1) both}
+#menu.hasbg #mLogoWrap .logo{font-size:calc(var(--bh,110px)*.4)!important;letter-spacing:.14em!important;margin:0;line-height:1;background:linear-gradient(180deg,#6b4a1c 0%,#3a260c 60%,#22160a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(255,250,235,.9)) drop-shadow(0 0 10px rgba(255,240,205,.5))}
+#menu.hasbg #mLogoWrap .logosub{font-size:calc(var(--bh,110px)*.13);letter-spacing:.42em;color:#6e5226;margin-top:calc(var(--bh,110px)*.07);font-weight:600}
+#menu.hasbg .mnav{position:absolute;left:50%;bottom:max(3.5vh,22px);transform:translateX(-50%);display:flex;gap:10px;margin:0;padding:12px;border-radius:6px 20px 6px 20px;background:linear-gradient(180deg,rgba(20,17,13,.72),rgba(10,10,12,.78));-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border:1px solid rgba(240,212,147,.28);box-shadow:0 20px 60px rgba(0,0,0,.5);animation:mrise .8s .35s cubic-bezier(.2,.8,.2,1) both}
+#menu.hasbg .mb{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;min-width:118px;padding:11px 14px}
+#menu.hasbg .mb:hover,#menu.hasbg .mb.hv,#menu.hasbg .mb:focus-visible{transform:translateY(-3px)}
+#menu.hasbg .mb.quit{margin-top:0}
+#menu.hasbg .mb>span{white-space:nowrap}
+#menu.hasbg>.ver{position:fixed;letter-spacing:.18em;white-space:nowrap;overflow:hidden;left:var(--vx,auto);top:var(--vy,auto);width:var(--vw,auto);height:var(--vh,auto);right:auto;bottom:auto;display:flex;align-items:center;justify-content:center;color:rgba(240,226,196,.8);font-size:calc(var(--vh,40px)*.19)}
+@media (max-width:1150px){#menu.hasbg .mb{min-width:92px;padding:9px 10px;font-size:14px}#menu.hasbg .mb small{display:none}}
 </style>
 </head>
 <body>
@@ -270,10 +293,11 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
 </div>
 <div id="tip" hidden></div>
 
-<div id="menu" class="screen" hidden>
+<div id="menu" class="screen hasbg" hidden>
+ <div id="menubg"></div>
  <div class="title" id="mTitle">
   <div class="eyebrow">Estrategia en tiempo real · 9 edades</div>
-  <h1 class="logo">IMPERIA</h1><div class="logobar"></div>
+  <div id="mLogoWrap"><h1 class="logo">CHRONOSVISOR</h1><div class="logosub">La guerra de las eras</div></div><div class="logobar"></div>
   <p class="lede">Del siglo V al año 2100: levanta tu aldea, avanza por nueve edades y conquista los reinos rivales.</p>
   <nav class="mnav">
    <button class="mb pri" data-go="play"><span>Jugar</span><small>Partida contra la IA</small></button>
@@ -282,13 +306,13 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
    <button class="mb" data-go="load"><span>Cargar partida</span><small>Ranuras guardadas</small></button>
    <button class="mb" data-go="opt"><span>Opciones</span><small>Sonido, gráficos, voz</small></button>
    <button class="mb" data-go="how"><span>Controles</span><small>Teclado y ratón</small></button>
-   <button class="mb quit" data-go="quit" id="mQuit"><span>Salir</span><small>Cerrar Imperia</small></button>
+   <button class="mb quit" data-go="quit" id="mQuit"><span>Salir</span><small>Cerrar Chronosvisor</small></button>
   </nav>
  </div>
- <div class="ver">IMPERIA 6.2</div>
+ <div class="ver">CHRONOSVISOR 6.3</div>
  <div class="card" id="mSetup" hidden>
   <div class="eyebrow">Estrategia en tiempo real</div>
-  <h1>IMPERIA</h1>
+  <h1>CHRONOSVISOR</h1>
   <p class="lede">Elige tu civilización, el mapa y a tus rivales. Nueve edades te esperan: de la madera y la paja al grafeno y los hologramas.</p>
   <div class="setup">
    <div class="lab">Civilización</div><div class="seg" id="s-civ"></div>
@@ -336,7 +360,7 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
 <div id="pause" class="screen center" hidden>
  <div class="box">
   <div class="eyebrow" id="pauseEye">Partida en pausa</div>
-  <h2>Imperia</h2>
+  <h2>Chronosvisor</h2>
   <div class="actions"><button class="btn pri" id="resume">Continuar</button><button class="btn" id="mpPause" hidden>Pausar para todos</button><button class="btn" id="saveBtn">Guardar partida</button><button class="btn" id="optBtn2">Opciones</button><button class="btn" id="restart">Reiniciar</button><button class="btn" id="resign" hidden>Rendirse</button><button class="btn" id="toMenu">Menú principal</button></div>
  </div>
 </div>
@@ -363,6 +387,7 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
    <div class="lab">Límite de fotogramas</div><div><div class="seg" id="o-cap"><button data-v="30">30 · ahorro</button><button data-v="60">60</button><button data-v="0">Sin límite</button></div><div class="hintline" style="margin-top:6px">Con 30 el portátil se calienta mucho menos y la batería dura más.</div></div>
    <div class="lab">Mostrar FPS</div><button class="tgl" id="o-fps" aria-label="Mostrar FPS"></button>
    <div class="lab">Voces</div><button class="tgl" id="o-voices" aria-label="Voces"></button>
+   <div class="lab">Colores para daltónicos</div><div><button class="tgl" id="o-cb" aria-label="Colores para daltónicos"></button><div class="hintline" style="margin-top:6px">Azul, naranja, amarillo y rosa. Se aplica al volver a abrir el juego.</div></div>
    <div class="lab">Panel de órdenes</div><div><div class="kgrid" id="keyGrid"></div><div class="hintline" style="margin-top:6px">Haz clic en una casilla y pulsa la tecla nueva. Esc cancela.</div></div>
    <div class="lab">Atajos</div><div class="klist" id="keyList"></div>
    <div></div><div><button class="btn sm" id="keyReset">Restablecer teclas</button></div>
@@ -410,7 +435,7 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
  </div>
 </div>
 
-<div id="loading">IMPERIA</div>
+<div id="loading">CHRONOSVISOR</div>
 
 <script src="three.min.js"></script>
 <script src="maps_data.js"></script>

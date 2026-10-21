@@ -1,8 +1,8 @@
 {
   "name": "imperia",
-  "productName": "Imperia",
+  "productName": "Chronosvisor",
   "version": "6.2.0",
-  "description": "Imperia — estrategia en tiempo real",
+  "description": "Chronosvisor: La guerra de las eras",
   "main": "main.js",
   "author": "Jacobo Vale",
   "license": "UNLICENSED",

@@ -18,7 +18,7 @@ const js=s=>{if(win&&!win.isDestroyed())win.webContents.executeJavaScript(s).cat
 
 function createWindow(){
  Menu.setApplicationMenu(null);
- win=new BrowserWindow({width:1440,height:900,minWidth:1024,minHeight:640,backgroundColor:'#07080a',title:'Imperia',show:false,fullscreen:!WINDOWED,autoHideMenuBar:true,
+ win=new BrowserWindow({width:1440,height:900,minWidth:1024,minHeight:640,backgroundColor:'#07080a',title:'Chronosvisor: La guerra de las eras',show:false,fullscreen:!WINDOWED,autoHideMenuBar:true,
   icon:path.join(__dirname,'icon.png'),
   webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false,spellcheck:false}});
  win.once('ready-to-show',()=>win.show());

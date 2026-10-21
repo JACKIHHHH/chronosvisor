@@ -17,4 +17,4 @@
 - [Electron](https://www.electronjs.org) (versión de Windows) — licencia MIT, © Electron contributors / GitHub Inc.; incluye Chromium (licencias en `LICENSES.chromium.html` del paquete).
 - [bonjour-service](https://github.com/onlxltd/bonjour-service) (versión de Windows) — licencia MIT.
 
-*Imperia es un proyecto independiente y no está afiliado a ninguna otra saga de estrategia ni a sus propietarios.*
+*Chronosvisor es un proyecto independiente y no está afiliado a ninguna otra saga de estrategia ni a sus propietarios.*

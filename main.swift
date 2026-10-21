@@ -73,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: w, height: h),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable],
                           backing: .buffered, defer: false)
-        window.title = "Imperia"
+        window.title = "Chronosvisor"
         window.titlebarAppearsTransparent = true
         window.appearance = NSAppearance(named: .darkAqua)
         window.backgroundColor = NSColor(red: 0.027, green: 0.031, blue: 0.039, alpha: 1)
@@ -156,11 +156,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         let main = NSMenu()
         let appItem = NSMenuItem(); main.addItem(appItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Acerca de Imperia", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: "Acerca de Chronosvisor", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Ocultar Imperia", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: "Ocultar Chronosvisor", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Salir de Imperia", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Salir de Chronosvisor", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
 
         let viewItem = NSMenuItem(); main.addItem(viewItem)
@@ -200,7 +200,7 @@ final class LanNet {
         guard let m = body as? [String: Any], let op = m["op"] as? String else { return }
         q.async {
             switch op {
-            case "host": self.host(name: (m["name"] as? String) ?? "Imperia", port: UInt16((m["port"] as? Int) ?? 47800))
+            case "host": self.host(name: (m["name"] as? String) ?? "Chronosvisor", port: UInt16((m["port"] as? Int) ?? 47800))
             case "join": self.join(host: (m["host"] as? String) ?? "127.0.0.1", port: UInt16((m["port"] as? Int) ?? 47800))
             case "joinService": self.joinService(name: (m["name"] as? String) ?? "")
             case "browse": self.browse()

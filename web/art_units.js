@@ -14,8 +14,7 @@ function cached(key,build){let g=cache.get(key);if(!g){g=mesh(build);cache.set(k
 function tireK(k,r,w){k.add(new TH.CylinderGeometry(r,r,w,14).rotateX(Math.PI/2),'rubber',TIRE,0,0,0);k.add(new TH.CylinderGeometry(r*.55,r*.55,w+.01,10).rotateX(Math.PI/2),'metal',GREY,0,0,0)}
 function spokedK(k,r,w,col){k.add(new TH.TorusGeometry(r,.02,5,16),'planks',col||WOOD,0,0,0);k.add(new TH.CylinderGeometry(.03,.03,w,8).rotateX(Math.PI/2),'metal',0x505358,0,0,0);for(let i=0;i<6;i++)k.add(box(.014,r*2,.014),'planks',col||WOOD,0,0,0,0,0,i*Math.PI/6)}
 function wheels(parts,list,build,key){parts.wheels=parts.wheels||[];for(const [x,y,z] of list){const w=pivot(x,y,z);w.add(cached(key,build));parts.body.add(w);parts.wheels.push(w)}}
-function trackK(k,L,h,w,z,col){k.add(box(L,h,w),'rubber',TIRE,0,h/2,z);for(let i=0;i<Math.round(L/.09);i++)k.add(box(.03,h+.012,w+.012),'metal',0x3a3a3a,-L/2+.045+i*.09,h/2,z);
- for(let i=0;i<4;i++)k.add(new TH.CylinderGeometry(h*.36,h*.36,w+.02,10).rotateX(Math.PI/2),'metal',col||GREY,-L/2+h*.5+i*(L-h)/3,h*.48,z)}
+function trackK(k,L,h,w,z,col){return runningGear(k,{L,h,w,z,n:5,r:h*.3,sprocket:'rear',ret:1,col:col===0x444||col===0x3a3a3a?0x4a4e48:col})}
 function barrelK(k,len,r,x,y,z,col,mat){k.add(new TH.CylinderGeometry(r,r*1.05,len,10).rotateZ(-Math.PI/2),mat||'metal',col||GUN,x+len/2,y,z)}
 function carriageK(k,col){k.add(box(.62,.06,.08),'planks',col||WOOD,-.2,.2,.13,0,0,-.25);k.add(box(.62,.06,.08),'planks',col||WOOD,-.2,.2,-.13,0,0,-.25);k.add(box(.12,.1,.34),'planks',col||WOOD,.08,.3,0);k.add(box(.08,.05,.3),'planks',col||WOOD,-.46,.08,0)}
 function flagK(k,pc,x,y,z,h){k.add(cyl(.008,.008,h||.35,4),'metal',LGREY,x,y,z);k.add(box(.005,.09,.13),'cloth',pc,x,y+(h||.35)-.06,z+.07)}
@@ -34,15 +33,120 @@ function drone(parts,pc){parts.fly=true;parts.rotors=[];parts.body.add(mesh(k=>{
 function hoverTank(parts,pc,big){parts.hover=true;const s=big?1.2:1;parts.body.add(mesh(k=>{k.add(box(1.0*s,.16,.62*s),'poly',WHITE,0,.28,0);k.add(box(.9*s,.08,.56*s),'panel',0x3a4048,0,.18,0);k.add(box(.3*s,.1,.5*s),'poly',WHITE,.45*s,.24,0,0,0,.4);
  k.add(box(.9*s,.03,.64*s),'neon',CYAN,0,.12,0);k.add(cyl(.18*s,.22*s,.14,8),'poly',LGREY,-.05,.43,0);barrelK(k,.5*s,.03,.05,.45,.06,0x2a3036);barrelK(k,.5*s,.03,.05,.45,-.06,0x2a3036);
  k.add(box(.5*s,.02,.4*s),'cloth',pc,-.1,.365,0);k.add(box(.04,.04,.2),'neon',CYAN,.1+.5*s,.45,0)}))}
-function tank(parts,pc,tier){const L=tier>=7?1.3:tier>=6?1.25:1.1,W=tier>=6?.7:.64;const col=tier===5?OLIVE:tier===6?0x6e6a4a:0x585e52;
- parts.body.add(mesh(k=>{trackK(k,L,.2,.14,W/2-.07,0x444);trackK(k,L,.2,.14,-W/2+.07,0x444);
-  k.add(box(L*.92,.16,W-.26),'steel',col,0,.26,0);k.add(box(L*.3,.12,W*.95),'steel',col,.3*L,.25,0,0,0,tier===5?.35:.6);k.add(box(L*.95,.04,W*.98),'steel',col,-.02,.35,0);
-  if(tier>=7){for(let i=0;i<5;i++){k.add(box(.12,.1,.05),'steel',0x4a5040,-.4+i*.2,.28,W/2+.02);k.add(box(.12,.1,.05),'steel',0x4a5040,-.4+i*.2,.28,-W/2-.02)}}
-  lightsK(k,L/2,.3,W*.35);lightsK(k,L/2,.3,-W*.35);k.add(box(.5,.02,.35),'cloth',pc,-.3,.375,0)}));
- const t=pivot(tier===5?.05:-.05,.37,0);parts.body.add(t);parts.turret=t;
- t.add(cached('turret'+tier,k=>{if(tier===5){k.add(cyl(.2,.24,.18,12),'steel',OLIVE,0,.09,0);k.add(cyl(.08,.08,.06,8),'steel',OLIVE2,-.05,.2,.08)}
-  else{k.add(box(.52,.16,.48),'steel',col,0,.08,0);k.add(box(.2,.14,.44),'steel',col,.3,.07,0,0,0,.5);k.add(box(.2,.1,.3),'steel',col,-.3,.07,0);k.add(cyl(.05,.05,.08,8),'steel',0x3a3e36,-.05,.2,.12);k.add(cyl(.01,.01,.35,4),'metal',DARK,-.25,.3,-.15)}
-  barrelK(k,tier===5?.55:.75,tier===5?.03:.035,tier===5?.15:.36,tier===5?.1:.08,0,tier===5?OLIVE2:0x3a3e36,'steel');if(tier>=6)k.add(cyl(.045,.045,.1,8).rotateZ(-Math.PI/2),'steel',0x3a3e36,.9,.08,0)}))}
+// ---------- blindados con perfiles reales (extrusiones de silueta en vez de cajas)
+function exG(shape,depth,bev){return new TH.ExtrudeGeometry(shape,{depth,bevelEnabled:!!bev,bevelThickness:bev||0,bevelSize:bev||0,bevelSegments:1,curveSegments:8})}
+function shapeOf(pts){const s=new TH.Shape();pts.forEach(([a,b],i)=>i?s.lineTo(a,b):s.moveTo(a,b));s.closePath();return s}
+// silueta lateral (x adelante, y arriba) extruida a lo ancho, centrada en z
+function sideG(pts,width,bev){const g=exG(shapeOf(pts),width,bev);g.translate(0,0,-width/2);return g}
+// planta (x adelante, z lateral) extruida hacia arriba; taper estrecha la parte alta (laterales inclinados)
+function topG(pts,h,taper,bev){const g=exG(shapeOf(pts.map(([x,z])=>[x,-z])),h,bev);g.rotateX(-Math.PI/2);
+ if(taper){g.computeBoundingBox();const bb=g.boundingBox,cx=(bb.min.x+bb.max.x)/2,cz=(bb.min.z+bb.max.z)/2,p=g.attributes.position;
+  for(let i=0;i<p.count;i++){const t=Math.max(0,Math.min(1,p.getY(i)/h)),f=1-taper*t;p.setX(i,cx+(p.getX(i)-cx)*(1-taper*.35*t));p.setZ(i,cz+(p.getZ(i)-cz)*f)}g.computeVertexNormals()}
+ return g}
+// envolvente convexa y desplazamiento hacia dentro (para la cadena: anillo con hueco)
+function hull2(P){P=P.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);const lo=[],up=[];
+ for(const p of P){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}
+ for(const p of P.slice().reverse()){while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}up.pop();lo.pop();return lo.concat(up)}
+function inset(poly,t){const n=poly.length,out=[];for(let i=0;i<n;i++){const a=poly[(i-1+n)%n],b=poly[i],c=poly[(i+1)%n];
+ const n1=nrm(a,b),n2=nrm(b,c);const p1=[a[0]+n1[0]*t,a[1]+n1[1]*t],d1=[b[0]-a[0],b[1]-a[1]],p2=[b[0]+n2[0]*t,b[1]+n2[1]*t],d2=[c[0]-b[0],c[1]-b[1]];
+ const den=d1[0]*d2[1]-d1[1]*d2[0];if(Math.abs(den)<1e-9){out.push([b[0]+n1[0]*t,b[1]+n1[1]*t]);continue}const s=((p2[0]-p1[0])*d2[1]-(p2[1]-p1[1])*d2[0])/den;out.push([p1[0]+d1[0]*s,p1[1]+d1[1]*s])}return out}
+function nrm(a,b){const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return[-dy/l,dx/l]}
+// tren de rodaje completo de un lado: cadena (anillo), ruedas de rodaje con buje, rueda motriz dentada, rueda tensora y rodillos de retorno
+// o={L,h,w,z,n (ruedas),r (radio rueda),sprocket:'rear'|'front',ret (rodillos),bogie (suspensión de bogies tipo Sherman),col}
+function runningGear(k,o){const L=o.L,h=o.h,w=o.w,z=o.z,n=o.n||6,r=o.r||h*.36,col=o.col||0x4a4e48,rr=h*.27,x0=-L/2,x1=L/2;
+ const xR=x0+rr+.01,xF=x1-rr-.01,yR=o.sprocket==='front'?h*.62:h*.68,yF=o.sprocket==='front'?h*.68:h*.6;
+ const wx=[];const first=x0+L*.15,last=x1-L*.15;for(let i=0;i<n;i++)wx.push(first+(last-first)*i/(n-1));
+ const pts=[];const circ=(cx,cy,R)=>{for(let a=0;a<16;a++)pts.push([cx+Math.cos(a/16*6.283)*R,cy+Math.sin(a/16*6.283)*R])};
+ circ(xR,yR,rr+.022);circ(xF,yF,rr+.022);for(const x of wx)circ(x,r,r+.022);
+ const outer=hull2(pts);const inner=inset(outer,.024);const sh=shapeOf(outer);sh.holes.push(new TH.Path(inner.map(p=>new TH.Vector2(p[0],p[1]))));
+ const belt=exG(sh,w,0);belt.translate(0,0,z-w/2);k.add(belt,'rubber',0x2a2a28,0,0,0);
+ // tacos de la cadena por encima y por debajo
+ const topY=Math.max(...outer.map(p=>p[1]));for(let x=xR;x<xF;x+=.055){k.add(box(.022,.012,w+.006),'metal',0x3c3c3a,x,topY-.002,z)}
+ for(let x=wx[0];x<=wx[wx.length-1];x+=.055){k.add(box(.022,.012,w+.006),'metal',0x3c3c3a,x,.004,z)}
+ const wheel=(x,y,R,ww,c,hub)=>{k.add(new TH.CylinderGeometry(R,R,ww,16).rotateX(Math.PI/2),'steel',c,x,y,z);k.add(new TH.CylinderGeometry(R*.62,R*.62,ww+.012,12).rotateX(Math.PI/2),'steel',hub,x,y,z);
+  k.add(new TH.CylinderGeometry(R*.18,R*.18,ww+.024,8).rotateX(Math.PI/2),'metal',0x2a2c2a,x,y,z)};
+ for(const x of wx)wheel(x,r,r,w*.82,col,0x3a3d38);
+ if(o.bogie){for(let i=0;i<n;i+=2){const xm=(wx[i]+wx[Math.min(n-1,i+1)])/2;k.add(box(Math.abs(wx[Math.min(n-1,i+1)]-wx[i])+.05,.07,.03),'steel',col,xm,r+.04,z+Math.sign(z)*(w*.42));k.add(box(.05,.09,.04),'steel',col,xm,r+.1,z+Math.sign(z)*(w*.42))}}
+ // rueda motriz (dientes) y tensora
+ const xs=o.sprocket==='front'?xF:xR,ys=o.sprocket==='front'?yF:yR,xi=o.sprocket==='front'?xR:xF,yi=o.sprocket==='front'?yR:yF;
+ wheel(xs,ys,rr,w*.7,0x3a3d38,0x2c2e2c);for(let a=0;a<10;a++){const an=a/10*6.283;k.add(box(.026,.018,w*.6),'metal',0x2c2e2c,xs+Math.cos(an)*rr,ys+Math.sin(an)*rr,z,0,0,an)}
+ wheel(xi,yi,rr*.92,w*.7,col,0x3a3d38);
+ if(o.ret)for(let i=0;i<o.ret;i++){const x=xR+(xF-xR)*(i+1)/(o.ret+1);k.add(new TH.CylinderGeometry(.022,.022,w*.6,8).rotateX(Math.PI/2),'steel',0x3a3d38,x,topY-.04,z)}
+ return topY}
+// cañón con manguito térmico, extractor de humos, freno de boca opcional
+function gunK(k,len,r,x,y,o){o=o||{};const col=o.col||0x3c4036;
+ k.add(new TH.CylinderGeometry(r*.92,r*1.08,len,12).rotateZ(-Math.PI/2),'steel',col,x+len/2,y,0);
+ if(o.sleeve)for(let i=1;i<4;i++)k.add(new TH.CylinderGeometry(r*1.12,r*1.12,.012,12).rotateZ(-Math.PI/2),'steel',0x2e312a,x+len*i/4.2,y,0);
+ if(o.evac!=null)k.add(new TH.CylinderGeometry(r*1.55,r*1.55,len*.11,12).rotateZ(-Math.PI/2),'steel',col,x+len*o.evac,y,0);
+ if(o.brake){k.add(box(len*.08,r*2.6,r*2.6),'steel',col,x+len-len*.03,y,0);k.add(box(len*.04,r*1.2,r*3.2),'steel',0x2e312a,x+len-len*.035,y,0)}
+ if(o.mrs)k.add(box(.03,.02,.02),'steel',0x2e312a,x+len-.03,y+r*1.3,0)}
+function smokeK(k,x,y,z,s){for(let i=0;i<4;i++)k.add(new TH.CylinderGeometry(.012,.012,.05,6).rotateZ(-Math.PI/2+.5).rotateY(s*.5),'steel',0x2e312a,x-i*.025,y+(i%2)*.02,z)}
+// carro de combate según la edad: 5 = Segunda Guerra Mundial (cuerpo alto, torreta fundida, bogies); 6 = Guerra Fría (torreta de domo, cinco ruedas grandes);
+// 7 = moderno (torreta angular de blindaje compuesto, faldones, cañón largo)
+function tank(parts,pc,tier){
+ if(tier===5){const col=0x5d6537,L=1.04,W=.6,tw=.13,z=W/2-tw/2;
+  parts.body.add(mesh(k=>{for(const s of[1,-1])runningGear(k,{L,h:.2,w:tw,z:s*z,n:6,r:.055,sprocket:'front',bogie:true,ret:3,col});
+   k.add(sideG([[-.5,.12],[.46,.12],[.53,.2],[.42,.42],[-.4,.44],[-.52,.34]],W-.02,.006),'steel',col,0,0,0);
+   k.add(box(.14,.04,.07),'steel',0x4e5530,.28,.42,.13);k.add(box(.1,.03,.09),'steel',0x4e5530,-.36,.45,0);
+   for(const s of[1,-1]){k.add(box(.9,.012,.13),'steel',0x4e5530,0,.215,s*z);lightsK(k,.47,.36,s*.2)}
+   k.add(new TH.CylinderGeometry(.008,.008,.07,6).rotateZ(-Math.PI/2),'steel',0x2e312a,.46,.4,-.12);
+   k.add(box(.28,.012,.24),'cloth',pc,-.28,.448,0)}));
+  const t=pivot(.02,.44,0);parts.body.add(t);parts.turret=t;
+  t.add(cached('tank5t',k=>{k.add(new TH.LatheGeometry([new TH.Vector2(0,0),new TH.Vector2(.2,0),new TH.Vector2(.21,.05),new TH.Vector2(.19,.12),new TH.Vector2(.12,.17),new TH.Vector2(0,.18)],16).scale(1.15,1,1),'steel',col,0,0,0);
+   k.add(box(.08,.11,.17),'steel',0x4e5530,.21,.07,0);gunK(k,.5,.026,.22,.075,{col:0x4e5530,brake:false});k.add(new TH.CylinderGeometry(.034,.034,.03,10).rotateZ(-Math.PI/2),'steel',0x4e5530,.72,.075,0);
+   k.add(cyl(.05,.055,.05,10),'steel',0x4e5530,-.06,.15,.07);k.add(new TH.CylinderGeometry(.006,.006,.12,5).rotateZ(-Math.PI/2),'steel',0x2e312a,-.02,.22,.07);
+   k.add(cyl(.004,.004,.3,4),'metal',0x222,-.15,.14,-.1);k.add(box(.003,.05,.07),'cloth',pc,-.15,.4,-.065)}));return}
+ if(tier===6){const col=0x6f6a4c,L=1.12,W=.64,tw=.14,z=W/2-tw/2;
+  parts.body.add(mesh(k=>{for(const s of[1,-1])runningGear(k,{L,h:.19,w:tw,z:s*z,n:5,r:.068,sprocket:'rear',col});
+   k.add(sideG([[-.55,.1],[.4,.1],[.56,.2],[.5,.3],[-.5,.32],[-.56,.26]],W-.05,.006),'steel',col,0,0,0);
+   for(const s of[1,-1]){k.add(box(1.06,.014,tw+.02),'steel',0x5e5a40,0,.205,s*z);k.add(box(.22,.06,.06),'steel',0x5e5a40,-.25,.24,s*(z+.0))}
+   k.add(cyl(.05,.05,.02,10),'steel',0x5e5a40,.32,.3,.12);for(let i=0;i<5;i++)k.add(box(.012,.006,.3),'metal',0x3a3828,-.48+i*.03,.322,0);
+   lightsK(k,.53,.27,.2);lightsK(k,.53,.27,-.2);k.add(box(.24,.012,.26),'cloth',pc,-.38,.325,0)}));
+  const t=pivot(.06,.32,0);parts.body.add(t);parts.turret=t;
+  t.add(cached('tank6t',k=>{k.add(new TH.LatheGeometry([new TH.Vector2(0,0),new TH.Vector2(.24,0),new TH.Vector2(.25,.03),new TH.Vector2(.22,.09),new TH.Vector2(.15,.14),new TH.Vector2(0,.155)],20).scale(1.2,1,1),'steel',col,-.02,0,0);
+   k.add(sph(.08,10,8).scale(1,.7,1.4),'steel',col,.22,.07,0);gunK(k,.78,.028,.24,.07,{col:0x5e5a40,evac:.78});
+   k.add(cyl(.055,.06,.05,10),'steel',0x5e5a40,-.08,.14,-.08);k.add(new TH.CylinderGeometry(.007,.007,.14,5).rotateZ(-Math.PI/2),'steel',0x2e2c22,-.05,.21,-.08);
+   k.add(box(.06,.05,.05),'glass',0x2a3a40,.04,.13,.12);k.add(cyl(.004,.004,.32,4),'metal',0x222,-.2,.14,.12);k.add(box(.003,.05,.07),'cloth',pc,-.2,.42,.155)}));return}
+ // moderno
+ const col=0x6a6d55,dk=0x55584a,L=1.26,W=.68,tw=.15,z=W/2-tw/2;
+ parts.body.add(mesh(k=>{for(const s of[1,-1])runningGear(k,{L,h:.19,w:tw,z:s*z,n:7,r:.05,sprocket:'rear',ret:2,col:dk});
+  k.add(sideG([[-.6,.09],[.48,.09],[.63,.2],[.62,.22],[-.6,.26]],W-.08,.005),'steel',col,0,0,0);
+  k.add(topG([[-.62,-W/2],[.5,-W/2],[.6,-W/2+.06],[.6,W/2-.06],[.5,W/2],[-.62,W/2]],.03,0,.003),'steel',col,0,.235,0);
+  // faldones laterales con paneles
+  for(const s of[1,-1]){const sk=sideG([[-.5,.11],[.5,.11],[.58,.2],[.58,.235],[-.5,.235]],.018,0);k.add(sk,'steel',col,0,0,s*(W/2+.004));
+   for(let i=0;i<6;i++)k.add(box(.006,.1,.021),'steel',dk,-.42+i*.17,.172,s*(W/2+.004))}
+  for(let i=0;i<6;i++)k.add(box(.012,.006,.34),'metal',0x3a3c32,-.58+i*.022,.268,0);k.add(box(.06,.03,.5),'steel',dk,-.6,.2,0);
+  lightsK(k,.6,.24,.24);lightsK(k,.6,.24,-.24);k.add(box(.05,.014,.08),'glass',0x2a3a40,.5,.262,0)}));
+ const t=pivot(-.02,.265,0);parts.body.add(t);parts.turret=t;
+ t.add(cached('tank7t',k=>{
+  // torreta de blindaje compuesto: frontal en cuña, laterales inclinados, cesto trasero
+  k.add(topG([[.34,-.09],[.34,.09],[.14,.27],[-.26,.28],[-.38,.23],[-.42,.17],[-.42,-.17],[-.38,-.23],[-.26,-.28],[.14,-.27]],.13,.16,.006),'steel',col,0,0,0);
+  k.add(box(.1,.07,.14),'steel',dk,.36,.065,0);gunK(k,.92,.026,.38,.065,{col:dk,sleeve:true,evac:.42,mrs:true});
+  for(const s of[1,-1]){k.add(box(.04,.035,.07),'steel',dk,.12,.14,s*.15);smokeK(k,.1,.1,s*.27,s)}
+  k.add(cyl(.05,.055,.04,10),'steel',dk,-.1,.13,.11);k.add(box(.06,.035,.035),'glass',0x2a3a40,-.06,.17,.11);k.add(new TH.CylinderGeometry(.006,.006,.14,5).rotateZ(-Math.PI/2),'steel',0x2e312a,-.04,.2,.11);
+  k.add(cyl(.04,.045,.03,10),'steel',dk,-.08,.13,-.11);k.add(box(.07,.06,.06),'steel',dk,.02,.16,-.17);k.add(box(.02,.04,.05),'glass',0x2a3a40,.055,.17,-.17);
+  // cesto de equipaje y antenas
+  for(const s of[1,-1])k.add(box(.2,.05,.008),'metal',0x3a3c32,-.47,.08,s*.18);k.add(box(.008,.05,.36),'metal',0x3a3c32,-.57,.08,0);k.add(box(.2,.04,.3),'cloth',0x6d6550,-.47,.06,0);
+  k.add(cyl(.004,.004,.36,4),'metal',0x222,-.34,.13,.16);k.add(cyl(.004,.004,.3,4),'metal',0x222,-.34,.13,-.16);k.add(box(.003,.05,.07),'cloth',pc,-.34,.44,.195);
+  k.add(box(.22,.006,.22),'cloth',pc,-.2,.131,0)}))}
+// lanzacohetes múltiple sobre camión 6×6 (estilo HIMARS): cabina blindada, contenedor de 6 tubos elevado y estabilizadores
+function rocketTruck(parts,pc,tier){const col=tier>=7?0x5e6252:0x6b7148,dk=tier>=7?0x4a4e42:0x565c38;
+ parts.body.add(mesh(k=>{
+  k.add(box(1.12,.05,.3),'steel',0x2c2e2a,-.05,.19,0);
+  // cabina con parabrisas inclinado
+  k.add(sideG([[.3,.2],[.62,.2],[.62,.3],[.56,.46],[.34,.47],[.3,.44]],.48,.008),'steel',col,0,0,0);
+  for(const s of[1,-1])k.add(box(.14,.08,.004),'glass',0x2a3a44,.47,.39,s*.245);k.add(box(.004,.09,.38),'glass',0x2a3a44,.59,.4,0,0,0,-.62);
+  k.add(box(.03,.07,.4),'metal',0x2c2e2a,.63,.25,0);lightsK(k,.63,.29,.17);lightsK(k,.63,.29,-.17);for(const s of[1,-1])k.add(box(.03,.04,.02),'metal',0x222,.5,.44,s*.26);
+  for(const s of[1,-1]){k.add(box(.2,.025,.1),'steel',dk,.42,.29,s*.22);k.add(box(.5,.025,.1),'steel',dk,-.25,.29,s*.22)}
+  // plataforma, contenedor de cohetes elevado (6 tubos) y estabilizadores
+  k.add(box(.62,.06,.46),'steel',dk,-.22,.25,0);k.add(box(.2,.08,.2),'steel',dk,-.12,.32,0);
+  const ang=.32;
+  k.add(box(.62,.2,.34),'steel',col,-.22,.47,0,0,0,ang);
+  const fx=-.22+Math.cos(ang)*.31,fy=.47+Math.sin(ang)*.31;
+  for(let i=0;i<2;i++)for(let j=0;j<3;j++)k.add(new TH.CylinderGeometry(.04,.04,.012,10).rotateZ(Math.PI/2+ang),'metal',0x1c1d1a,fx+.004,fy-.05+i*.1,-.1+j*.1);
+  for(const s of[1,-1])k.add(box(.05,.12,.04),'steel',dk,-.5,.2,s*.2);
+  k.add(box(.22,.012,.2),'cloth',pc,-.32,.505,0,0,0,ang);flagK(k,pc,.35,.47,-.18,.25)}));
+ wheels(parts,[[.44,.12,.24],[.44,.12,-.24],[-.2,.12,.24],[-.2,.12,-.24],[-.44,.12,.24],[-.44,.12,-.24]],k=>{tireK(k,.12,.09);for(let a=0;a<12;a++){const an=a/12*6.283;k.add(box(.03,.02,.092),'rubber',0x151515,Math.cos(an)*.115,Math.sin(an)*.115,0,0,0,an)}},'ttire2')}
 function mechFallback(parts,pc){hoverTank(parts,pc,true)}
 // ---------- artillería
 function cannon(parts,pc,tier,type){const long=type==='mangonel';parts.body.add(mesh(k=>{
@@ -50,14 +154,18 @@ function cannon(parts,pc,tier,type){const long=type==='mangonel';parts.body.add(
   if(type==='ram'&&tier===3){k.add(box(.12,.22,.3),'planks',WOOD,.08,.28,0)}for(let i=0;i<3;i++)k.add(sph(.035,6,4),'metal',0x222,-.4-i*.07,.05,.25);flagK(k,pc,-.45,.08,-.2,.4)}
  else if(tier===5){k.add(box(.1,.3,.5),'steel',OLIVE,.05,.35,0);carriageK(k,OLIVE2);barrelK(k,long?.3:.7,long?.07:.05,long?.05:-.05,long?.22:.38,0,OLIVE2,'steel');if(long){k.add(box(.3,.02,.3),'steel',OLIVE2,0,.02,0)}k.add(box(.26,.02,.2),'cloth',pc,-.35,.13,0)}
  }));if(tier<=5)wheels(parts,[[0,.16,.21],[0,.16,-.21]],k=>tier<=4?spokedK(k,.16,.05):tireK(k,.15,.07),tier<=4?'swheel':'atire')}
-function spArt(parts,pc){parts.body.add(mesh(k=>{trackK(k,1.15,.2,.14,.27,0x444);trackK(k,1.15,.2,.14,-.27,0x444);k.add(box(1.05,.16,.4),'steel',0x6e6a4a,0,.26,0);
- k.add(box(.55,.3,.58),'steel',0x6e6a4a,-.2,.46,0);barrelK(k,.9,.035,.05,.52,0,0x3a3e36,'steel');k.add(box(.3,.02,.3),'cloth',pc,-.25,.615,0);lightsK(k,.55,.3,.18);lightsK(k,.55,.3,-.18)}))}
+function spArt(parts,pc){const col=0x6f6a4c,dk=0x5a563c;parts.body.add(mesh(k=>{for(const sd of[1,-1])runningGear(k,{L:1.12,h:.19,w:.14,z:sd*.25,n:6,r:.052,sprocket:'front',ret:2,col:dk});
+ k.add(sideG([[-.56,.09],[.42,.09],[.57,.19],[.5,.27],[-.56,.27]],.5,.005),'steel',col,0,0,0);for(const sd of[1,-1])k.add(box(1.08,.014,.16),'steel',dk,0,.2,sd*.25);
+ k.add(topG([[.26,-.22],[.26,.22],[.1,.27],[-.5,.27],[-.56,.22],[-.56,-.22],[-.5,-.27],[.1,-.27]],.22,.12,.006),'steel',col,-.06,.27,0);
+ gunK(k,.82,.03,.18,.39,{col:dk,evac:.55,brake:true});k.add(box(.1,.1,.16),'steel',dk,.22,.39,0);k.add(cyl(.045,.05,.04,10),'steel',dk,-.25,.49,.12);
+ k.add(new TH.CylinderGeometry(.006,.006,.12,5).rotateZ(-Math.PI/2),'steel',0x2e312a,-.22,.55,.12);k.add(box(.26,.008,.26),'cloth',pc,-.3,.495,-.04);lightsK(k,.55,.24,.18);lightsK(k,.55,.24,-.18)}))}
 function truckBase(k,col,cabW){k.add(box(.3,.26,cabW||.46),'steel',col,.42,.3,0);k.add(box(.04,.12,.4),'glass',0x9fc4d8,.575,.36,0);k.add(box(1.05,.08,.46),'steel',DARK,-.05,.17,0);lightsK(k,.58,.22,.16);lightsK(k,.58,.22,-.16)}
-function rocketTruck(parts,pc,tier){parts.body.add(mesh(k=>{truckBase(k,tier>=7?0x5a6050:OLIVE);const p=pivot(0,0,0);
- k.add(box(.58,.3,.44),'steel',tier>=7?0x4a5048:OLIVE2,-.2,.42,0,0,0,.35);for(let i=0;i<3;i++)for(let j=0;j<3;j++)k.add(cyl(.045,.045,.02,8).rotateZ(Math.PI/2+.35),'metal',DARK,.08,.36+i*.09+.05,-.13+j*.13);k.add(box(.3,.02,.3),'cloth',pc,-.35,.6,0)}));
- wheels(parts,[[.38,.12,.25],[.38,.12,-.25],[-.18,.12,.25],[-.18,.12,-.25],[-.42,.12,.25],[-.42,.12,-.25]],k=>tireK(k,.12,.09),'ttire')}
-function smartArt(parts,pc){parts.body.add(mesh(k=>{trackK(k,1.0,.18,.13,.26,0x3a3a3a);trackK(k,1.0,.18,.13,-.26,0x3a3a3a);k.add(box(.95,.18,.4),'panel',0x5a6058,0,.26,0);
- k.add(box(.4,.24,.44),'panel',0x5a6058,-.1,.46,0);k.add(box(.12,.12,.12),'glass',0x223040,.12,.55,0);barrelK(k,.75,.04,.1,.46,0,0x2a3036,'steel');k.add(box(.04,.03,.4),'neon',CYAN,.1,.34,0);k.add(box(.3,.02,.3),'cloth',pc,-.2,.585,0)}))}
+function smartArt(parts,pc){const col=0x6a6f66,dk=0x50554e;parts.body.add(mesh(k=>{for(const sd of[1,-1])runningGear(k,{L:1.1,h:.18,w:.14,z:sd*.25,n:6,r:.05,sprocket:'rear',ret:2,col:dk});
+ k.add(sideG([[-.55,.09],[.45,.09],[.58,.18],[.56,.22],[-.55,.25]],.5,.005),'steel',col,0,0,0);for(const sd of[1,-1])k.add(sideG([[-.48,.11],[.5,.11],[.56,.19],[.56,.22],[-.48,.22]],.016,0),'steel',col,0,0,sd*.33);
+ k.add(topG([[.3,-.14],[.3,.14],[.12,.25],[-.46,.25],[-.52,.18],[-.52,-.18],[-.46,-.25],[.12,-.25]],.2,.2,.006),'steel',col,-.05,.25,0);
+ gunK(k,.9,.03,.24,.35,{col:dk,sleeve:true,brake:true,mrs:true});k.add(box(.09,.09,.13),'steel',dk,.27,.35,0);
+ k.add(box(.1,.06,.08),'steel',dk,.0,.47,.14);k.add(box(.02,.04,.06),'glass',0x223040,.05,.48,.14);k.add(box(.03,.02,.3),'neon',CYAN,-.1,.455,0);
+ k.add(cyl(.004,.004,.3,4),'metal',0x222,-.4,.45,.18);k.add(box(.24,.008,.24),'cloth',pc,-.28,.452,-.04);lightsK(k,.56,.21,.18);lightsK(k,.56,.21,-.18)}))}
 function railgun(parts,pc,plasma){parts.hover=true;parts.body.add(mesh(k=>{k.add(box(1.0,.14,.6),'poly',WHITE,0,.25,0);k.add(box(.95,.03,.62),'neon',CYAN,0,.15,0);
  if(plasma){k.add(cyl(.12,.16,.26,10),'poly',LGREY,-.1,.42,0);k.add(sph(.13,12,10),'neon',0xb06bff,.22,.52,0);barrelK(k,.35,.05,-.05,.52,0,0x2a3036)}
  else{for(const z of[.07,-.07])k.add(box(1.1,.05,.03),'panel',0x2a3036,.25,.45,z);k.add(box(1.0,.02,.03),'neon',CYAN,.28,.45,0);k.add(box(.4,.18,.3),'poly',LGREY,-.25,.4,0)}

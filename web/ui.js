@@ -18,7 +18,7 @@ let G=null,MW=88,MH=88,mode='menu',sel=[],bm=null,amode=false,page=0,speed=1,pau
 let uiT=0,miniT=0,terT=0,ambT=0,pings=[],curCmds=[],cmdSig=null,tipCmd=null,delArm=0,lastGK={k:null,t:0},idleIx=0,menuA=0,lastToast='',wallDrag=null,fpsN=0,fpsT=0,rebinding=null,graphK='score',sayT=0;
 const cfg={civ:'iberos',map:'continental',size:'medium',nAI:1,teams:'ffa',diff:'normal',win:'standard',reveal:'normal'};
 const DEFKEYS={grid:'QWERTASDFGZXCVB'.split(''),idle:'.',tc:'H',army:'M',pause:'P',chat:'Enter',save:'F5'};
-const opts={quality:'high',music:55,sfx:80,cam:100,edge:true,day:false,fpsCap:60,fps:false,voices:true,name:'Jugador',keys:JSON.parse(JSON.stringify(DEFKEYS))};
+const opts={quality:'high',music:55,sfx:80,cam:100,edge:true,day:false,fpsCap:60,fps:false,voices:true,cb:false,name:'Jugador',keys:JSON.parse(JSON.stringify(DEFKEYS))};
 const tut={on:false,i:0,done:false};
 const keys={},mouse={x:0,y:0,down:false,sx:0,sy:0,drag:false,inside:false};
 const RICON={
@@ -54,7 +54,11 @@ function ackFor(r){const o=own().filter(e=>e.kind==='unit');if(!o.length)return;
  if(c==='vil')return say(pick(ag>=4?ACK.obr:ACK.vil),false,{pitch:1.1,voz:ag>=4?'obrero':'aldeano'});
  if(c==='monk')return say(pick(ACK.monk),false,{pitch:1,voz:'monje'});if(c==='ship')return say(pick(ACK.ship),false,{pitch:.9,voz:'marinero'});
  say(pick(ag>=8?ACK.fut:ag>=5?ACK.mod:ACK.mil),false,{pitch:.85,voz:ag>=8?'futuro':ag>=5?'moderno':'soldado'})}
-function applyOpts(){opts.day=false;AU.setVolumes(opts.music/100,opts.sfx/100);R.setQuality(opts.quality);R.setDayNight(false);if(R.setFpsCap)R.setFpsCap(+opts.fpsCap||0);$('fps').hidden=!opts.fps}
+// paleta para daltónicos (azul, naranja, amarillo y rosa de Okabe-Ito): se fija al arrancar porque los modelos guardan el color del jugador
+const PAL={def:['#4a86e8','#e0553f','#e2b534','#9a6ae0'],cb:['#2f86d8','#e69f00','#f0e442','#cc79a7']};let palSet=false;
+function applyPalette(){if(palSet)return;palSet=true;if(!opts.cb)return;const A=window.ImperiaArt,h=s=>parseInt(s.slice(1),16),dk=v=>(((v>>16&255)*.62|0)<<16)|(((v>>8&255)*.62|0)<<8)|((v&255)*.62|0);
+ PAL.cb.forEach((c,i)=>{PCOLORS[i]=c;if(A&&A.PC){A.PC[i]=h(c);if(A._&&A._.PCD)A._.PCD[i]=dk(h(c))}})}
+function applyOpts(){applyPalette();opts.day=false;AU.setVolumes(opts.music/100,opts.sfx/100);R.setQuality(opts.quality);R.setDayNight(false);if(R.setFpsCap)R.setFpsCap(+opts.fpsCap||0);$('fps').hidden=!opts.fps}
 function saveOpts(){Store.write('options',JSON.stringify(opts))}
 
 // ---------- utilidades
@@ -345,7 +349,13 @@ function startMP(c,seed){AU.init();G=I.newGame(c,seed);R.build(G);setupHUD();tut
  const tc=G.bl.find(e=>e.owner===ME()&&e.type==='tc');setSel(tc?[tc.id]:[]);toast('Partida en red · '+G.players.length+' jugadores. Intro para chatear.');say('Que comience la batalla',true)}
 function pause(){if(mode!=='play'||G.over)return;if(!mp())paused=true;tipCmd=null;$('pause').hidden=false;$('tip').hidden=true;$('pauseEye').textContent=mp()?'Menú · la partida sigue en marcha':'Partida en pausa';$('mpPause').textContent=Net.paused?'Reanudar para todos':'Pausar para todos'}
 function resume(){paused=false;$('pause').hidden=true}
-function menuStage(st){$('mTitle').hidden=st!=='title';$('mSetup').hidden=st!=='setup';$('menu').classList.remove('fade')}
+// el título y la versión se colocan sobre la cartela y el recuadro de la ilustración (misma escala que background-size:cover)
+const menuArt=()=>!$('menu').hidden&&$('menu').classList.contains('hasbg');
+function placeMenuArt(){const W=innerWidth,H=innerHeight,iw=2576,ih=1438,s=Math.max(W/iw,H/ih),ox=(W-iw*s)/2,oy=(H-ih*s)/2,m=$('menu').style,px=v=>v+'px';
+ m.setProperty('--bx',px(ox+830*s));m.setProperty('--by',px(oy+64*s));m.setProperty('--bw',px(880*s));m.setProperty('--bh',px(168*s));
+ m.setProperty('--vx',px(ox+2136*s));m.setProperty('--vy',px(oy+1292*s));m.setProperty('--vw',px(326*s));m.setProperty('--vh',px(80*s))}
+window.addEventListener('resize',placeMenuArt);
+function menuStage(st){$('mTitle').hidden=st!=='title';$('mSetup').hidden=st!=='setup';$('menu').classList.remove('fade');$('menu').classList.toggle('insetup',st==='setup');placeMenuArt()}
 function quitApp(){try{window.webkit.messageHandlers.nativeApp.postMessage({cmd:'quit'})}catch(e){window.close()}}
 function showMenu(){menuStage('title');if(Net&&Net.role)Net.leave();mode='menu';paused=false;tut.on=false;$('tut').hidden=true;$('hud').hidden=true;hideScreens();$('menu').hidden=false;$('tip').hidden=true;
  G=I.newGame({map:cfg.map,size:'small',nAI:1,diff:'normal',civ:cfg.civ},Math.floor(Math.random()*1e9));MW=I.MW;MH=I.MH;G.vis.fill(1);G.exp.fill(1);R.build(G);R.view.tdist=R.view.dist=21;sel=[];R.setSelection([]);R.setGhost(null)}
@@ -413,13 +423,13 @@ $('keyGrid').onclick=ev=>{const b=ev.target.closest('[data-i]');if(b)startRebind
 $('keyList').onclick=ev=>{const b=ev.target.closest('[data-id]');if(b)startRebind({id:b.dataset.id})};
 $('keyReset').onclick=()=>{opts.keys=JSON.parse(JSON.stringify(DEFKEYS));rebinding=null;renderKeys();cmdSig=null;saveOpts();sfx('click')};
 function syncOpts(){for(const b of $('o-quality').children)b.classList.toggle('on',b.dataset.v===opts.quality);$('o-music').value=opts.music;$('o-sfx').value=opts.sfx;$('o-cam').value=opts.cam;
- for(const b of $('o-cap').children)b.classList.toggle('on',String(b.dataset.v)===String(opts.fpsCap||0));for(const [id,k] of[['o-edge','edge'],['o-fps','fps'],['o-voices','voices']]){$(id).classList.toggle('on',!!opts[k]);$(id).setAttribute('aria-pressed',!!opts[k])}renderKeys()}
+ for(const b of $('o-cap').children)b.classList.toggle('on',String(b.dataset.v)===String(opts.fpsCap||0));for(const [id,k] of[['o-edge','edge'],['o-fps','fps'],['o-voices','voices'],['o-cb','cb']]){$(id).classList.toggle('on',!!opts[k]);$(id).setAttribute('aria-pressed',!!opts[k])}renderKeys()}
 function openOpts(){syncOpts();$('opts').hidden=false}
 function closeOpts(){rebinding=null;$('opts').hidden=true;saveOpts()}
 $('o-quality').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;opts.quality=b.dataset.v;applyOpts();syncOpts();sfx('click')};
 $('o-music').oninput=ev=>{opts.music=+ev.target.value;applyOpts()};$('o-sfx').oninput=ev=>{opts.sfx=+ev.target.value;applyOpts()};$('o-sfx').onchange=()=>sfx('train');$('o-cam').oninput=ev=>{opts.cam=+ev.target.value};
 $('o-cap').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;opts.fpsCap=+b.dataset.v;applyOpts();syncOpts();saveOpts();sfx('click')};
-for(const [id,k] of[['o-edge','edge'],['o-fps','fps'],['o-voices','voices']])$(id).onclick=()=>{opts[k]=!opts[k];applyOpts();syncOpts();sfx('click');if(k==='voices'&&opts.voices)say('Voces activadas',true)};
+for(const [id,k] of[['o-edge','edge'],['o-fps','fps'],['o-voices','voices'],['o-cb','cb']])$(id).onclick=()=>{opts[k]=!opts[k];applyOpts();syncOpts();sfx('click');if(k==='voices'&&opts.voices)say('Voces activadas',true)};
 $('optsBack').onclick=closeOpts;$('optBtn').onclick=()=>{AU.init();openOpts()};$('optBtn2').onclick=openOpts;
 $('saveBtn').onclick=()=>showSlots(true);$('loadBtn').onclick=()=>{AU.init();showSlots(false)};$('slotsBack').onclick=()=>{$('slots').hidden=true};
 
@@ -427,7 +437,7 @@ $('saveBtn').onclick=()=>showSlots(true);$('loadBtn').onclick=()=>{AU.init();sho
 function mpStatus(t,bad){const e=$('mpStatus');e.textContent=t||'';e.style.color=bad?'var(--bad)':''}
 function showMP(){AU.init();hideScreens();$('menu').hidden=true;$('mp').hidden=false;$('mpName').value=opts.name;mpStatus(Net.native?'Buscando partidas en tu red local…':'El multijugador necesita la app de Imperia para Mac.',!Net.native);
  renderFound([]);if(Net.native)Net.browse()}
-function renderFound(list){$('mpFound').innerHTML=list.length?list.map(n=>`<div class="slot"><div class="sd"><b>${esc(n.replace(/ · Imperia$/,''))}</b><span>Partida en tu red local</span></div><button class="btn sm pri" data-svc="${esc(n)}">Unirse</button></div>`).join(''):'<div class="qnote">No se ha encontrado ninguna partida todavía. También puedes escribir la dirección IP del anfitrión.</div>'}
+function renderFound(list){$('mpFound').innerHTML=list.length?list.map(n=>`<div class="slot"><div class="sd"><b>${esc(n.replace(/ · (Imperia|Chronosvisor)$/,''))}</b><span>Partida en tu red local</span></div><button class="btn sm pri" data-svc="${esc(n)}">Unirse</button></div>`).join(''):'<div class="qnote">No se ha encontrado ninguna partida todavía. También puedes escribir la dirección IP del anfitrión.</div>'}
 function myName(){const n=($('mpName').value||'').trim().slice(0,18)||'Jugador';opts.name=n;saveOpts();return n}
 $('mpFound').onclick=ev=>{const b=ev.target.closest('[data-svc]');if(!b)return;Net.stopBrowse();Net.joinService(b.dataset.svc,myName());mpStatus('Conectando…')};
 $('mpHost').onclick=()=>{if(!Net.native)return;Net.stopBrowse();Net.host(myName());showLobby()};
@@ -506,13 +516,13 @@ function loop(now,id){if(id!=null&&id!==chain)return;
  {const cap=mode==='menu'?30:(+opts.fpsCap||0);if(cap&&id!=null&&rafOK&&!document.hidden&&now-lastDraw<1000/cap-3){requestAnimationFrame(t=>loop(t,id));return}lastDraw=now}lastLoopT=performance.now();window.__loopN=(window.__loopN||0)+1;const dt=Math.min(document.hidden||!rafOK?.15:.05,Math.max(0,(now-last)/1000));last=now;
  try{
   if(G){
-   if(mode==='menu'){I.update(dt);G.vis.fill(1);G.exp.fill(1);G.ev.length=0;menuA+=dt*.02;R.centerOn(MW/2+Math.cos(menuA)*MW*.1,MH/2+Math.sin(menuA)*MH*.1);R.view.yaw=Math.PI/4+menuA*.6}
+   if(mode==='menu'&&menuArt()){}else if(mode==='menu'){I.update(dt);G.vis.fill(1);G.exp.fill(1);G.ev.length=0;menuA+=dt*.02;R.centerOn(MW/2+Math.cos(menuA)*MW*.1,MH/2+Math.sin(menuA)*MH*.1);R.view.yaw=Math.PI/4+menuA*.6}
    else if(mp()){if(!G.over)Net.pump(dt,runTurn)}
    else if(!paused&&!G.over){let s=dt*speed;while(s>1e-4){const h=Math.min(s,1/30);I.update(h);s-=h}}
    if(mode==='play'){handleEvents();if(!paused||mp())camKeys(dt);
     if(bm&&$('pause').hidden)R.setGhost(bm,ghostTiles());else R.setGhost(null)}
   }
-  if(!document.hidden){R.render(dt,G);drawOverlay()}
+  if(!document.hidden&&!(mode==='menu'&&menuArt())){R.render(dt,G);drawOverlay()}
   if(mode==='play'){uiT-=dt;if(uiT<=0){uiT=.12;refreshUI();tutCheck()}miniT-=dt;if(miniT<=0){miniT=.2;drawMini()}terT-=dt;if(terT<=0){terT=3;miniTerrain()}
    ambT-=dt;if(ambT<=0&&(!paused||mp())){ambT=.3+Math.random()*.25;ambient()}}
   fpsN++;fpsT+=dt;if(fpsT>=.5){if(opts.fps)$('fps').textContent=Math.round(fpsN/fpsT)+' fps';fpsN=0;fpsT=0}

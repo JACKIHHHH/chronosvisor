@@ -1,6 +1,8 @@
-# Imperia
+# Chronosvisor: La guerra de las eras
 
 Juego de estrategia en tiempo real en 3D, en español, para **macOS** y **Windows**: nueve edades de la Edad Oscura al año 2100, mapas de continentes con relieve y ríos reales, partidas contra la IA y en red local.
+
+![Menú principal](docs/menu.jpg)
 
 ![Península Ibérica](docs/iberia.jpg)
 
@@ -10,8 +12,8 @@ En **[Releases](../../releases)**:
 
 | Sistema | Archivo | Cómo instalar |
 |---|---|---|
-| macOS 13 o posterior (Apple Silicon e Intel) | `Imperia-<versión>.dmg` | Abre el DMG y arrastra Imperia a Aplicaciones. La primera vez: clic derecho sobre la app → **Abrir** (no está firmada por Apple). |
-| Windows 10/11 (64 bits) | `Imperia-<versión>-Windows.zip` | Descomprime la carpeta y abre `Imperia.exe`. Si sale SmartScreen: **Más información → Ejecutar de todas formas**. |
+| macOS 13 o posterior (Apple Silicon e Intel) | `Chronosvisor-<versión>.dmg` | Abre el DMG y arrastra Chronosvisor a Aplicaciones. La primera vez: clic derecho sobre la app → **Abrir** (no está firmada por Apple). |
+| Windows 10/11 (64 bits) | `Chronosvisor-<versión>-Windows.zip` | Descomprime la carpeta y abre `Chronosvisor.exe`. Si sale SmartScreen: **Más información → Ejecutar de todas formas**. |
 
 ## Qué tiene
 
@@ -34,8 +36,8 @@ Clic izquierdo selecciona, clic derecho ordena (mover, atacar, recolectar, const
 Requisitos: un Mac con Xcode (Swift) y Node.js.
 
 ```sh
-./build.sh                 # app de Mac y DMG → build/Imperia.dmg
-windows/build_win.sh       # versión de Windows (Electron) → ~/Desktop/Imperia-<versión>-Windows.zip
+./build.sh                 # app de Mac y DMG → build/Chronosvisor.dmg
+windows/build_win.sh       # versión de Windows (Electron) → ~/Desktop/Chronosvisor-<versión>-Windows.zip
 ```
 
 El juego es HTML/JavaScript con [three.js](https://threejs.org) (`web/`). La app de Mac es un envoltorio nativo en Swift con WebKit (`main.swift`); la de Windows, el mismo juego en Electron (`windows/`), con el mismo puente nativo para partidas guardadas y red.

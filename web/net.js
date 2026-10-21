@@ -25,7 +25,7 @@ const civs=()=>Object.keys(root.Imperia.CIVS);
 function newLobby(name){return{slots:[{k:'host',name,civ:civs()[0],team:0},{k:'open',team:1},{k:'ai',name:null,civ:civs()[1],team:1},{k:'closed',team:1}],
  cfg:{map:'continental',size:'medium',diff:'normal',win:'standard',reveal:'normal'}}}
 function lobbyOut(){for(const id in N.peers)sendTo(+id,{t:'lobby',L:N.L,you:N.peers[id].slot});emit('lobby',N.L,N.you)}
-N.host=function(name){N.leave();N.role='host';N.you=0;N.peers={};N.L=newLobby(name||'Anfitrión');post({op:'host',name:(name||'Imperia')+' · Imperia',port:N.port});emit('lobby',N.L,N.you)};
+N.host=function(name){N.leave();N.role='host';N.you=0;N.peers={};N.L=newLobby(name||'Anfitrión');post({op:'host',name:(name||'Chronosvisor')+' · Chronosvisor',port:N.port});emit('lobby',N.L,N.you)};
 N.browse=function(){post({op:'browse'})};
 N.stopBrowse=function(){post({op:'stopBrowse'})};
 N.join=function(addr,name){N.leave();N.role='client';N.myName=name||'Jugador';N.hostId=0;
