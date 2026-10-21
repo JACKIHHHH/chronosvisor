@@ -25,7 +25,7 @@ rm -rf ico && mkdir ico
 for s in 16 24 32 48 64 128 256; do sips -z $s $s ../build/icon_1024.png --out ico/$s.png >/dev/null; done
 python3 make_ico.py ico/imperia.ico ico/16.png ico/24.png ico/32.png ico/48.png ico/64.png ico/128.png ico/256.png
 
-echo "› Montando Imperia para Windows"
+echo "› Montando Chronosvisor para Windows"
 D=dist/Chronosvisor; rm -rf dist && mkdir -p $D
 ditto -x -k cache/electron-v$EV-win32-x64.zip $D
 mv $D/electron.exe $D/Chronosvisor.exe
