@@ -23,7 +23,8 @@ En **[Releases](../../releases)**:
 - **Campaña «Crónicas del Chronosvisor»**: 9 misiones, una por edad (de la Iberia del siglo V a 2100), con objetivos, oleadas y límites de tiempo.
 - **Empieza en la época que quieras**: de la Edad Oscura a la del Futuro, con la aldea ya desarrollada.
 - **Civilizaciones con identidad en la era moderna**: cada una con su unidad única propia (legionarios, cañón de 75, ametralladoras Vickers, Panzer y Leopard, blindados ligeros) y bonificaciones.
-- **Multijugador por Internet** con código de sala y lista de partidas públicas (servidor en `online/`), además de la red local.
+- **Multijugador por Internet** con código de sala, partidas públicas, reconexión automática, resincronización y espectadores (servidor en `online/`), además de la red local. Hasta **8 jugadores**.
+- **Repeticiones** de cada partida, **patrulla**, árbol de unidades y marcador en partida, población máxima configurable y tamaño de interfaz ajustable.
 - **IA** en tres niveles (fácil, normal y difícil), **red local** (hasta 4 jugadores, Mac y Windows juntos; búsqueda automática o por IP), tutorial, partidas guardadas, aldeanos ociosos, resembrado automático de granjas y límite de fotogramas para ahorrar batería.
 
 | | |

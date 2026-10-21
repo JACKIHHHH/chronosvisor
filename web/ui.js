@@ -14,12 +14,12 @@ const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX'];
 const {AGEYEAR,T,U,B,RDEF,AGES,AGECOST,AGETIME,RN,BPAGES,TECH,RES,CIVS,MAPS,SIZES,DIFF,PCOLORS,GAR,WONDER_T,RELIC_T}=I;
 const $=id=>document.getElementById(id);
 const cv=$('c3d'),ov=$('ov'),oc=ov.getContext('2d'),mini=$('mini'),mc=mini.getContext('2d');
-let G=null,MW=88,MH=88,mode='menu',sel=[],bm=null,amode=false,page=0,speed=1,paused=false,groups={},last=0,dpr=1;
-let uiT=0,miniT=0,terT=0,ambT=0,pings=[],curCmds=[],cmdSig=null,tipCmd=null,delArm=0,lastGK={k:null,t:0},idleIx=0,menuA=0,lastToast='',wallDrag=null,fpsN=0,fpsT=0,rebinding=null,graphK='score',sayT=0;
+let G=null,MW=88,MH=88,mode='menu',sel=[],bm=null,amode=false,pmode=false,page=0,speed=1,paused=false,groups={},last=0,dpr=1;
+let simAcc=0,REC=null,uiT=0,miniT=0,terT=0,ambT=0,pings=[],curCmds=[],cmdSig=null,tipCmd=null,delArm=0,lastGK={k:null,t:0},idleIx=0,menuA=0,lastToast='',wallDrag=null,fpsN=0,fpsT=0,rebinding=null,graphK='score',sayT=0;
 const AGESHORT=['Oscura','Feudal','Castillos','Imperial','Industrial','Mundial','Atómica','Información','Futuro'];
-const cfg={startAge:'0',civ:'iberos',map:'continental',size:'medium',nAI:1,teams:'ffa',diff:'normal',win:'standard',reveal:'normal'};
+const cfg={pop:'200',startAge:'0',civ:'iberos',map:'continental',size:'medium',nAI:1,teams:'ffa',diff:'normal',win:'standard',reveal:'normal'};
 const DEFKEYS={grid:'QWERTASDFGZXCVB'.split(''),idle:'.',tc:'H',army:'M',pause:'P',chat:'Enter',save:'F5'};
-const opts={quality:'high',music:55,sfx:80,cam:100,edge:true,day:false,fpsCap:60,fps:false,voices:true,cb:false,name:'Jugador',keys:JSON.parse(JSON.stringify(DEFKEYS))};
+const opts={quality:'high',music:55,sfx:80,cam:100,edge:true,day:false,fpsCap:60,fps:false,voices:true,cb:false,ui:100,name:'Jugador',keys:JSON.parse(JSON.stringify(DEFKEYS))};
 const tut={on:false,i:0,done:false};
 const keys={},mouse={x:0,y:0,down:false,sx:0,sy:0,drag:false,inside:false};
 const RICON={
@@ -56,18 +56,18 @@ function ackFor(r){const o=own().filter(e=>e.kind==='unit');if(!o.length)return;
  if(c==='monk')return say(pick(ACK.monk),false,{pitch:1,voz:'monje'});if(c==='ship')return say(pick(ACK.ship),false,{pitch:.9,voz:'marinero'});
  say(pick(ag>=8?ACK.fut:ag>=5?ACK.mod:ACK.mil),false,{pitch:.85,voz:ag>=8?'futuro':ag>=5?'moderno':'soldado'})}
 // paleta para daltónicos (azul, naranja, amarillo y rosa de Okabe-Ito): se fija al arrancar porque los modelos guardan el color del jugador
-const PAL={def:['#4a86e8','#e0553f','#e2b534','#9a6ae0'],cb:['#2f86d8','#e69f00','#f0e442','#cc79a7']};let palSet=false;
+const PAL={cb:['#2f86d8','#e69f00','#f0e442','#cc79a7','#56b4e9','#d55e00','#009e73','#ffffff']};let palSet=false;
 function applyPalette(){if(palSet)return;palSet=true;if(!opts.cb)return;const A=window.ImperiaArt,h=s=>parseInt(s.slice(1),16),dk=v=>(((v>>16&255)*.62|0)<<16)|(((v>>8&255)*.62|0)<<8)|((v&255)*.62|0);
  PAL.cb.forEach((c,i)=>{PCOLORS[i]=c;if(A&&A.PC){A.PC[i]=h(c);if(A._&&A._.PCD)A._.PCD[i]=dk(h(c))}})}
-function applyOpts(){applyPalette();opts.day=false;AU.setVolumes(opts.music/100,opts.sfx/100);R.setQuality(opts.quality);R.setDayNight(false);if(R.setFpsCap)R.setFpsCap(+opts.fpsCap||0);$('fps').hidden=!opts.fps}
+function applyOpts(){applyPalette();{const z=(+opts.ui||100)/100;$('hud').style.zoom=z===1?'':z}opts.day=false;AU.setVolumes(opts.music/100,opts.sfx/100);R.setQuality(opts.quality);R.setDayNight(false);if(R.setFpsCap)R.setFpsCap(+opts.fpsCap||0);$('fps').hidden=!opts.fps}
 function saveOpts(){Store.write('options',JSON.stringify(opts))}
 
 // ---------- utilidades
 const ME=()=>G?G.me||0:0,PME=()=>G.players[ME()];
 const mp=()=>Net&&Net.inGame;
-function cmd(c){if(mp()){Net.cmd(c);return true}return I.exec(ME(),c)}
+function cmd(c){if(G&&(G.replay||G.spectate))return false;if(mp()){Net.cmd(c);return true}const ok=I.exec(ME(),c);if(ok!==false&&REC)REC.cmds.push([REC.tick,ME(),c]);return ok}
 function own(){return sel.map(id=>G.ents.get(id)).filter(e=>e&&!e.dead&&e.owner===ME()&&!(e.kind==='unit'&&e.gar))}
-function setSel(ids){sel=ids;R.setSelection(ids);bm=null;amode=false;wallDrag=null;R.setGhost(null);if(!own().some(e=>e.type==='villager'))page=0;cmdSig=null;refreshUI()}
+function setSel(ids){sel=ids;R.setSelection(ids);bm=null;amode=false;pmode=false;wallDrag=null;R.setGhost(null);if(!own().some(e=>e.type==='villager'))page=0;cmdSig=null;refreshUI()}
 function toast(t,warn,cls){if(t===lastToast&&$('msgs').lastChild)return;lastToast=t;const m=document.createElement('div');m.className='msg'+(warn?' warn':'')+(cls?' '+cls:'');m.textContent=t;const box=$('msgs');box.appendChild(m);while(box.children.length>5)box.firstChild.remove();
  setTimeout(()=>{m.style.opacity=0;m.style.transform='translateY(-6px)'},cls?7000:3800);setTimeout(()=>{m.remove();if(lastToast===t)lastToast=''},cls?7600:4400)}
 function centerSel(ids){const es=ids.map(i=>G.ents.get(i)).filter(Boolean);if(!es.length)return;let x=0,z=0;for(const e of es){x+=e.x;z+=e.y}R.centerOn(x/es.length/T,z/es.length/T)}
@@ -86,11 +86,12 @@ function isMil(e){return e.kind==='unit'&&U[e.type].atk>0&&e.type!=='villager'}
 function commands(){const o=own();if(!o.length)return[];const p=PME(),L=[],me=ME();
  const del={id:'del',slot:14,icon:'x:del',name:'Eliminar',desc:'Elimina la selección. Pulsa Supr dos veces para confirmar.',act:()=>delSel()};
  const vills=o.filter(e=>e.type==='villager'),units=o.filter(e=>e.kind==='unit');
- if(vills.length){BPAGES[page].forEach((t,i)=>L.push({id:'b:'+t,slot:i,icon:'b:'+t,name:I.bName(t,me),desc:B[t].desc,cost:B[t].cost,time:B[t].time,off:!I.bldAvail(p,t),req:B[t].age?'Requiere la '+AGES[B[t].age]:'',act:()=>{bm=t;amode=false;wallDrag=null;cmdSig=null}}));
+ if(vills.length){BPAGES[page].forEach((t,i)=>L.push({id:'b:'+t,slot:i,icon:'b:'+t,name:I.bName(t,me),desc:B[t].desc,cost:B[t].cost,time:B[t].time,off:!I.bldAvail(p,t),req:B[t].age?'Requiere la '+AGES[B[t].age]:'',act:()=>{bm=t;amode=false;pmode=false;wallDrag=null;cmdSig=null}}));
   L.push({id:'page',slot:10,icon:'x:page'+(page?0:1),name:page?'Edificios económicos':'Edificios militares',desc:page?'Casas, granjas, almacén, mercado, muelle, torres y murallas.':'Cuartel, galería, establo, herrería, asedio, monasterio, castillo y maravilla.',act:()=>{page=1-page;bm=null;cmdSig=null}});
   L.push({id:'stop',slot:11,icon:'x:stop',name:'Detener',desc:'Cancela la orden actual y las encadenadas.',act:()=>cmd({c:'stop',ids:sel})});L.push(del);return L}
  if(units.length){const mil=units.filter(isMil);
   if(mil.length)L.push({id:'amove',slot:5,icon:'x:amove',name:'Atacar y avanzar',desc:'Haz clic en el mapa: tus tropas avanzan en formación y atacan a todo enemigo que encuentren. Con Mayús encadenas puntos.',act:()=>{amode=true;bm=null;cmdSig=null}});
+  if(mil.length)L.push({id:'patrol',slot:8,icon:'x:patrol',name:'Patrullar',desc:'Haz clic en el mapa: tus tropas van y vienen entre su posición y ese punto, atacando a los enemigos que encuentren.',act:()=>{pmode=true;amode=false;pmode=false;bm=null;cmdSig=null}});
   L.push({id:'stop',slot:6,icon:'x:stop',name:'Detener',desc:'Cancela la orden actual y las encadenadas.',act:()=>cmd({c:'stop',ids:sel})});
   const tr=units.filter(u=>u.type==='transport'&&u.cargo&&u.cargo.length);
   if(tr.length)L.push({id:'unload',slot:7,icon:'x:unload',name:'Desembarcar',desc:'Haz clic derecho en la costa con el transporte seleccionado para desembarcar allí. Este botón desembarca en la orilla más cercana.',act:()=>{for(const s of tr)cmd({c:'right',ids:[s.id],x:s.x,y:s.y+T})}});
@@ -174,7 +175,7 @@ function refreshCmds(){curCmds=commands();const p=PME(),el=$('cmds');
    b.addEventListener('mouseenter',()=>{tipCmd=c.id;showTip()});b.addEventListener('mouseleave',()=>{tipCmd=null;$('tip').hidden=true});el.appendChild(b)}
   if(tipCmd&&!curCmds.some(c=>c.id===tipCmd)){tipCmd=null;$('tip').hidden=true}}
  const hint=tut.on&&curHint();
- for(const b of el.children){const c=curCmds.find(x=>x.id===b.dataset.id);if(!c)continue;b.classList.toggle('poor',!!c.cost&&!I.canAfford(p,c.cost));b.classList.toggle('on',!!c.on||c.id==='b:'+bm||(c.id==='amove'&&amode));b.classList.toggle('hint',!!hint&&c.id===hint)}
+ for(const b of el.children){const c=curCmds.find(x=>x.id===b.dataset.id);if(!c)continue;b.classList.toggle('poor',!!c.cost&&!I.canAfford(p,c.cost));b.classList.toggle('on',!!c.on||c.id==='b:'+bm||(c.id==='amove'&&amode)||(c.id==='patrol'&&pmode));b.classList.toggle('hint',!!hint&&c.id===hint)}
  if(tipCmd&&!paused)showTip()}
 function showTip(){const c=curCmds.find(x=>x.id===tipCmd),t=$('tip');if(!c){t.hidden=true;return}const p=PME();
  t.innerHTML=`<div class="tn">${esc(c.name)}<span class="tk">${c.id==='del'?'Supr':esc(keyName(gridKey(c.slot)))}</span></div>${c.cost?costHTML(c.cost,p):''}<div class="td">${c.desc||''}${c.time?` <span style="color:var(--dim)">· ${c.time} s</span>`:''}</div>${c.off&&c.req?`<div class="tr">${c.req}</div>`:''}`;
@@ -242,10 +243,10 @@ function ghostTiles(){const p0=PME(),s=B[bm].size,c=B[bm].cost;
  const w=R.screenToWorld(mouse.x,mouse.y);if(!w)return[];const tx=Math.round(w.x-s/2),ty=Math.round(w.z-s/2);return[[tx,ty,I.canPlace(bm,tx,ty,ME())&&I.canAfford(p0,c)]]}
 function place(shift){const t=ghostTiles()[0];if(!t)return;cmd({c:'place',b:bm,tx:t[0],ty:t[1],ids:sel,q:shift});if(!t[2])return;
  const s2=B[bm].size/2;R.puff(t[0]+s2,.1+R.hAt(t[0]+s2,t[1]+s2),t[1]+s2,0xb8a07a,5);if(mp())sfx('place');ackFor('build');if(!shift){bm=null;R.setGhost(null);cmdSig=null}}
-function rightClick(ev){if(bm){bm=null;wallDrag=null;R.setGhost(null);cmdSig=null;return}if(amode){amode=false;cmdSig=null;return}
+function rightClick(ev){if(G&&(G.spectate||G.replay))return;if(bm){bm=null;wallDrag=null;R.setGhost(null);cmdSig=null;return}if(amode||pmode){amode=false;pmode=false;cmdSig=null;return}
  if(!own().length)return;const w=R.screenToWorld(ev.clientX,ev.clientY);if(!w)return;const tgt=entAtScreen(ev.clientX,ev.clientY);
  let r;if(mp()){Net.cmd({c:'right',ids:sel,x:w.x*T,y:w.z*T,tgt:tgt?tgt.id:null,q:ev.shiftKey});r=tgt&&tgt.owner!=null&&I.isEnemy(ME(),tgt.owner)?'atk':tgt&&(tgt.kind==='res'||tgt.kind==='relic')?'gather':'move'}
- else{r=I.exec(ME(),{c:'right',ids:sel,x:w.x*T,y:w.z*T,tgt:tgt?tgt.id:null,q:ev.shiftKey});if(!r)return}
+ else{if(G.replay)return;const rc={c:'right',ids:sel,x:w.x*T,y:w.z*T,tgt:tgt?tgt.id:null,q:ev.shiftKey};r=I.exec(ME(),rc);if(!r)return;if(REC)REC.cmds.push([REC.tick,ME(),rc])}
  const col={atk:0xff6a55,conv:0xf0d493,heal:0x7dff9a,gather:0xf0cf7a,build:0xf0cf7a,rally:0x9fd4ff,gar:0x9fd4ff,unload:0x9fd4ff}[r]||0x9be07e;
  if(tgt&&r!=='move'&&r!=='rally'&&r!=='unload')R.marker(tgt.x/T,tgt.y/T,col);else R.marker(w.x,w.z,col);sfx('cmd');if(r!=='rally')ackFor(r);refreshUI()}
 function clickSelect(shift,dbl){const e=entAtScreen(mouse.sx,mouse.sy);
@@ -261,7 +262,8 @@ cv.addEventListener('mousedown',ev=>{AU.init();if(inputBlocked())return;mouse.x=
  if(ev.button===2||(ev.button===0&&ev.ctrlKey)){rightClick(ev);return}
  if(ev.button!==0)return;
  if(bm){if(B[bm].wall&&!B[bm].gate){wallDrag=tileAtMouse();return}place(ev.shiftKey);return}
- if(amode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'amove',ids:sel,x:w.x*T,y:w.z*T,q:ev.shiftKey});R.marker(w.x,w.z,0xff6a55);sfx('cmd');ackFor('atk')}if(!ev.shiftKey){amode=false;cmdSig=null}return}
+ if(pmode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'patrol',ids:sel,x:w.x*T,y:w.z*T});R.marker(w.x,w.z,0x8fd0ff);sfx('cmd');ackFor('move')}pmode=false;cmdSig=null;return}
+ if(amode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'amove',ids:sel,x:w.x*T,y:w.z*T,q:ev.shiftKey});R.marker(w.x,w.z,0xff6a55);sfx('cmd');ackFor('atk')}if(!ev.shiftKey){amode=false;pmode=false;cmdSig=null}return}
  mouse.down=true;mouse.sx=ev.clientX;mouse.sy=ev.clientY;mouse.drag=false});
 window.addEventListener('mousemove',ev=>{mouse.x=ev.clientX;mouse.y=ev.clientY;mouse.inside=true;if(mouse.down&&Math.hypot(mouse.x-mouse.sx,mouse.y-mouse.sy)>6)mouse.drag=true});
 document.addEventListener('mouseleave',()=>{mouse.inside=false});
@@ -283,9 +285,10 @@ window.addEventListener('keydown',ev=>{AU.init();
  if(rebinding){ev.preventDefault();finishRebind(ev);return}
  if(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)){if(ev.key==='Escape')document.activeElement.blur();return}
  keys[ev.key]=true;const k=keyOf(ev),K=opts.keys;
- if(ev.key==='Escape'){ev.preventDefault();if(!$('opts').hidden){closeOpts();return}if(!$('slots').hidden){$('slots').hidden=true;return}
-  if(mode!=='play'||G.over)return;if(bm){bm=null;wallDrag=null;R.setGhost(null);cmdSig=null}else if(amode){amode=false;cmdSig=null}else if(!$('pause').hidden)resume();else if(sel.length)setSel([]);else pause();return}
+ if(ev.key==='Escape'){ev.preventDefault();if(!$('tree').hidden){$('tree').hidden=true;return}if(!$('opts').hidden){closeOpts();return}if(!$('slots').hidden){$('slots').hidden=true;return}
+  if(mode!=='play'||G.over)return;if(bm){bm=null;wallDrag=null;R.setGhost(null);cmdSig=null}else if(amode||pmode){amode=false;pmode=false;cmdSig=null}else if(!$('pause').hidden)resume();else if(sel.length)setSel([]);else pause();return}
  if(mode!=='play'||G.over||!$('pause').hidden)return;
+ if((ev.key==='k'||ev.key==='K')&&!ev.metaKey&&!ev.ctrlKey&&!opts.keys.grid.includes('K')){if($('tree').hidden)showTree();else $('tree').hidden=true;return}
  if(k===K.chat&&mp()){ev.preventDefault();openChat();return}
  if(paused&&!mp())return;
  if((ev.metaKey||ev.ctrlKey)&&/^[1-9]$/.test(ev.key)){groups[ev.key]=own().map(e=>e.id);if(groups[ev.key].length)toast('Grupo '+ev.key+' asignado');else delete groups[ev.key];ev.preventDefault();refreshGroups();return}
@@ -338,15 +341,15 @@ function tutCheck(){if(!tut.on)return;const s=TUT[tut.i];if(s&&s.ok()){tut.i++;s
 $('tutSkip').onclick=()=>{tut.on=false;for(const k in G.ai)G.ai[k].passive=false;$('tut').hidden=true;cmdSig=null};
 
 // ---------- flujo de partida
-function hideScreens(){for(const id of['menu','end','pause','slots','mp','lobby','opts','camp'])$(id).hidden=true}
-function setupHUD(){MW=I.MW;MH=I.MH;hideScreens();$('hud').hidden=false;$('msgs').innerHTML='';$('info').dataset.s='';$('plist').dataset.s='';$('vict').dataset.h='';$('groups').dataset.h='';$('chat').hidden=true;
- mode='play';paused=false;sel=[];groups={};bm=null;amode=false;wallDrag=null;page=0;speed=1;$('spd').textContent='1×';$('spd').disabled=mp()&&Net.role!=='host';cmdSig=null;miniTerrain();AU.startMusic();
+function hideScreens(){for(const id of['menu','end','pause','slots','mp','lobby','opts','camp','tree'])$(id).hidden=true}
+function setupHUD(){MW=I.MW;MH=I.MH;hideScreens();$('hud').hidden=false;$('replayBar').hidden=!(G&&(G.replay||G.spectate));if(G&&(G.replay||G.spectate))setTimeout(renderReplayBar,0);$('msgs').innerHTML='';$('info').dataset.s='';$('plist').dataset.s='';$('vict').dataset.h='';$('groups').dataset.h='';$('chat').hidden=true;
+ mode='play';paused=false;sel=[];groups={};bm=null;amode=false;pmode=false;wallDrag=null;page=0;speed=1;$('spd').textContent='1×';$('spd').disabled=mp()&&Net.role!=='host';cmdSig=null;miniTerrain();AU.startMusic();
  $('saveBtn').hidden=mp();$('restart').hidden=mp();$('mpPause').hidden=!mp();$('resign').hidden=!mp()}
-function startGame(extra){AU.init();const c=Object.assign({},cfg,extra||{});G=I.newGame(c);R.build(G);setupHUD();
+function startGame(extra){AU.init();const c=Object.assign({},cfg,extra||{});const sd=(Date.now()%2147483647)|0||7;G=I.newGame(c,sd);recStart(c,sd);R.build(G);setupHUD();
  tut.on=!!c.tutorial;tut.i=0;showTut();
  const tc=G.bl.find(e=>e.owner===ME()&&e.type==='tc');setSel(tc?[tc.id]:[]);
  if(!tut.on){toast('Entrena aldeanos, recolecta recursos y construye casas.');setTimeout(()=>{if(mode==='play'&&G)toast(G.players.length>2?'Hay '+(G.players.length-1)+' reinos más en el mapa.':'El reino rival ya está preparando su ejército.')},4200)}}
-function startMP(c,seed){AU.init();G=I.newGame(c,seed);R.build(G);setupHUD();tut.on=false;showTut();
+function startMP(c,seed){AU.init();G=I.newGame(c,seed);if(c.spec)G.spectate=true;recStart(c,seed);R.build(G);setupHUD();tut.on=false;showTut();
  const tc=G.bl.find(e=>e.owner===ME()&&e.type==='tc');setSel(tc?[tc.id]:[]);toast('Partida en red · '+G.players.length+' jugadores. Intro para chatear.');say('Que comience la batalla',true)}
 function pause(){if(mode!=='play'||G.over)return;if(!mp())paused=true;tipCmd=null;$('pause').hidden=false;$('tip').hidden=true;$('pauseEye').textContent=mp()?'Menú · la partida sigue en marcha':'Partida en pausa';$('mpPause').textContent=Net.paused?'Reanudar para todos':'Pausar para todos'}
 function resume(){paused=false;$('pause').hidden=true}
@@ -361,7 +364,7 @@ function menuStage(st){$('mTitle').hidden=st!=='title';$('mSetup').hidden=st!=='
 function quitApp(){try{window.webkit.messageHandlers.nativeApp.postMessage({cmd:'quit'})}catch(e){window.close()}}
 function showMenu(){menuStage('title');if(Net&&Net.role)Net.leave();mode='menu';paused=false;tut.on=false;$('tut').hidden=true;$('hud').hidden=true;hideScreens();$('menu').hidden=false;$('tip').hidden=true;
  if(!G||!G.menuDemo){G=I.newGame({map:'continental',size:'small',nAI:1,diff:'normal',civ:cfg.civ},Math.floor(Math.random()*1e9));G.menuDemo=true;MW=I.MW;MH=I.MH;G.vis.fill(1);G.exp.fill(1);R.build(G);R.view.tdist=R.view.dist=21}sel=[];R.setSelection([]);R.setGhost(null)}
-function showEnd(win,how){paused=true;sfx(win?'win':'lose');const M=G.cfg.scn&&campM(G.cfg.scn);say(M?(win?'Misión cumplida':'Misión fracasada'):win?'¡Victoria!':'Hemos sido derrotados',true);
+function showEnd(win,how){paused=true;if(!G.replay)recSave();sfx(win?'win':'lose');const M=G.cfg.scn&&campM(G.cfg.scn);say(M?(win?'Misión cumplida':'Misión fracasada'):win?'¡Victoria!':'Hemos sido derrotados',true);
  $('endEye').textContent='Fin de la partida · '+DIFF[G.cfg.diff].name+' · '+MAPS[G.cfg.map].name+(mp()?' · en red':'');
  const t=$('endTitle');t.textContent=win?'Victoria':'Derrota';t.className=win?'win':'lose';
  const hw={wonder:'por la maravilla',relics:'por las reliquias',conquest:'por conquista'}[how]||'';
@@ -408,7 +411,7 @@ async function saveSlot(n,silent){if(!G||mode!=='play'||G.over||mp())return;try{
  const ok=await Store.write('slot'+n,data);await Store.write('slot'+n+'meta',JSON.stringify(meta));
  if(!silent){toast(ok?'Partida guardada en la ranura '+n:'No se pudo guardar la partida',!ok);if(ok)sfx('built')}}catch(err){toast('No se pudo guardar: '+err.message,true)}}
 async function loadSlot(n){const data=await Store.read('slot'+n);if(!data){toast('Esa ranura está vacía',true);return}
- try{AU.init();G=I.deserialize(data);R.build(G);setupHUD();tut.on=false;showTut();const tc=G.bl.find(e=>e.owner===ME()&&e.type==='tc')||G.list.find(e=>e.owner===ME());if(tc)R.centerOn(tc.x/T,tc.y/T);setSel([]);toast('Partida cargada')}
+ try{AU.init();G=I.deserialize(data);recStart(null,0,data);R.build(G);setupHUD();tut.on=false;showTut();const tc=G.bl.find(e=>e.owner===ME()&&e.type==='tc')||G.list.find(e=>e.owner===ME());if(tc)R.centerOn(tc.x/T,tc.y/T);setSel([]);toast('Partida cargada')}
  catch(err){toast('No se pudo cargar: '+err.message,true);showMenu()}}
 async function showSlots(saving){$('slotsEye').textContent=saving?'Guardar partida':'Cargar partida';$('slotsTitle').textContent=saving?'Elige una ranura':'Partidas guardadas';
  const list=$('slotList');list.innerHTML='<div class="qnote">Leyendo…</div>';$('slots').hidden=false;const rows=[];
@@ -416,7 +419,24 @@ async function showSlots(saving){$('slotsEye').textContent=saving?'Guardar parti
   const d=m?new Date(m.date):null;
   if(n==='A'&&!m)continue;rows.push(`<div class="slot"><div class="sn">${n==='A'?'↻':n}</div><div class="sd">${m?`<b>${CIVS[m.civ].name} · ${MAPS[m.map]?MAPS[m.map].name:m.map} · ${m.n} jugadores</b><span>${AGES[m.age]} · ${fmtT(m.t)} de partida · ${DIFF[m.diff].name} · ${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span>`:'<b style="color:var(--mut)">Vacía</b>'}</div>
    <button class="btn sm${saving?'':' pri'}" data-slot="${n}" ${!saving&&!m?'disabled style="opacity:.35"':''}>${saving?(m?'Sobrescribir':'Guardar aquí'):'Cargar'}</button></div>`)}
- list.innerHTML=rows.join('');list.onclick=async ev=>{const b=ev.target.closest('[data-slot]');if(!b||b.disabled)return;const n=b.dataset.slot==='A'?'A':+b.dataset.slot;$('slots').hidden=true;if(saving){await saveSlot(n)}else{await loadSlot(n)}}}
+ if(!saving){for(const n of[1,2,3]){let m=null;try{m=JSON.parse(await Store.read('replay'+n+'meta')||'null')}catch(e){}if(!m)continue;const d=new Date(m.date);
+  rows.push(`<div class="slot"><div class="sn">▶</div><div class="sd"><b>Repetición · ${CIVS[m.civ]?CIVS[m.civ].name:''} · ${MAPS[m.map]?MAPS[m.map].name:m.map} · ${m.n} jugadores${m.scn?' · campaña':''}</b><span>${m.win?'Victoria':'Derrota'} · ${fmtT(m.t)} · ${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span></div><button class="btn sm" data-replay="${n}">Ver</button></div>`)}}
+ list.innerHTML=rows.join('');list.onclick=async ev=>{const rb=ev.target.closest('[data-replay]');if(rb){$('slots').hidden=true;await playReplay(+rb.dataset.replay);return}const b=ev.target.closest('[data-slot]');if(!b||b.disabled)return;const n=b.dataset.slot==='A'?'A':+b.dataset.slot;$('slots').hidden=true;if(saving){await saveSlot(n)}else{await loadSlot(n)}}}
+// ---------- repeticiones: el motor es determinista, así que basta con la semilla (o una instantánea) y las órdenes con su tic
+function recStart(c,seed,snap){REC={v:1,cfg:c?JSON.parse(JSON.stringify(c)):null,seed,snap:snap||null,me:G.me,cmds:[],tick:0,date:new Date().toISOString()};simAcc=0}
+async function recSave(){if(!REC||!G||REC.saved)return;REC.saved=true;const p=G.players[G.me],meta={date:REC.date,t:G.t,civ:p.civ,map:G.cfg.map,n:G.players.length,win:G.winTeam===p.team,mp:!!G.cfg.mp,scn:G.cfg.scn||null,ticks:REC.tick};
+ try{for(let i=3;i>1;i--){const d=await Store.read('replay'+(i-1)),m=await Store.read('replay'+(i-1)+'meta');if(d){await Store.write('replay'+i,d);await Store.write('replay'+i+'meta',m||'null')}}
+  await Store.write('replay1',JSON.stringify(Object.assign({},REC,{saved:undefined})));await Store.write('replay1meta',JSON.stringify(meta))}catch(e){}}
+let RP=null;
+function replayCmds(){const r=G.replay;while(r.i<r.cmds.length&&r.cmds[r.i][0]<=r.tick){const [,pl,c]=r.cmds[r.i++];try{I.exec(pl,c)}catch(e){}}r.tick++}
+async function playReplay(n){const data=await Store.read('replay'+n);if(!data){toast('No hay repetición',true);return}let rec;try{rec=JSON.parse(data)}catch(e){toast('Repetición dañada',true);return}
+ AU.init();G=rec.snap?I.deserialize(rec.snap):I.newGame(rec.cfg,rec.seed);G.mp=false;G.replay={cmds:rec.cmds,i:0,tick:0,len:rec.tick};I.setMe(rec.me||0);REC=null;R.build(G);setupHUD();tut.on=false;showTut();speed=2;$('spd').textContent='2×';
+ const tc=G.bl.find(e=>e.owner===ME()&&e.type==='tc');if(tc)R.centerOn(tc.x/T,tc.y/T);setSel([]);$('replayBar').hidden=false;renderReplayBar();toast('Repetición: no puedes dar órdenes. Cambia de jugador para ver su niebla.')}
+function renderReplayBar(){if(G&&G.spectate&&!G.replay){$('replayBar').hidden=false;$('replayBar').innerHTML=`<b>Espectador</b><select id="rpMe">${G.players.map(p=>`<option value="${p.i}"${p.i===ME()?' selected':''}>Ver a ${esc(G.players[p.i].name)}</option>`).join('')}</select><button class="ib" id="rpExit">Salir</button>`;return}
+ if(!G||!G.replay){$('replayBar').hidden=true;return}const r=G.replay;
+ $('replayBar').innerHTML=`<b>Repetición</b><span id="rpT">${fmtT(r.tick/30)} / ${fmtT(r.len/30)}</span>`+[1,2,4,8].map(s=>`<button class="ib${speed===s?' on':''}" data-sp="${s}">${s}×</button>`).join('')+`<select id="rpMe">${G.players.map(p=>`<option value="${p.i}"${p.i===ME()?' selected':''}>Ver a ${esc(pName(p.i))}</option>`).join('')}</select><button class="ib" id="rpExit">Salir</button>`}
+document.addEventListener('click',ev=>{const b=ev.target.closest('#replayBar [data-sp]');if(b&&G&&G.replay){speed=+b.dataset.sp;$('spd').textContent=speed+'×';renderReplayBar()}if(ev.target.id==='rpExit'){$('replayBar').hidden=true;if(G&&G.spectate&&Net)Net.leave();showMenu()}});
+document.addEventListener('change',ev=>{if(ev.target.id==='rpMe'&&G&&(G.replay||G.spectate)){I.setMe(+ev.target.value);R.build(G);renderReplayBar()}});
 const KEYROWS=[['idle','Aldeano inactivo'],['army','Todo el ejército'],['tc','Centro urbano'],['pause','Pausa'],['chat','Chat (en red)'],['save','Guardado rápido']];
 function renderKeys(){const K=opts.keys;
  $('keyGrid').innerHTML=K.grid.map((k,i)=>`<button class="kb${rebinding&&rebinding.i===i?' on':''}" data-i="${i}" title="Casilla ${i+1} del panel de órdenes">${esc(keyName(k))}</button>`).join('');
@@ -431,11 +451,12 @@ $('keyGrid').onclick=ev=>{const b=ev.target.closest('[data-i]');if(b)startRebind
 $('keyList').onclick=ev=>{const b=ev.target.closest('[data-id]');if(b)startRebind({id:b.dataset.id})};
 $('keyReset').onclick=()=>{opts.keys=JSON.parse(JSON.stringify(DEFKEYS));rebinding=null;renderKeys();cmdSig=null;saveOpts();sfx('click')};
 function syncOpts(){for(const b of $('o-quality').children)b.classList.toggle('on',b.dataset.v===opts.quality);$('o-music').value=opts.music;$('o-sfx').value=opts.sfx;$('o-cam').value=opts.cam;
- for(const b of $('o-cap').children)b.classList.toggle('on',String(b.dataset.v)===String(opts.fpsCap||0));for(const [id,k] of[['o-edge','edge'],['o-fps','fps'],['o-voices','voices'],['o-cb','cb']]){$(id).classList.toggle('on',!!opts[k]);$(id).setAttribute('aria-pressed',!!opts[k])}renderKeys()}
+ for(const b of $('o-cap').children)b.classList.toggle('on',String(b.dataset.v)===String(opts.fpsCap||0));for(const b of $('o-ui').children)b.classList.toggle('on',String(b.dataset.v)===String(opts.ui||100));for(const [id,k] of[['o-edge','edge'],['o-fps','fps'],['o-voices','voices'],['o-cb','cb']]){$(id).classList.toggle('on',!!opts[k]);$(id).setAttribute('aria-pressed',!!opts[k])}renderKeys()}
 function openOpts(){syncOpts();$('opts').hidden=false}
 function closeOpts(){rebinding=null;$('opts').hidden=true;saveOpts()}
 $('o-quality').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;opts.quality=b.dataset.v;applyOpts();syncOpts();sfx('click')};
 $('o-music').oninput=ev=>{opts.music=+ev.target.value;applyOpts()};$('o-sfx').oninput=ev=>{opts.sfx=+ev.target.value;applyOpts()};$('o-sfx').onchange=()=>sfx('train');$('o-cam').oninput=ev=>{opts.cam=+ev.target.value};
+$('o-ui').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;opts.ui=+b.dataset.v;applyOpts();syncOpts();saveOpts();sfx('click')};
 $('o-cap').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;opts.fpsCap=+b.dataset.v;applyOpts();syncOpts();saveOpts();sfx('click')};
 for(const [id,k] of[['o-edge','edge'],['o-fps','fps'],['o-voices','voices'],['o-cb','cb']])$(id).onclick=()=>{opts[k]=!opts[k];applyOpts();syncOpts();sfx('click');if(k==='voices'&&opts.voices)say('Voces activadas',true)};
 $('optsBack').onclick=closeOpts;$('optBtn').onclick=()=>{AU.init();openOpts()};$('optBtn2').onclick=openOpts;
@@ -450,19 +471,21 @@ function setMpTab(k){mpTab=k;opts.mpTab=k;for(const b of $('mpTabs').children)b.
  if(k==='lan'){mpStatus(Net.native?'Buscando partidas en tu red local…':'La red local necesita la app de Chronosvisor para Mac o Windows.',!Net.native);renderFound([]);if(Net.native)Net.browse()}
  else{Net.stopBrowse&&Net.stopBrowse();mpStatus('Juega con amigos por Internet: crea una sala y pásales el código, o únete a una partida pública.');refreshRooms()}}
 $('mpTabs').onclick=ev=>{const b=ev.target.closest('button');if(b){sfx('click');setMpTab(b.dataset.k)}};
+$('mpSpec').onclick=()=>{$('mpSpec').classList.toggle('on');sfx('click')};
+const spec=()=>$('mpSpec').classList.contains('on');
 $('mpPub').onclick=()=>{const b=$('mpPub');b.classList.toggle('on');sfx('click')};
 async function refreshRooms(){const el=$('mpRooms');el.innerHTML='<div class="qnote">Buscando partidas…</div>';
  try{const list=await Net.listOnline();el.innerHTML=list.length?list.map(r=>`<div class="slot"><div class="sd"><b>${esc(String(r.name||'Partida').replace(/ · (Imperia|Chronosvisor)$/,''))}</b><span>${r.n}/${r.max} jugadores · código ${esc(r.code)}</span></div><button class="btn sm pri" data-code="${esc(r.code)}">Unirse</button></div>`).join(''):'<div class="qnote">No hay partidas públicas ahora mismo. Crea una sala y comparte el código.</div>'}
  catch(e){el.innerHTML='<div class="qnote">No se puede conectar con el servidor online. Comprueba tu conexión a Internet.</div>'}}
 $('mpRefresh').onclick=()=>{sfx('click');refreshRooms()};
-$('mpRooms').onclick=ev=>{const b=ev.target.closest('[data-code]');if(!b)return;sfx('click');Net.joinOnline(b.dataset.code,myName());mpStatus('Conectando…')};
-$('mpJoinCode').onclick=()=>{const c=$('mpCode').value.trim();if(!c){mpStatus('Escribe el código de la sala',true);return}sfx('click');Net.joinOnline(c,myName())};
+$('mpRooms').onclick=ev=>{const b=ev.target.closest('[data-code]');if(!b)return;sfx('click');Net.joinOnline(b.dataset.code,myName(),spec());mpStatus('Conectando…')};
+$('mpJoinCode').onclick=()=>{const c=$('mpCode').value.trim();if(!c){mpStatus('Escribe el código de la sala',true);return}sfx('click');Net.joinOnline(c,myName(),spec())};
 $('mpCode').addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter')$('mpJoinCode').click()});
 function renderFound(list){$('mpFound').innerHTML=list.length?list.map(n=>`<div class="slot"><div class="sd"><b>${esc(n.replace(/ · (Imperia|Chronosvisor)$/,''))}</b><span>Partida en tu red local</span></div><button class="btn sm pri" data-svc="${esc(n)}">Unirse</button></div>`).join(''):'<div class="qnote">No se ha encontrado ninguna partida todavía. También puedes escribir la dirección IP del anfitrión.</div>'}
 function myName(){const n=($('mpName').value||'').trim().slice(0,18)||'Jugador';opts.name=n;saveOpts();return n}
-$('mpFound').onclick=ev=>{const b=ev.target.closest('[data-svc]');if(!b)return;Net.stopBrowse();Net.joinService(b.dataset.svc,myName());mpStatus('Conectando…')};
+$('mpFound').onclick=ev=>{const b=ev.target.closest('[data-svc]');if(!b)return;Net.stopBrowse();Net.joinService(b.dataset.svc,myName(),spec());mpStatus('Conectando…')};
 $('mpHost').onclick=()=>{if(mpTab==='online'){mpStatus('Creando sala…');Net.hostOnline(myName(),$('mpPub').classList.contains('on')).then(()=>{if(Net.L)showLobby()});return}if(!Net.native)return;Net.stopBrowse();Net.setMode('lan');Net.host(myName());showLobby()};
-$('mpJoin').onclick=()=>{if(!Net.native)return;const a=$('mpAddr').value.trim();if(!a){mpStatus('Escribe la IP del anfitrión',true);return}Net.stopBrowse();Net.join(a,myName());mpStatus('Conectando con '+a+'…')};
+$('mpJoin').onclick=()=>{if(!Net.native)return;const a=$('mpAddr').value.trim();if(!a){mpStatus('Escribe la IP del anfitrión',true);return}Net.stopBrowse();Net.join(a,myName(),spec());mpStatus('Conectando con '+a+'…')};
 $('mpBack').onclick=()=>{Net.stopBrowse();Net.leave();showMenu()};
 function showLobby(){hideScreens();$('lobby').hidden=false;$('lobChat').innerHTML='';renderLobby()}
 function renderLobby(){const L=Net.L;if(!L)return;const host=Net.role==='host',you=Net.you;
@@ -470,7 +493,7 @@ function renderLobby(){const L=Net.L;if(!L)return;const host=Net.role==='host',y
  else $('lobEye').textContent=host?'Eres el anfitrión'+(Net.ips.length?' · IP '+Net.ips.join(', ')+' · puerto '+Net.port:''):'Sala de '+esc((L.slots[0]&&L.slots[0].name)||'');
  const cp=$('lobCopy');if(cp)cp.onclick=()=>{try{navigator.clipboard.writeText(Net.code);cp.textContent='Copiado'}catch(e){}};
  const civOpts=sel=>Object.entries(CIVS).map(([k,v])=>`<option value="${k}"${k===sel?' selected':''}>${v.name}</option>`).join('');
- const teamOpts=t=>[0,1,2,3].map(i=>`<option value="${i}"${i===t?' selected':''}>Equipo ${i+1}</option>`).join('');
+ const teamOpts=t=>[0,1,2,3,4,5,6,7].map(i=>`<option value="${i}"${i===t?' selected':''}>Equipo ${i+1}</option>`).join('');
  $('lobSlots').innerHTML=L.slots.map((s,i)=>{const mine=i===you,canEdit=mine||(host&&s.k==='ai'),col=PCOLORS[i];
   let who;if(s.k==='host'||s.k==='human')who=`<b>${esc(s.name||'Jugador')}</b>${s.k==='host'?' <span class="tag">anfitrión</span>':''}${mine?' <span class="tag you">tú</span>':''}`;
   else if(host)who=`<select data-k="${i}"><option value="open"${s.k==='open'?' selected':''}>Abierto</option><option value="ai"${s.k==='ai'?' selected':''}>IA</option><option value="closed"${s.k==='closed'?' selected':''}>Cerrado</option></select>`;
@@ -478,7 +501,8 @@ function renderLobby(){const L=Net.L;if(!L)return;const host=Net.role==='host',y
   const act=s.k!=='open'&&s.k!=='closed';
   return`<div class="lrow"><i style="background:${col}"></i><div class="lwho">${who}</div>${act?`<select data-civ="${i}" ${canEdit?'':'disabled'}>${civOpts(s.civ)}</select><select data-team="${i}" ${canEdit?'':'disabled'}>${teamOpts(s.team)}</select>`:'<span></span><span></span>'}${host&&s.k==='human'?`<button class="btn sm" data-kick="${i}">Expulsar</button>`:'<span></span>'}</div>`}).join('');
  const segH=(id,items,key)=>`<div class="lab">${id}</div><div class="seg lcfg" data-key="${key}">${items.map(([v,n])=>`<button data-v="${v}" class="${String(L.cfg[key])===v?'on':''}" ${host?'':'disabled'}>${n}</button>`).join('')}</div>`;
- $('lobCfg').innerHTML=segH('Mapa',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map')+segH('Tamaño',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size')+segH('IA',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff')+segH('Victoria',[['standard','Estándar'],['conquest','Conquista']],'win')+segH('Visibilidad',[['normal','Normal'],['explored','Explorado'],['all','Todo visible']],'reveal')+segH('Época inicial',AGESHORT.map((n,i)=>[String(i),n]),'startAge');
+ $('lobCfg').innerHTML=segH('Mapa',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map')+segH('Tamaño',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size')+segH('IA',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff')+segH('Victoria',[['standard','Estándar'],['conquest','Conquista']],'win')+segH('Visibilidad',[['normal','Normal'],['explored','Explorado'],['all','Todo visible']],'reveal')+segH('Época inicial',AGESHORT.map((n,i)=>[String(i),n]),'startAge')+segH('Población',[['150','150'],['200','200'],['250','250']],'pop');
+ $('lobSlots').insertAdjacentHTML('beforeend',L.specs&&L.specs.length?`<div class="qnote">Espectadores: ${L.specs.map(esc).join(', ')}</div>`:'');
  $('lobStart').hidden=!host}
 $('lobSlots').onchange=ev=>{const t=ev.target;if(t.dataset.k!=null)Net.setSlot(+t.dataset.k,{k:t.value});else if(t.dataset.civ!=null)Net.setSlot(+t.dataset.civ,{civ:t.value});else if(t.dataset.team!=null)Net.setSlot(+t.dataset.team,{team:+t.value})};
 $('lobSlots').onclick=ev=>{const b=ev.target.closest('[data-kick]');if(b)Net.kick(+b.dataset.kick)};
@@ -495,7 +519,9 @@ if(Net){Object.assign(Net.on,{
  start:(c,seed)=>startMP(c,seed),
  pause:v=>{toast(v?'Partida en pausa':'Partida reanudada');$('mpPause').textContent=v?'Reanudar para todos':'Pausar para todos'},
  desync:n=>toast('Aviso: las simulaciones se han desincronizado (turno '+n+'). La partida puede comportarse de forma distinta en cada equipo.',true,'chatmsg'),
- lost:(was)=>{if(was&&mode==='play'&&!G.over){toast('Se ha perdido la conexión con el anfitrión',true,'chatmsg');G.over=true;setTimeout(()=>showEnd(false,'lost'),800)}else{showMP();mpStatus('Se ha perdido la conexión con el anfitrión',true)}}})}
+ lost:(was)=>{if(was&&mode==='play'&&!G.over){I.goSolo();toast('Se ha perdido la conexión con el anfitrión: la partida sigue contra la IA. Puedes guardarla.',true,'chatmsg');say('Seguimos sin conexión',true)}else{showMP();mpStatus('Se ha perdido la conexión con el anfitrión',true)}},
+ reload:(data,me)=>{const fresh=mode!=='play';const v=!fresh&&R.view?{tx:R.view.tx,tz:R.view.tz,ty:R.view.ty,dist:R.view.dist,tdist:R.view.tdist,yaw:R.view.yaw}:null;const wasSpec=G&&G.spectate;G=I.deserialize(data);G.mp=true;G.cfg.mp=true;if(wasSpec||Net.spec)G.spectate=true;I.setMe(me);MW=I.MW;MH=I.MH;R.build(G);
+  if(v&&R.view)Object.assign(R.view,v);if(fresh){AU.init();setupHUD();tut.on=false;showTut();const tc=G.bl.find(e=>e.owner===ME()&&e.type==='tc');if(tc)R.centerOn(tc.x/T,tc.y/T);sel=[];toast(G.spectate?'Estás mirando la partida':'Te has unido a la partida')}sel=sel.filter(id=>{const e=G.ents.get(id);return e&&!e.dead});R.setSelection(sel);if(!fresh)toast('Partida sincronizada',false,'chatmsg')}})}
 
 // ---------- menú principal
 // ---------- campaña
@@ -521,10 +547,10 @@ function setupMenu(){
  marks.map=seg('s-map',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map',descs);
  marks.size=seg('s-size',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size');
  marks.nAI=seg('s-nai',null,'nAI',descs);marks.teams=seg('s-teams',null,'teams',descs);
- marks.startAge=seg('s-age',AGESHORT.map((n,i)=>[String(i),n]),'startAge',descs);marks.diff=seg('s-diff',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff');marks.win=seg('s-win',null,'win',descs);marks.reveal=seg('s-reveal',null,'reveal',descs);descs()}
+ marks.pop=seg('s-pop',null,'pop');marks.startAge=seg('s-age',AGESHORT.map((n,i)=>[String(i),n]),'startAge',descs);marks.diff=seg('s-diff',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff');marks.win=seg('s-win',null,'win',descs);marks.reveal=seg('s-reveal',null,'reveal',descs);descs()}
 function descs(){{const a=+cfg.startAge||0;$('ageDesc').textContent=a?`Empiezas en la ${AGES[a]} (${AGEYEAR[a]}) con la aldea desarrollada, más aldeanos, edificios y recursos. Todos los jugadores igual.`:'Empiezas desde cero en la Edad Oscura, como siempre.'}$('civDesc').textContent=CIVS[cfg.civ].desc;$('mapDesc').textContent=MAPS[cfg.map].desc;
  const tb=$('s-teams').children[1];tb.disabled=cfg.nAI<2;if(cfg.nAI<2&&cfg.teams==='teams'){cfg.teams='ffa';marks.teams&&marks.teams()}
- $('teamDesc').textContent=cfg.nAI===1?'Duelo uno contra uno.':cfg.teams==='ffa'?'Cada reino lucha por su cuenta.':cfg.nAI===2?'Tú y un aliado contra un rival.':'Tú y un aliado contra dos rivales.';
+ {const n=cfg.nAI+1,a=Math.ceil(n/2);$('teamDesc').textContent=cfg.nAI===1?'Duelo uno contra uno.':cfg.teams==='ffa'?`${n} reinos, cada uno por su cuenta${n>5?' (el mapa crece para que quepan)':''}.`:`Tu equipo de ${a} contra ${n-a} rivales.`}
 $('revealDesc').textContent={normal:'Niebla de guerra: solo ves lo que exploran tus unidades.',explored:'El terreno se ve desde el principio; las unidades enemigas, solo con visión.',all:'Todo el mapa y todas las unidades visibles en todo momento.'}[cfg.reveal];
  $('winDesc').textContent=cfg.win==='conquest'?'Solo se gana destruyendo a todos los rivales.':'Conquista, maravilla en pie 5 minutos o todas las reliquias durante 5 minutos.'}
 $('start').onclick=()=>{AU.init();sfx('click');$('menu').classList.add('fade');setTimeout(()=>startGame(),380)};/* reveal viaja en cfg */
@@ -539,13 +565,29 @@ $('howBtn').onclick=()=>{$('how').hidden=!$('how').hidden;AU.init();sfx('click')
 $('resume').onclick=resume;$('restart').onclick=()=>startGame(G.cfg.tutorial?{tutorial:true,map:'continental',size:'small',nAI:1,teams:'ffa',diff:'easy',win:'conquest'}:G.cfg);$('toMenu').onclick=showMenu;
 $('mpPause').onclick=()=>{Net.setPause(!Net.paused);resume()};
 $('resign').onclick=()=>{cmd({c:'resign'});resume();toast('Te has rendido',true)};
-$('again').onclick=()=>{if(mp()||G.cfg.mp){showMP();return}const M=G.cfg.scn&&campM(G.cfg.scn);if(M&&G.over&&G.winTeam===G.players[G.me].team){const nx=CAMP[CAMP.indexOf(M)+1];if(nx)playMission(nx);else showCamp();return}if(M){playMission(M);return}startGame(G.cfg)};$('endMenu').onclick=showMenu;
+$('again').onclick=()=>{if(mp()||G.cfg.mp){showMP();return}const M=G.cfg.scn&&campM(G.cfg.scn);if(M&&G.over&&G.winTeam===G.players[G.me].team){const nx=CAMP[CAMP.indexOf(M)+1];if(nx)playMission(nx);else showCamp();return}if(M){playMission(M);return}startGame(G.cfg)};$('endMenu').onclick=showMenu;$('endReplay').onclick=async()=>{sfx('click');await recSave();playReplay(1)};
+// árbol de evolución: cada rama de unidades a lo largo de las nueve edades (con la unidad única de tu civilización)
+function showTree(){if(!G)return;const me=ME(),p=G.players[me],age=p.age,uu=CIVS[p.civ].uu;
+ const lines=[['villager','Aldeano'],['militia','Infantería'],['spear','Antiinfantería y antitanque'],['archer','Tiradores'],['scout','Exploración'],['knight','Caballería y blindados'],['ram','Asedio pesado'],['mangonel','Artillería'],['monk','Monjes y médicos'],['galley','Buques de guerra'],['transport','Transporte naval'],[uu,'Única · '+CIVS[p.civ].name]];
+ const head='<tr><th></th>'+AGES.map((a,i)=>`<th class="${i===age?'now':''}">${a}<small>${AGEYEAR[i]}</small></th>`).join('')+'</tr>';
+ const rows=lines.map(([t,label])=>{let prev='';return`<tr><td class="row">${esc(label)}</td>`+AGES.map((_,a)=>{const req=U[t].age||0;if(a<req)return`<td class="lock ${a===age?'now':''}">—</td>`;
+  const d=I.UUM&&I.UUM[t]&&a>=4?null:I.gdAt(t,a);let n=d?d.name:(I.UUM[t].names[a]||I.UUM[t].names[4]);if(!d&&a<4)n=I.gdAt(t,a).name;const same=n===prev;prev=n;
+  const st=d||I.gdAt(I.UUM[t]?I.UUM[t].base:t,a);return`<td class="${a===age?'now':''}${same?' lock':''}">${same?'·':esc(n)}${same?'':`<small>vida ${Math.round(st.hp)} · ataque ${Math.round(st.atk)}${st.range>1?' · alcance '+st.range:''}</small>`}</td>`}).join('')+'</tr>'}).join('');
+ $('treeTab').innerHTML=head+rows;$('tree').hidden=false;treeK='tree';for(const b of $('treeTabs').children)b.classList.toggle('on',b.dataset.k==='tree')}
+let treeK='tree';
+function showScore(){const me=ME(),meT=G.players[me].team,vis=p=>p.team===meT||G.cfg.reveal==='all'||!!G.replay;
+ const rows=G.players.map(p=>{const army=G.ul.filter(e=>!e.dead&&e.owner===p.i&&e.type!=='villager'&&U[e.type].atk>0).length,v=vis(p);
+  return`<tr><td class="row"><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${PCOLORS[p.i]};margin-right:6px"></i>${esc(pName(p.i))}</td><td>${CIVS[p.civ].name}</td><td>${p.out?'Derrotado':AGES[p.age]}</td><td>${v?p.pop:'?'}</td><td>${v?army:'?'}</td><td>${I.score(p)}</td><td>${p.stats.killed}</td><td>${p.stats.lost}</td><td>${p.team+1}</td></tr>`}).join('');
+ $('treeTab').innerHTML='<tr><th>Jugador</th><th>Civilización</th><th>Edad</th><th>Población</th><th>Ejército</th><th>Puntos</th><th>Bajas causadas</th><th>Bajas sufridas</th><th>Equipo</th></tr>'+rows;
+ for(const b of $('treeTabs').children)b.classList.toggle('on',b.dataset.k==='score');treeK='score'}
+$('treeTabs').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;sfx('click');if(b.dataset.k==='score')showScore();else showTree()};
+$('treeBtn').onclick=()=>{sfx('click');showTree()};$('treeClose').onclick=()=>{sfx('click');$('tree').hidden=true};
 $('menuBtn').onclick=pause;$('idle').onclick=nextIdle;$('idleBig').onclick=()=>{sfx('click');nextIdle()};$('autoFarm').onclick=()=>{const p=G&&G.players[ME()];if(!p)return;sfx('click');cmd({c:'autofarm',on:!p.autoFarm})};$('armyBtn').onclick=ev=>selectArmy(ev.shiftKey);
 $('spd').onclick=()=>{speed=speed===1?1.5:speed===1.5?2:1;$('spd').textContent=speed+'×';if(mp())Net.setSpeed(speed)};
 
 // ---------- bucle
 function resize(){dpr=Math.min(2,window.devicePixelRatio||1);ov.width=innerWidth*dpr;ov.height=innerHeight*dpr;R.resize()}
-function runTurn(cmds,ticks){for(const [pl,c] of cmds){try{I.exec(pl,c)}catch(e){console.error('orden',e)}}for(let k=0;k<ticks;k++)I.update(1/30)}
+function runTurn(cmds,ticks){for(const [pl,c] of cmds){try{I.exec(pl,c);if(REC)REC.cmds.push([REC.tick,pl,c])}catch(e){console.error('orden',e)}}for(let k=0;k<ticks;k++){I.update(1/30);if(REC)REC.tick++}}
 let chain=0,lastLoopT=0,rafOK=true;
 let lastDraw=0;
 function loop(now,id){if(id!=null&&id!==chain)return;
@@ -555,12 +597,12 @@ function loop(now,id){if(id!=null&&id!==chain)return;
   if(G){
    if(menuArt()){}else if(mode==='menu'){I.update(dt);G.vis.fill(1);G.exp.fill(1);G.ev.length=0;menuA+=dt*.02;R.centerOn(MW/2+Math.cos(menuA)*MW*.1,MH/2+Math.sin(menuA)*MH*.1);R.view.yaw=Math.PI/4+menuA*.6}
    else if(mp()){if(!G.over)Net.pump(dt,runTurn)}
-   else if(!paused&&!G.over){let s=dt*speed;while(s>1e-4){const h=Math.min(s,1/30);I.update(h);s-=h}}
+   else if(!paused&&!G.over){simAcc+=dt*speed;let n=0;const lim=G.replay?40:16;while(simAcc>=1/30&&n<lim){if(G.replay)replayCmds();I.update(1/30);if(REC)REC.tick++;simAcc-=1/30;n++}if(n>=lim)simAcc=0}
    if(mode==='play'){handleEvents();if(!paused||mp())camKeys(dt);
     if(bm&&$('pause').hidden)R.setGhost(bm,ghostTiles());else R.setGhost(null)}
   }
   if(!document.hidden&&mode!=='menu'){R.render(dt,G);drawOverlay()}
-  if(mode==='play'){uiT-=dt;if(uiT<=0){uiT=.12;refreshUI();tutCheck()}scnT-=dt;if(scnT<=0){scnT=.5;drawScn()}if(!mp()&&!G.over&&G.t-(G.autoT||0)>=300){G.autoT=G.t;saveSlot('A',true)}miniT-=dt;if(miniT<=0){miniT=.2;drawMini()}terT-=dt;if(terT<=0){terT=3;miniTerrain()}
+  if(mode==='play'){uiT-=dt;if(uiT<=0){uiT=.12;refreshUI();tutCheck()}scnT-=dt;if(scnT<=0){scnT=.5;drawScn();if(G.replay&&$('rpT'))$('rpT').textContent=fmtT(G.replay.tick/30)+' / '+fmtT(G.replay.len/30)}if(!mp()&&!G.over&&G.t-(G.autoT||0)>=300){G.autoT=G.t;saveSlot('A',true)}miniT-=dt;if(miniT<=0){miniT=.2;drawMini()}terT-=dt;if(terT<=0){terT=3;miniTerrain()}
    ambT-=dt;if(ambT<=0&&(!paused||mp())){ambT=.3+Math.random()*.25;ambient()}}
   fpsN++;fpsT+=dt;if(fpsT>=.5){if(opts.fps)$('fps').textContent=Math.round(fpsN/fpsT)+' fps';fpsN=0;fpsT=0}
  }catch(err){console.error(err&&err.stack||err);if(!window.__imperr){window.__imperr=1;toast('Error: '+err.message,true)}}
@@ -575,7 +617,7 @@ async function boot(){R.init(cv);resize();window.addEventListener('resize',resiz
  try{const s=JSON.parse(await Store.read('setup')||'null');if(s)for(const k in cfg)if(s[k]!=null&&(k!=='map'||MAPS[s[k]]))cfg[k]=s[k]}catch(e){}
  applyOpts();setupMenu();
  for(const t in U)R.icon('u:'+t);for(const t in B)R.icon('b:'+t);for(const t in RDEF)R.icon('r:'+t);R.icon('r:relic');for(const t in TECH)R.icon('t:'+t);
- ['stop','amove','age1','age2','age3','age4','age5','age6','age7','age8','del','page0','page1','st0','st1','st2','ungar','bell','unload','buy_food','buy_wood','buy_stone','sell_food','sell_wood','sell_stone'].forEach(t=>R.icon('x:'+t));
+ ['stop','amove','patrol','age1','age2','age3','age4','age5','age6','age7','age8','del','page0','page1','st0','st1','st2','ungar','bell','unload','buy_food','buy_wood','buy_stone','sell_food','sell_wood','sell_stone'].forEach(t=>R.icon('x:'+t));
  showMenu();last=performance.now();requestAnimationFrame(t=>loop(t,chain));
  setTimeout(()=>{const l=$('loading');l.style.opacity=0;setTimeout(()=>l.remove(),700)},350)}
 window.__imperia={get G(){return G},start:startGame,R,setSel:ids=>setSel(ids),get mode(){return mode},save:saveSlot,load:loadSlot,cmd,Net,opts};

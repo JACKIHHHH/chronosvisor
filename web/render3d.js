@@ -340,7 +340,7 @@ const TOOLBIT={axe:1,pick:2,hoe:3,hammer:4,basket:5};const CARRYC={food:0xc2533d
 function charKey(e){if(!CHR||!CHR.ok||!CH_TYPES[e.type])return null;const p=I.G.players[e.owner];let t=p?Math.min(8,p.age):0;if(t<2&&upOf(e))t++;const ty=I.visType?I.visType(e.type,t):e.type;if(!CH_TYPES[ty])return null;if(CH_SKIP[ty]&&CH_SKIP[ty].includes(t))return null;
  for(let k=t;k>=0;k--){const key=ty+'_'+k;if(CHR.has(key))return(e.id%3===1&&CHR.has(key+'f'))?key+'f':key}return null}
 function dropObj(o){(o.e.kind==='bld'?bldRoot:unitRoot).remove(o.g);if(o.ch){CHR.free(o.ch);o.ch=null}}
-function charPose(o,e,dt,g,dying){const h=o.ch;const key=o.ck;const pc=(ART._&&ART._.PC||[0x2f6fd6,0xc8352a,0xe0b12a,0x8a4fcf])[e.owner%4];
+function charPose(o,e,dt,g,dying){const h=o.ch;const key=o.ck;const pc=(ART._&&ART._.PC||[0x2f6fd6,0xc8352a,0xe0b12a,0x8a4fcf])[e.owner%8];
  if(!g.visible){_cm.compose(_c0,_cq.identity(),_c0);CHRset(h,_cm,'idle',0,pc,0);return}
  _cq.setFromAxisAngle(_cy,g.rotation.y);_cm.compose(g.position,_cq,_c1);
  if(dying!=null){CHRset(h,_cm,'die',dying,pc,0);return}
@@ -608,7 +608,7 @@ function glyph(t){const c=document.createElement('canvas');c.width=c.height=128;
  const gold='#d8b46a',dark='#1b1d21';g.strokeStyle=gold;g.fillStyle=gold;g.lineWidth=7;const L=(pts,close)=>{g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));if(close)g.closePath()};
  switch(t){
  case'stop':g.beginPath();g.roundRect(-30,-30,60,60,8);g.stroke();break;
- case'amove':for(const s of[-1,1]){g.save();g.rotate(s*.78);L([[0,-40],[0,26]]);g.stroke();L([[-12,20],[12,20]]);g.stroke();g.restore()}break;
+ case'amove':for(const s of[-1,1]){g.save();g.rotate(s*.78);L([[0,-40],[0,26]]);g.stroke();L([[-12,20],[12,20]]);g.stroke();g.restore()}break;case'patrol':g.beginPath();g.arc(0,0,30,Math.PI*.15,Math.PI*.85);g.stroke();g.beginPath();g.arc(0,0,30,Math.PI*1.15,Math.PI*1.85);g.stroke();L([[-26,-24],[-28,-8],[-14,-12]]);g.stroke();L([[26,24],[28,8],[14,12]]);g.stroke();break;
  case'age1':case'age2':case'age3':case'age4':case'age5':case'age6':case'age7':case'age8':g.beginPath();for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5;g.lineTo(Math.cos(a)*40,Math.sin(a)*40);const b=a+Math.PI/5;g.lineTo(Math.cos(b)*17,Math.sin(b)*17)}g.closePath();g.fill();
   g.fillStyle=dark;g.font='bold 26px Baskerville, Georgia, serif';g.textAlign='center';g.textBaseline='middle';g.fillText(['','II','III','IV','V','VI','VII','VIII','IX'][+t.slice(3)],0,4);break;
  case'del':L([[-26,-26],[26,26]]);g.stroke();L([[26,-26],[-26,26]]);g.stroke();break;

@@ -3,7 +3,7 @@
 // con el mismo formato de eventos que la red local nativa (hosted / open / close / msg). El juego sigue siendo
 // lockstep determinista: el servidor no simula nada, solo retransmite.
 const CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const MAXP=8,MAXMSG=65536,VER=1;
+const MAXP=8,MAXMSG=262144,VER=1;
 const json=(o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'content-type':'application/json','access-control-allow-origin':'*','cache-control':'no-store'}});
 const clean=s=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,24);
 function newCode(){let c='';const b=crypto.getRandomValues(new Uint8Array(5));for(const x of b)c+=CODE_ABC[x%CODE_ABC.length];return c}
@@ -22,7 +22,7 @@ export default{
    const room=env.ROOM.get(env.ROOM.idFromName(code));const u=new URL('https://room/host');u.searchParams.set('code',code);for(const k of['name','pub'])u.searchParams.set(k,url.searchParams.get(k)||'');
    return room.fetch(new Request(u,req))}
   const m=/^\/join\/([A-Za-z0-9]{5})$/.exec(p);
-  if(m){if(!ws)return json({error:'Se necesita WebSocket'},426);const room=env.ROOM.get(env.ROOM.idFromName(m[1].toUpperCase()));const u=new URL('https://room/join');u.searchParams.set('name',url.searchParams.get('name')||'');return room.fetch(new Request(u,req))}
+  if(m){if(!ws)return json({error:'Se necesita WebSocket'},426);const room=env.ROOM.get(env.ROOM.idFromName(m[1].toUpperCase()));const u=new URL('https://room/join');u.searchParams.set('name',url.searchParams.get('name')||'');if(url.searchParams.get('rejoin'))u.searchParams.set('rejoin','1');if(url.searchParams.get('spec'))u.searchParams.set('spec','1');return room.fetch(new Request(u,req))}
   return json({error:'No encontrado'},404)}};
 
 // registro de salas abiertas (para la lista de partidas públicas y para no repetir códigos)
@@ -55,7 +55,7 @@ export class Room{
    return new Response(null,{status:101,webSocket:cl})}
   if(url.pathname==='/join'){const m=await this.getMeta();const host=this.byId(0);
    if(!m||!host){this.state.acceptWebSocket(sv);sv.serializeAttachment({id:-1});this.send(sv,{type:'error',msg:'No existe ninguna sala con ese código'});sv.close(4004,'sin sala');return new Response(null,{status:101,webSocket:cl})}
-   if(!m.open||this.sockets().length>=MAXP){this.state.acceptWebSocket(sv);sv.serializeAttachment({id:-1});this.send(sv,{type:'error',msg:m.open?'La sala está llena':'La partida ya ha empezado'});sv.close(4003,'cerrada');return new Response(null,{status:101,webSocket:cl})}
+   if((!m.open&&!q.get('rejoin')&&!q.get('spec'))||this.sockets().length>=MAXP+2){this.state.acceptWebSocket(sv);sv.serializeAttachment({id:-1});this.send(sv,{type:'error',msg:m.open?'La sala está llena':'La partida ya ha empezado'});sv.close(4003,'cerrada');return new Response(null,{status:101,webSocket:cl})}
    const id=m.next++;await this.saveMeta();const name=clean(q.get('name'))||'Jugador';
    this.state.acceptWebSocket(sv);sv.serializeAttachment({id,name});
    this.send(sv,{type:'open',id:0,addr:m.name});this.send(host,{type:'open',id,addr:name});await this.report();

@@ -207,7 +207,7 @@ function shipEra(parts,pc,type,tier){parts.ship=true;parts.legs=[];parts.body.ad
 // qué edad concreta usa cada tipo (null = modelo clásico)
 const STEPS={scout:[5,6,7,8],knight:[5,6,7,8],ram:[3,4,5,6,7,8],mangonel:[3,4,5,6,7,8],trade:[3,4,5,7,8],galley:[3,4,5,6,7,8],transport:[3,4,5,7],fishship:[4,5,7]};
 A.unitEraTier=function(type,age){const s=STEPS[type];if(!s)return null;let t=null;for(const v of s)if(age>=v)t=v;return t};
-A.unitEra=function(type,o,age){const tier=A.unitEraTier(type,age);if(tier==null)return null;const g=new TH.Group(),body=new TH.Group();g.add(body);const parts={body};const pc=PC[o%4];
+A.unitEra=function(type,o,age){const tier=A.unitEraTier(type,age);if(tier==null)return null;const g=new TH.Group(),body=new TH.Group();g.add(body);const parts={body};const pc=PC[o%8];
  switch(type){
  case'scout':if(tier===5)jeep(parts,pc,false);else if(tier===6)recon(parts,pc);else if(tier===7)drone(parts,pc);else hoverTank(parts,pc,false);break;
  case'knight':if(tier===8)mechFallback(parts,pc);else tank(parts,pc,tier);break;

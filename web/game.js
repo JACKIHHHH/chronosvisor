@@ -1,7 +1,7 @@
 // Imperia — núcleo de simulación v3 (sin DOM, determinista). Coordenadas lógicas en px: 1 casilla = T px.
 (function(root){
 'use strict';
-const T=32,POPMAX=150,CAP=10,MAXN=120*120;
+const T=32,CAP=10,MAXN=144*144;let POPMAX=200;
 let MW=88,MH=88,NN=MW*MH;
 const RES=['food','wood','gold','stone'];
 const RN={food:'Comida',wood:'Madera',gold:'Oro',stone:'Piedra'};
@@ -11,7 +11,7 @@ const MAXAGE=AGES.length-1;
 const AGECOST=[{food:500},{food:800,gold:200},{food:1000,gold:800},{food:1200,gold:900,wood:300},{food:1400,gold:1100,stone:300},{food:1600,gold:1300,stone:400},{food:1800,gold:1500,stone:500},{food:2000,gold:1800,stone:600}];
 const AGETIME=[35,50,60,65,70,75,80,85];
 const GR={food:.85,farm:.7,wood:.62,gold:.52,stone:.5,fish:.72};
-const PCOLORS=['#4a86e8','#e0553f','#e2b534','#9a6ae0'];
+const PCOLORS=['#4a86e8','#e0553f','#e2b534','#9a6ae0','#2bb3a3','#e86fb6','#8cc63f','#d4d8de'];
 const WONDER_T=300,RELIC_T=300;
 
 const CIVS={
@@ -272,7 +272,10 @@ function techState(p,t){if(p.tech[t])return'done';if(p.tq[t])return'queued';if(T
 
 // ---------- mapa
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function genBases(n,teams,m){const C={TL:[m,m],TR:[MW-m-3,m],BR:[MW-m-3,MH-m-3],BL:[m,MH-m-3]};let order;
+function genBases(n,teams,m){if(n>4){// más de cuatro: en anillo, los aliados juntos
+  const ord=Array.from({length:n},(_,i)=>i).sort((a,b)=>teams[a]-teams[b]||a-b),R=MW/2-m-2,a0=rnd()*6.283,out=new Array(n);
+  ord.forEach((pi,k)=>{const a=a0+k*6.283/n,x=Math.round(MW/2+Math.cos(a)*R-1.5),y=Math.round(MH/2+Math.sin(a)*R-1.5);out[pi]={x,y,cx:x+1.5,cy:y+1.5,corner:'R'}});return out}
+ const C={TL:[m,m],TR:[MW-m-3,m],BR:[MW-m-3,MH-m-3],BL:[m,MH-m-3]};let order;
  const tset=[...new Set(teams)];
  if(n===2){order=rnd()<.5?['TL','BR']:['TR','BL'];if(rnd()<.5)order.reverse()}
  else if(tset.length<n){const sides=rnd()<.5?[['TL','BL'],['TR','BR']]:[['TR','BR'],['TL','BL']];order=new Array(n);const byTeam={};
@@ -331,6 +334,9 @@ function genReal(type,n,teams){
  const cand=[];for(let y=6;y<MH-9;y++)for(let x=6;x<MW-9;x++){const i=idx(x,y);if(comp[i]!==main)continue;let ok=true;
   for(let dy=-1;dy<=4&&ok;dy++)for(let dx=-1;dx<=4;dx++){const j=idx(x+dx,y+dy);if(G.ter[j]!==0||Math.abs(el[j]-el[i])>600*mScale){ok=false;break}}
   if(ok)for(let dy=-3;dy<=6&&ok;dy++)for(let dx=-3;dx<=6;dx++){const xx=x+dx,yy=y+dy;if(!inb(xx,yy)||wa[idx(xx,yy)]){ok=false;break}}if(ok)cand.push(i)}
+ // espacio útil alrededor (tierra transitable en un radio de 9): evita bases encajonadas entre mar, montaña y ríos
+ const room=i=>{const x0=i%MW,y0=(i/MW)|0;let ok=0,all=0;for(let dy=-9;dy<=11;dy+=2)for(let dx=-9;dx<=11;dx+=2){if(dx*dx+dy*dy>110)continue;all++;const xx=x0+dx,yy=y0+dy;if(inb(xx,yy)&&G.ter[idx(xx,yy)]===0)ok++}return ok/all};
+ for(const th of[.85,.75,.65]){const c2=cand.filter(i=>room(i)>=th);if(c2.length>=n*6){cand.length=0;cand.push(...c2);break}}
  if(cand.length<n)return genMapFallback(n,teams);
  const pickSet=()=>{const bs=[cand[Math.floor(rnd()*cand.length)]];while(bs.length<n){let best=-1,bd=-1;for(const c of cand){let d=1e9;const cx=c%MW,cy=(c/MW)|0;for(const b of bs){const dd=(cx-b%MW)**2+(cy-((b/MW)|0))**2;if(dd<d)d=dd}d+=rnd()*30;if(d>bd){bd=d;best=c}}bs.push(best)}
   let m=1e9;for(let a2=0;a2<bs.length;a2++)for(let b2=a2+1;b2<bs.length;b2++)m=Math.min(m,(bs[a2]%MW-bs[b2]%MW)**2+(((bs[a2]/MW)|0)-((bs[b2]/MW)|0))**2);return[m,bs]};
@@ -351,7 +357,8 @@ function genReal(type,n,teams){
  const forestP=i=>{const r=col[i*3],g=col[i*3+1],b=col[i*3+2],l=lum(i);if(G.ter[i]!==0)return 0;if(l>150)return .004;const green=g-Math.max(r,b);if(green>6&&l<70)return .5;if(green>2&&l<95)return .22;if(r>g&&l>110)return .01;return .07};
  for(const b of G.bases){const a=rnd()*6.283;const at=(da,d)=>[Math.max(3,Math.min(MW-4,b.cx+Math.cos(a+da)*d)),Math.max(3,Math.min(MH-4,b.cy+Math.sin(a+da)*d))];
   cluster('berry',...at(1.35,6),6);cluster('gold',...at(-1.35,7.5),6);cluster('stone',...at(.7,9.5),5);cluster('gold',...at(-.45,14),5);forest(...at(2.3,10),50,far,6);forest(...at(-2.3,11),35,far,6)}
- for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++){const i=idx(x,y);const p=forestP(i);if(p>0&&free(x,y)&&far(x,y,7)&&rnd()<p)mkRes('tree',x,y)}
+ // claro de 10 casillas alrededor de cada base y bosque más ralo hasta las 16: sitio para granjas y edificios
+ for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++){const i=idx(x,y);let p=forestP(i);if(p>0&&!far(x,y,16))p*=.35;if(p>0&&free(x,y)&&far(x,y,10)&&rnd()<p)mkRes('tree',x,y)}
  // oro y piedra en las faldas de las montañas y colinas; bayas en praderas
  const hills=[];for(let i=0;i<NN;i++){if(G.ter[i]!==0)continue;const x=i%MW,y=(i/MW)|0;let m=0;for(const [dx,dy] of[[1,0],[-1,0],[0,1],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&G.ter[idx(xx,yy)]===3)m++}if(m||el[i]-loc[i]>120*mScale)hills.push(i)}
  shuffle(hills);let gp=0,sp=0;const want=Math.round(5*K);for(const i of hills){const x=i%MW,y=(i/MW)|0;if(!far(x,y,15))continue;if(gp<want){cluster('gold',x,y,ri(4,6));gp++}else if(sp<want){cluster('stone',x,y,ri(4,5));sp++}else break}
@@ -474,9 +481,11 @@ function landNear(px,py,gx,gy){const tx=clampT(px/T,MW),ty=clampT(py/T,MH);let b
 
 // ---------- búsquedas
 function workerOn(r){const w=G.ents.get(r.wk);return w&&!w.dead&&w.o.t==='gather'&&w.o.id===r.id}
+// un recurso solo se puede recoger si tiene al menos una casilla libre al lado (los árboles del interior del bosque, no)
+function openNb(tx,ty){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const x=tx+dx,y=ty+dy;if(inb(x,y)&&!G.block[idx(x,y)])return true}return false}
 function findRes(rt,x,y,maxD,owner,farms,ex,fish){const hum=!P(owner).ai,exp=hum?expOf(owner):null;fish=!!fish;
  const lab=fish?G.sea:G.land,src=lab?lab[idx(clampT(x/T,MW),clampT(y/T,MH))]:-1;
- let best=ringSearch(rgrid(),x,y,maxD,e=>{if(e.dead||e.amt<=0||e.id===ex||fish!==(e.type==='fish')||RDEF[e.type].r!==rt)return -1;const i=idx(e.tx,e.ty);if(exp&&!exp[i])return -1;if(src>=0&&lab[i]!==src)return -1;return Math.hypot(e.x-x,e.y-y)});
+ let best=ringSearch(rgrid(),x,y,maxD,e=>{if(e.dead||e.amt<=0||e.id===ex||fish!==(e.type==='fish')||RDEF[e.type].r!==rt)return -1;const i=idx(e.tx,e.ty);if(exp&&!exp[i])return -1;if(src>=0&&lab[i]!==src)return -1;if(!fish&&!openNb(e.tx,e.ty))return -1;return Math.hypot(e.x-x,e.y-y)});
  if(farms&&rt==='food'){let bd=best?Math.hypot(best.x-x,best.y-y):maxD;for(const e of G.bl){if(e.dead||e.owner!==owner||!B[e.type].farm||e.bp<1||e.id===ex)continue;if(e.wk&&workerOn(e))continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;best=e}}}
  return best}
 function nearestDrop(owner,a,fish){let best=null,bd=1e9;for(const e of G.bl){if(e.dead||e.kind!=='bld'||e.owner!==owner||e.bp<1)continue;const dr=B[e.type].drop;if(!dr||(fish?dr!=='fish':dr!==true))continue;const d=entDist(a,e);if(d<bd){bd=d;best=e}}return best}
@@ -577,7 +586,7 @@ function doGather(u,dt,o){
   o.id=nr.id;u.gk=null;r=nr}
  if(u.carry.a>0&&u.carry.t!==o.rt){o.s='ret';return}
  const farm=r.kind==='bld';
- const near=farm?(u.x>r.tx*T+2&&u.x<(r.tx+r.size)*T-2&&u.y>r.ty*T+2&&u.y<(r.ty+r.size)*T-2):entDist(u,r)<=T*(fishing?.95:.8);
+ const near=farm?(u.x>r.tx*T+2&&u.x<(r.tx+r.size)*T-2&&u.y>r.ty*T+2&&u.y<(r.ty+r.size)*T-2):entDist(u,r)<=T*(fishing?.95:1.02);
  if(near){
   u.path=[];u.pi=0;u.gk=null;u.work=true;u.task=farm?'farm':fishing?'fish':(r.type==='tree'?'chop':r.type==='berry'?'forage':'mine');if(!farm)u.dir=Math.atan2(r.y-u.y,r.x-u.x);else r.wk=u.id;
   o.rf=0;o.acc=(o.acc||0)+gatherRate(u.owner,o.rt,farm,fishing)*dt;const cap=carryCap(u.owner,u.type);
@@ -702,6 +711,8 @@ function updUnit(u,dt){
   case'move':if(travel(u,dt,'m'+o.x+','+o.y,o.x/T,o.y/T,null,false,freeAtPx(o.x,o.y,u.owner,U[u.type].naval)?o.x:null,o.y))order(u,o.then||{t:'idle'});break;
   case'amove':{if(U[u.type].atk>0){u.scan-=dt;if(u.scan<=0){u.scan=.3;const d=gd(u.type,u.owner);const e=nearestEnemy(u,d.sight*T,d.bldOnly?'bld':null);if(e&&!(d.splash&&e.kind==='unit'&&Math.hypot(e.x-u.x,e.y-u.y)<d.minr*T)){order(u,{t:'atk',id:e.id,auto:true,then:o});break}}}
    if(travel(u,dt,'m'+o.x+','+o.y,o.x/T,o.y/T,null,false,freeAtPx(o.x,o.y,u.owner,U[u.type].naval)?o.x:null,o.y))order(u,{t:'idle'});break}
+  case'patrol':{if(U[u.type].atk>0){u.scan-=dt;if(u.scan<=0){u.scan=.3;const d=gd(u.type,u.owner);const e=nearestEnemy(u,d.sight*T,d.bldOnly?'bld':null);if(e&&!(d.splash&&e.kind==='unit'&&Math.hypot(e.x-u.x,e.y-u.y)<d.minr*T)){order(u,{t:'atk',id:e.id,auto:true,then:o});break}}}
+   const tx=o.leg?o.bx:o.ax,ty=o.leg?o.by:o.ay;if(travel(u,dt,'p'+o.leg+tx+','+ty,tx/T,ty/T,null,false,freeAtPx(tx,ty,u.owner,U[u.type].naval)?tx:null,ty)){o.leg=o.leg?0:1;u.gk=null}break}
   case'gather':doGather(u,dt,o);break;
   case'build':doBuild(u,dt,o);break;
   case'atk':doAttack(u,dt,o);break;
@@ -886,8 +897,9 @@ function aiThink(p,A){
  // defensa y campana
  const intr=[];for(const e of G.ul)if(act(e)&&isEnemy(me,e.owner)&&!U[e.type].naval&&Math.hypot(e.x-home.x,e.y-home.y)<16*T)intr.push(e);
  const recent=A.hit&&G.t-A.hit.t<15;
- if(D.bell){if(intr.length>=3&&army.length<intr.length&&!p.bell&&G.t-(A.bellT||-99)>30){ringBell(me);A.bellT=G.t}
-  else if(p.bell&&!intr.length&&G.t-(A.bellT||0)>15){ringBell(me);A.bellT=G.t}}
+ const threat=intr.filter(e=>e.type!=='villager'&&gd(e.type,e.owner).atk>0).length;
+ if(D.bell){if(threat>=3&&army.length<threat&&!p.bell&&G.t-(A.bellT||-99)>30){ringBell(me);A.bellT=G.t}
+  else if(p.bell&&((threat<2||army.length>=threat)&&G.t-(A.bellT||0)>15||G.t-(A.bellT||0)>60)){ringBell(me);A.bellT=G.t}}
  if(intr.length||(recent&&A.hit.bld&&D!==DIFF.easy)){const tgts=intr.length?intr:null;
   for(const a of army.concat(monks)){if(a.o.t==='atk'||a.o.t==='conv'||a.o.t==='gar')continue;
    if(tgts){let n=null,nd=1e9;for(const e of tgts){if(U[a.type].bldOnly)break;const dd=Math.hypot(e.x-a.x,e.y-a.y);if(dd<nd){nd=dd;n=e}}if(n&&nd<30*T)order(a,a.type==='monk'?{t:'conv',id:n.id}:{t:'atk',id:n.id})}
@@ -1036,11 +1048,12 @@ function scnTick(){const M=scnDef();if(!M)return;const S=G.scnS,me=ME();
     for(const [type,n] of W.units)for(let j=0;j<n+k*(W.grow||0);j++){const t=freeTileNear(src,tg.x/T,tg.y/T,!!U[type].naval);if(t)us.push(mkUnit(type,W.owner,(t[0]+.5)*T,(t[1]+.5)*T))}
     formMove(us,tg.x,tg.y,true);if(W.alert!==false){msg(W.alert||'¡Un ejército enemigo se dirige hacia ti!',true);sfx('alert')}}}})}
 function score(p){return Math.round(p.stats.gathered*.1+p.stats.killed*6+p.stats.razed*25+Object.keys(p.tech).length*40+p.age*250+(p.stats.converted||0)*10)}
-function teamsFor(n,mode){if(mode!=='teams'||n<3)return Array.from({length:n},(_,i)=>i);return n===3?[0,0,1]:[0,0,1,1]}
+function teamsFor(n,mode){if(mode!=='teams'||n<3)return Array.from({length:n},(_,i)=>i);return Array.from({length:n},(_,i)=>i<Math.ceil(n/2)?0:1)}
 function newGame(cfg,s){cfg=Object.assign({diff:'normal',map:'continental',size:'medium',civ:'iberos',nAI:1,teams:'ffa',tutorial:false,win:'standard',reveal:'normal',me:0,mp:false,startAge:0},cfg||{});
  seed=(s||Date.now())%2147483647|0;if(!seed)seed=7;
- MW=MH=SIZES[cfg.size].n;NN=MW*MH;GW=Math.ceil(MW/GC);const D=DIFF[cfg.diff];
- let spec=cfg.players;if(!spec){const n=1+Math.max(1,Math.min(3,cfg.nAI)),teams=teamsFor(n,cfg.teams);const pool=shuffle(Object.keys(CIVS).filter(c=>c!==cfg.civ));
+ POPMAX=Math.max(50,Math.min(300,+cfg.pop||200));const nP=cfg.players?cfg.players.length:1+Math.max(1,Math.min(7,cfg.nAI));
+ MW=MH=Math.min(144,SIZES[cfg.size].n+(nP>4?(nP-4)*8:0));NN=MW*MH;GW=Math.ceil(MW/GC);const D=DIFF[cfg.diff];
+ let spec=cfg.players;if(!spec){const n=1+Math.max(1,Math.min(7,cfg.nAI)),teams=teamsFor(n,cfg.teams);const pool=shuffle(Object.keys(CIVS).filter(c=>c!==cfg.civ));
   spec=Array.from({length:n},(_,i)=>({civ:i===0?cfg.civ:pool[(i-1)%pool.length],team:teams[i],ai:i>0,name:i===0?'Tú':null}))}
  G={t:0,ents:new Map(),list:[],nid:1,proj:[],ev:[],cfg,over:false,win:null,dirty:false,fogT:0,endT:3,histT:1,alertT:0,msgT:{},fogV:0,pb:60,nb:30000,players:[],ai:{},visT:{},expT:{},me:cfg.me,mp:!!cfg.mp,
   price:{food:100,wood:100,stone:130},mem:new Map(),hist:[],wonder:null,relicHold:null,ul:[],bl:[],rl:[],rel:[],bv:0,rv:0};
@@ -1077,6 +1090,8 @@ function initFogArrays(){G.humanTeams=[...new Set(G.players.filter(p=>!p.ai||p.i
  for(const p of G.players){if(!G.visT[p.team]){G.visT[p.team]=new Uint8Array(NN);if(!G.expT[p.team]){G.expT[p.team]=new Uint8Array(NN);if(G.cfg.reveal==='explored'||G.cfg.reveal==='all')G.expT[p.team].fill(1)}}}
  G.vis=G.visT[G.players[G.me].team];G.exp=G.expT[G.players[G.me].team];if(!G.humanTeams.includes(G.players[G.me].team))G.humanTeams.push(G.players[G.me].team)}
 function setMe(i){G.me=i;initFogArrays();calcFog()}
+// el anfitrión se ha ido: la partida sigue en local y los demás jugadores humanos pasan a la IA
+function goSolo(){G.mp=false;G.cfg.mp=false;for(const p of G.players)if(p.i!==G.me&&!p.ai&&!p.out){p.ai=true;G.ai[p.i]={tick:1,next:G.t+240,wave:DIFF[G.cfg.diff].wave,attacking:false}}initFogArrays();calcFog()}
 
 // ---------- guardar y cargar
 const enc=a=>{let s='';for(let i=0;i<a.length;i+=4096)s+=String.fromCharCode.apply(null,Array.from(a.subarray(i,i+4096),v=>48+v));return s};
@@ -1086,7 +1101,7 @@ function serialize(){const ents=[];for(const e of G.list){if(e.dead)continue;con
  return JSON.stringify({v:3,MW,MH,seed,cfg:G.cfg,t:G.t,nid:G.nid,players:G.players,ai:G.ai,bases:G.bases,ter:enc(G.ter),exps,hgt:Array.from(G.hgt,h=>Math.round(h*100)),ents,
   price:G.price,wonder:G.wonder,relicHold:G.relicHold,relicN:G.relicN,hist:G.hist,mem:[...G.mem.values()],real:G.real||null,scnS:G.scnS||null})}
 function deserialize(str){const d=JSON.parse(str);if(d.v!==3)throw new Error('Formato de partida no compatible con esta versión');
- MW=d.MW;MH=d.MH;NN=MW*MH;GW=Math.ceil(MW/GC);seed=d.seed;
+ MW=d.MW;MH=d.MH;NN=MW*MH;GW=Math.ceil(MW/GC);seed=d.seed;POPMAX=Math.max(50,Math.min(300,+(d.cfg&&d.cfg.pop)||200));
  G={t:d.t,ents:new Map(),list:[],nid:d.nid,proj:[],ev:[],cfg:d.cfg,over:false,win:null,dirty:false,fogT:0,endT:1,histT:30,alertT:0,msgT:{},fogV:0,pb:60,nb:30000,players:d.players,ai:d.ai,bases:d.bases,
   visT:{},expT:{},me:0,mp:false,ter:dec(d.ter),occ:new Int32Array(NN),block:new Uint8Array(NN),gate:new Uint8Array(NN),hgt:Float32Array.from(d.hgt,h=>h/100),
   price:d.price,wonder:d.wonder,relicHold:d.relicHold,relicN:d.relicN,hist:d.hist||[],mem:new Map((d.mem||[]).map(m=>[m.id,m])),real:d.real&&root.IMPERIA_MAPS&&root.IMPERIA_MAPS[d.real]?d.real:undefined};
@@ -1153,7 +1168,7 @@ function placeWall(pl,type,tiles,ids,q){const p=P(pl),c=B[type].cost,me=pl===ME(
  return n}
 // validación: las órdenes pueden venir de la red; cualquier orden mal formada se descarta sin tocar el estado
 const fin=v=>typeof v==='number'&&isFinite(v),int=v=>Number.isInteger(v);
-function validCmd(pl,c){if(!c||typeof c!=='object'||typeof c.c!=='string'||!int(pl)||!G.players[pl]&&c.c!=='drop')return false;
+function validCmd(pl,c){if(!c||typeof c!=='object'||typeof c.c!=='string'||!int(pl)||!G.players[pl]&&c.c!=='drop'&&c.c!=='rejoin')return false;
  if(c.ids!=null&&(!Array.isArray(c.ids)||c.ids.length>250||!c.ids.every(int)))return false;
  if(c.id!=null&&!int(c.id))return false;
  switch(c.c){case'right':case'amove':return fin(c.x)&&fin(c.y)&&Array.isArray(c.ids)&&(c.tgt==null||int(c.tgt));
@@ -1167,11 +1182,14 @@ function validCmd(pl,c){if(!c||typeof c!=='object'||typeof c.c!=='string'||!int(
   case'bell':case'resign':return true;
   case'autofarm':return typeof c.on==='boolean';
   case'market':return(c.op==='buy'||c.op==='sell')&&['food','wood','stone'].includes(c.r);
+  case'patrol':return fin(c.x)&&fin(c.y)&&Array.isArray(c.ids);
   case'drop':return int(c.pl)&&!!G.players[c.pl];
+  case'rejoin':return int(c.pl)&&!!G.players[c.pl];
   default:return false}}
 function exec(pl,c){if(!validCmd(pl,c))return false;const e=c.id!=null?G.ents.get(c.id):null;switch(c.c){
  case'right':return cmdRight(pl,c.ids,c.x,c.y,c.tgt?G.ents.get(c.tgt)||null:null,!!c.q);
  case'amove':return cmdAmove(pl,c.ids,c.x,c.y,!!c.q);
+ case'patrol':{const us=selOwn(pl,c.ids).filter(e=>e.kind==='unit'&&U[e.type].atk>0&&e.type!=='villager');for(const u of us){u.oq=[];order(u,{t:'patrol',ax:u.x,ay:u.y,bx:c.x+(u.x-us[0].x)*.5,by:c.y+(u.y-us[0].y)*.5,leg:1})}return us.length>0}
  case'stop':return cmdStop(pl,c.ids);
  case'del':return cmdDelete(pl,c.ids);
  case'stance':return setStance(pl,c.ids,c.s);
@@ -1183,6 +1201,7 @@ function exec(pl,c){if(!validCmd(pl,c))return false;const e=c.id!=null?G.ents.ge
  case'bell':return ringBell(pl);
  case'autofarm':{const p=P(pl);if(p){p.autoFarm=c.on;if(pl===ME())msg(c.on?'Resembrado automático de granjas: activado':'Resembrado automático de granjas: desactivado')}return true}
  case'market':return marketTrade(pl,c.op,c.r);
+ case'rejoin':{const p=P(c.pl);if(p&&!p.out&&p.ai){p.ai=false;delete G.ai[c.pl];msg(p.name+' ha vuelto a la partida')}return}
  case'drop':{const p=P(c.pl);if(p&&!p.out&&!p.ai){p.ai=true;G.ai[c.pl]={tick:1,next:G.t+300,wave:DIFF[G.cfg.diff].wave,attacking:false};msg(p.name+' se ha desconectado; la IA toma el control',true)}return}
  case'resign':{const p=P(pl);if(p&&!p.out)eliminate(p);return}
 }}
@@ -1195,11 +1214,11 @@ function pickAt(wx,wy,rad){let best=null,bd=1e9;rad=rad||12;
  if(o){const e=G.ents.get(o);if(e&&(e.kind==='res'?G.exp[idx(tx,ty)]:isVisible(e)))return e}return null}
 function stateText(u){if(u.gar){const c=G.ents.get(u.gar);return'Dentro de '+(c?(c.kind==='bld'?B[c.type].name:U[c.type].name).toLowerCase():'')}const o=u.o;switch(o.t){
  case'gather':return o.s==='ret'?'Llevando '+RN[u.carry.t||o.rt].toLowerCase():(u.work?(u.type==='fishship'?'Pescando':'Recolectando '+RN[o.rt].toLowerCase()):'Yendo a por '+RN[o.rt].toLowerCase());
- case'build':return'Construyendo';case'atk':return'Combatiendo';case'move':case'amove':return'En marcha';case'dep':return'Entregando recursos';
+ case'build':return'Construyendo';case'atk':return'Combatiendo';case'move':case'amove':return'En marcha';case'patrol':return'Patrullando';case'dep':return'Entregando recursos';
  case'heal':return'Curando';case'conv':return u.faith<1?'Recuperando fe para convertir':'Convirtiendo';case'gar':return u.relic?'Llevando la reliquia al monasterio':'Buscando refugio';
  case'relic':return'Yendo a por la reliquia';case'trade':return'Comerciando';case'unload':return'Navegando para desembarcar';default:return u.relic?'Lleva una reliquia':'Inactivo'}}
 
-root.Imperia={scnStatus,scnDef,visType,UUM,T,get MW(){return MW},get MH(){return MH},get NN(){return NN},POPMAX,CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
+root.Imperia={score,goSolo,scnStatus,scnDef,visType,UUM,T,get MW(){return MW},get MH(){return MH},get NN(){return NN},get POPMAX(){return POPMAX},CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
  newGame,update,get G(){return G},exec,hash,setMe,canAfford,unitAvail,bldAvail,techState,canPlace,wallLine,pickAt,isVisible,stateText,entDist,idx:(x,y)=>y*MW+x,hAt,hAtT,realCells:()=>G&&G.real&&root.IMPERIA_MAPS&&root.IMPERIA_MAPS[G.real]?realCells(G.real,MW,MH):null,
  isAlly,isEnemy,uAtk,uArmor,uRange,uSpeed,uMaxHp,uName,bArmor,bAtk,bRange,unitCost,trainTime,carryCap,convTime,trainsOf,tradeGold,garCap,contents,canEnter,
  serialize,deserialize,formMove,_dbg:{mkUnit,mkBld,applyTech,order,enter,kill}};

@@ -264,6 +264,18 @@ body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
 #campBrief h3{margin:0;font:400 30px/1.1 var(--disp);color:#f3e6c8}#campBrief .yr{color:var(--acc);letter-spacing:.24em;font-size:11px;text-transform:uppercase}
 #campBrief p{color:#d8d0c0;line-height:1.55;font-size:14px}#campBrief ul{padding-left:18px;color:var(--ink);font-size:13.5px;line-height:1.6}
 @media (max-width:900px){.campgrid{grid-template-columns:1fr}}
+#tree .box.treebox{max-width:min(1500px,97vw);width:min(1500px,97vw)}
+.treewrap{overflow:auto;max-height:68vh;margin-top:12px}
+table.tree{border-collapse:collapse;font-size:12px}
+table.tree th,table.tree td{padding:6px 8px;border-bottom:1px solid rgba(240,212,147,.1);text-align:left;vertical-align:top;min-width:96px}
+table.tree th{position:sticky;top:0;background:#16140f;color:var(--acc);font-weight:600;font-size:11px;letter-spacing:.06em}
+table.tree td.now,table.tree th.now{background:rgba(240,212,147,.12)}
+table.tree td.lock{color:rgba(236,230,218,.35)}
+table.tree td.row{color:var(--mut);min-width:120px}
+table.tree td small,table.tree th small{display:block;color:var(--mut);font-size:10.5px;font-weight:400;letter-spacing:0}
+#replayBar{position:fixed;left:50%;top:66px;transform:translateX(-50%);z-index:7;display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:4px 12px 4px 12px;background:rgba(14,13,11,.85);border:1px solid rgba(240,212,147,.3);pointer-events:auto}
+#replayBar b{color:var(--acc);letter-spacing:.12em;text-transform:uppercase;font-size:11px}#replayBar span{color:var(--mut);font-variant-numeric:tabular-nums;margin-right:6px}
+#replayBar select{background:#1b1915;color:var(--ink);border:1px solid rgba(240,212,147,.25);border-radius:6px;padding:4px}
 </style>
 </head>
 <body>
@@ -289,12 +301,14 @@ body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
    <span id="fps" hidden></span>
    <span id="clock">00:00</span>
    <button class="ib" id="spd" title="Velocidad de juego">1×</button>
+   <button class="ib" id="treeBtn" title="Árbol de unidades y marcador (K)">Árbol</button>
    <button class="ib" id="menuBtn" title="Menú (Esc)">Menú</button>
   </div>
  </header>
  <div id="msgs"></div>
  <div id="vict" hidden></div>
  <div id="scnObj" hidden></div>
+ <div id="replayBar" hidden></div>
  <div id="groups" hidden></div>
  <div id="chat" class="panel" hidden><input id="chatIn" maxlength="160" placeholder="Mensaje para todos · Intro para enviar"></div>
  <div id="tut" class="panel" hidden>
@@ -332,7 +346,7 @@ body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
    <button class="mb quit" data-go="quit" id="mQuit"><span>Salir</span><small>Cerrar Chronosvisor</small></button>
   </nav>
  </div>
- <div class="ver">CHRONOSVISOR 6.4</div>
+ <div class="ver">CHRONOSVISOR 6.5</div>
  <div class="card" id="mSetup" hidden>
   <div class="eyebrow">Estrategia en tiempo real</div>
   <h1>CHRONOSVISOR</h1>
@@ -343,9 +357,10 @@ body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
    <div class="lab">Mapa</div><div class="seg" id="s-map"></div>
    <div class="hintline" id="mapDesc"></div>
    <div class="lab">Tamaño</div><div class="seg" id="s-size"></div>
-   <div class="lab">Rivales</div><div class="seg" id="s-nai"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
+   <div class="lab">Rivales</div><div class="seg" id="s-nai"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button></div>
    <div class="lab">Modo</div><div class="seg" id="s-teams"><button data-v="ffa">Todos contra todos</button><button data-v="teams">Por equipos</button></div>
    <div class="hintline" id="teamDesc"></div>
+   <div class="lab">Población máx.</div><div class="seg" id="s-pop"><button data-v="150">150</button><button data-v="200">200</button><button data-v="250">250</button></div>
    <div class="lab">Época inicial</div><div class="seg" id="s-age"></div>
    <div class="hintline" id="ageDesc"></div>
    <div class="lab">Dificultad</div><div class="seg" id="s-diff"></div>
@@ -410,6 +425,7 @@ body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
    <div class="lab">Velocidad de cámara</div><input type="range" id="o-cam" min="40" max="220">
    <div class="lab">Mover al tocar el borde</div><button class="tgl" id="o-edge" aria-label="Mover al tocar el borde"></button>
    <div class="lab">Límite de fotogramas</div><div><div class="seg" id="o-cap"><button data-v="30">30 · ahorro</button><button data-v="60">60</button><button data-v="0">Sin límite</button></div><div class="hintline" style="margin-top:6px">Con 30 el portátil se calienta mucho menos y la batería dura más.</div></div>
+   <div class="lab">Tamaño de la interfaz</div><div class="seg" id="o-ui"><button data-v="85">85 %</button><button data-v="100">100 %</button><button data-v="115">115 %</button><button data-v="130">130 %</button></div>
    <div class="lab">Mostrar FPS</div><button class="tgl" id="o-fps" aria-label="Mostrar FPS"></button>
    <div class="lab">Voces</div><button class="tgl" id="o-voices" aria-label="Voces"></button>
    <div class="lab">Colores para daltónicos</div><div><button class="tgl" id="o-cb" aria-label="Colores para daltónicos"></button><div class="hintline" style="margin-top:6px">Azul, naranja, amarillo y rosa. Se aplica al volver a abrir el juego.</div></div>
@@ -429,7 +445,7 @@ body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
   <div class="tabs seg" id="graphTabs"><button data-k="score" class="on">Puntuación</button><button data-k="army">Ejército</button><button data-k="pop">Población</button><button data-k="res">Recursos</button></div>
   <canvas class="graph" id="endGraph"></canvas>
   <div style="overflow-x:auto"><table class="st" id="endStats"></table></div>
-  <div class="actions"><button class="btn pri" id="again">Jugar otra vez</button><button class="btn" id="endMenu">Menú principal</button></div>
+  <div class="actions"><button class="btn pri" id="again">Jugar otra vez</button><button class="btn" id="endReplay">Ver repetición</button><button class="btn" id="endMenu">Menú principal</button></div>
  </div>
 </div>
 
@@ -439,6 +455,14 @@ body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
   <h2>De la Edad Oscura al futuro</h2>
   <div class="campgrid"><div id="campList"></div><div id="campBrief"></div></div>
   <div class="actions"><button class="btn pri" id="campPlay">Jugar misión</button><button class="btn" id="campBack">Volver</button></div>
+ </div>
+</div>
+<div id="tree" class="screen center" hidden>
+ <div class="box wide treebox">
+  <div class="eyebrow">Durante la partida</div>
+  <div class="tabs seg" id="treeTabs"><button data-k="tree" class="on">Árbol de unidades</button><button data-k="score">Marcador</button></div>
+  <div class="treewrap"><table class="st tree" id="treeTab"></table></div>
+  <div class="actions"><button class="btn pri" id="treeClose">Cerrar</button></div>
  </div>
 </div>
 <div id="mp" class="screen center" hidden>
@@ -453,6 +477,7 @@ body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
   <div id="mpOnline">
    <div class="opts" style="grid-template-columns:120px 1fr">
     <div class="lab">Código de sala</div><div style="display:flex;gap:8px"><input class="inp" id="mpCode" placeholder="ABCDE" maxlength="5" style="width:120px;text-transform:uppercase;letter-spacing:.2em"><button class="btn sm" id="mpJoinCode">Unirse</button></div>
+    <div class="lab">Espectador</div><div><button class="tgl" id="mpSpec" aria-label="Entrar como espectador"></button><span class="hintline" style="margin-left:10px">Mira la partida sin jugar (puedes entrar con la partida empezada).</span></div>
     <div class="lab">Sala pública</div><div><button class="tgl on" id="mpPub" aria-label="Sala pública"></button><span class="hintline" style="margin-left:10px">Aparece en la lista para que cualquiera pueda unirse.</span></div>
    </div>
    <div class="lab" style="margin-top:18px;display:flex;justify-content:space-between;align-items:center">Partidas públicas <button class="btn sm" id="mpRefresh">Actualizar</button></div>
