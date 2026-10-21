@@ -11,12 +11,13 @@ const AGEDESC=['Desbloquea arqueros, caballería, mercado, herrería, torres, mu
  'Año 2100: exosoldados, mechs de asalto, cañones de riel y de plasma, aerodeslizadores y torres láser.'];
 const SHOTS={bullet:'gun',ball:'cannon',shell:'cannon',rocket:'rocket',laser:'laser',plasma:'plasma',grenade:'gun'};
 const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX'];
-const {T,U,B,RDEF,AGES,AGECOST,AGETIME,RN,BPAGES,TECH,RES,CIVS,MAPS,SIZES,DIFF,PCOLORS,GAR,WONDER_T,RELIC_T}=I;
+const {AGEYEAR,T,U,B,RDEF,AGES,AGECOST,AGETIME,RN,BPAGES,TECH,RES,CIVS,MAPS,SIZES,DIFF,PCOLORS,GAR,WONDER_T,RELIC_T}=I;
 const $=id=>document.getElementById(id);
 const cv=$('c3d'),ov=$('ov'),oc=ov.getContext('2d'),mini=$('mini'),mc=mini.getContext('2d');
 let G=null,MW=88,MH=88,mode='menu',sel=[],bm=null,amode=false,page=0,speed=1,paused=false,groups={},last=0,dpr=1;
 let uiT=0,miniT=0,terT=0,ambT=0,pings=[],curCmds=[],cmdSig=null,tipCmd=null,delArm=0,lastGK={k:null,t:0},idleIx=0,menuA=0,lastToast='',wallDrag=null,fpsN=0,fpsT=0,rebinding=null,graphK='score',sayT=0;
-const cfg={civ:'iberos',map:'continental',size:'medium',nAI:1,teams:'ffa',diff:'normal',win:'standard',reveal:'normal'};
+const AGESHORT=['Oscura','Feudal','Castillos','Imperial','Industrial','Mundial','Atómica','Información','Futuro'];
+const cfg={startAge:'0',civ:'iberos',map:'continental',size:'medium',nAI:1,teams:'ffa',diff:'normal',win:'standard',reveal:'normal'};
 const DEFKEYS={grid:'QWERTASDFGZXCVB'.split(''),idle:'.',tc:'H',army:'M',pause:'P',chat:'Enter',save:'F5'};
 const opts={quality:'high',music:55,sfx:80,cam:100,edge:true,day:false,fpsCap:60,fps:false,voices:true,cb:false,name:'Jugador',keys:JSON.parse(JSON.stringify(DEFKEYS))};
 const tut={on:false,i:0,done:false};
@@ -337,7 +338,7 @@ function tutCheck(){if(!tut.on)return;const s=TUT[tut.i];if(s&&s.ok()){tut.i++;s
 $('tutSkip').onclick=()=>{tut.on=false;for(const k in G.ai)G.ai[k].passive=false;$('tut').hidden=true;cmdSig=null};
 
 // ---------- flujo de partida
-function hideScreens(){for(const id of['menu','end','pause','slots','mp','lobby','opts'])$(id).hidden=true}
+function hideScreens(){for(const id of['menu','end','pause','slots','mp','lobby','opts','camp'])$(id).hidden=true}
 function setupHUD(){MW=I.MW;MH=I.MH;hideScreens();$('hud').hidden=false;$('msgs').innerHTML='';$('info').dataset.s='';$('plist').dataset.s='';$('vict').dataset.h='';$('groups').dataset.h='';$('chat').hidden=true;
  mode='play';paused=false;sel=[];groups={};bm=null;amode=false;wallDrag=null;page=0;speed=1;$('spd').textContent='1×';$('spd').disabled=mp()&&Net.role!=='host';cmdSig=null;miniTerrain();AU.startMusic();
  $('saveBtn').hidden=mp();$('restart').hidden=mp();$('mpPause').hidden=!mp();$('resign').hidden=!mp()}
@@ -350,7 +351,8 @@ function startMP(c,seed){AU.init();G=I.newGame(c,seed);R.build(G);setupHUD();tut
 function pause(){if(mode!=='play'||G.over)return;if(!mp())paused=true;tipCmd=null;$('pause').hidden=false;$('tip').hidden=true;$('pauseEye').textContent=mp()?'Menú · la partida sigue en marcha':'Partida en pausa';$('mpPause').textContent=Net.paused?'Reanudar para todos':'Pausar para todos'}
 function resume(){paused=false;$('pause').hidden=true}
 // el título y la versión se colocan sobre la cartela y el recuadro de la ilustración (misma escala que background-size:cover)
-const menuArt=()=>!$('menu').hidden&&$('menu').classList.contains('hasbg');
+// en el menú (y sus pantallas: multijugador, opciones, sala…) se ve la ilustración y no se dibuja el 3D
+const menuArt=()=>{const im=mode==='menu',it=im&&!$('menu').hidden&&!$('mTitle').hidden,b=document.body.classList;if(b.contains('inmenu')!==im)b.toggle('inmenu',im);if(b.contains('intitle')!==it)b.toggle('intitle',it);return im};
 function placeMenuArt(){const W=innerWidth,H=innerHeight,iw=2576,ih=1438,s=Math.max(W/iw,H/ih),ox=(W-iw*s)/2,oy=(H-ih*s)/2,m=$('menu').style,px=v=>v+'px';
  m.setProperty('--bx',px(ox+830*s));m.setProperty('--by',px(oy+64*s));m.setProperty('--bw',px(880*s));m.setProperty('--bh',px(168*s));
  m.setProperty('--vx',px(ox+2136*s));m.setProperty('--vy',px(oy+1292*s));m.setProperty('--vw',px(326*s));m.setProperty('--vh',px(80*s))}
@@ -358,14 +360,18 @@ window.addEventListener('resize',placeMenuArt);
 function menuStage(st){$('mTitle').hidden=st!=='title';$('mSetup').hidden=st!=='setup';$('menu').classList.remove('fade');$('menu').classList.toggle('insetup',st==='setup');placeMenuArt()}
 function quitApp(){try{window.webkit.messageHandlers.nativeApp.postMessage({cmd:'quit'})}catch(e){window.close()}}
 function showMenu(){menuStage('title');if(Net&&Net.role)Net.leave();mode='menu';paused=false;tut.on=false;$('tut').hidden=true;$('hud').hidden=true;hideScreens();$('menu').hidden=false;$('tip').hidden=true;
- G=I.newGame({map:cfg.map,size:'small',nAI:1,diff:'normal',civ:cfg.civ},Math.floor(Math.random()*1e9));MW=I.MW;MH=I.MH;G.vis.fill(1);G.exp.fill(1);R.build(G);R.view.tdist=R.view.dist=21;sel=[];R.setSelection([]);R.setGhost(null)}
-function showEnd(win,how){paused=true;sfx(win?'win':'lose');say(win?'¡Victoria!':'Hemos sido derrotados',true);
+ if(!G||!G.menuDemo){G=I.newGame({map:'continental',size:'small',nAI:1,diff:'normal',civ:cfg.civ},Math.floor(Math.random()*1e9));G.menuDemo=true;MW=I.MW;MH=I.MH;G.vis.fill(1);G.exp.fill(1);R.build(G);R.view.tdist=R.view.dist=21}sel=[];R.setSelection([]);R.setGhost(null)}
+function showEnd(win,how){paused=true;sfx(win?'win':'lose');const M=G.cfg.scn&&campM(G.cfg.scn);say(M?(win?'Misión cumplida':'Misión fracasada'):win?'¡Victoria!':'Hemos sido derrotados',true);
  $('endEye').textContent='Fin de la partida · '+DIFF[G.cfg.diff].name+' · '+MAPS[G.cfg.map].name+(mp()?' · en red':'');
  const t=$('endTitle');t.textContent=win?'Victoria':'Derrota';t.className=win?'win':'lose';
  const hw={wonder:'por la maravilla',relics:'por las reliquias',conquest:'por conquista'}[how]||'';
  $('endText').textContent=(win?'Tu bando se ha impuesto '+hw+' tras ':'Tu reino ha caído tras ')+fmtT(G.t).replace(':',' min ')+' s.';
  const rows=[['Civilización',p=>CIVS[p.civ].name],['Equipo',p=>p.team+1],['Edad alcanzada',p=>ROMAN[p.age]],['Puntuación',p=>{const h=G.hist[G.hist.length-1];return h?h.s[p.i].score:0}],['Unidades entrenadas',p=>p.stats.trained],['Enemigos abatidos',p=>p.stats.killed],['Conversiones',p=>p.stats.converted||0],['Unidades perdidas',p=>p.stats.lost],['Edificios construidos',p=>p.stats.built],['Edificios destruidos',p=>p.stats.razed],['Recursos recolectados',p=>p.stats.gathered],['Investigaciones',p=>Object.keys(p.tech).length]];
  $('endStats').innerHTML='<tr><th></th>'+G.players.map(p=>`<th style="color:${PCOLORS[p.i]}">${esc(pName(p.i))}</th>`).join('')+'</tr>'+rows.map(([n,f])=>`<tr><td>${n}</td>${G.players.map(p=>`<td>${f(p)}</td>`).join('')}</tr>`).join('');
+ if(M){$('endEye').textContent='Campaña · misión '+(CAMP.indexOf(M)+1)+' de '+CAMP.length+' · '+M.year;t.textContent=win?'Misión cumplida':'Misión fracasada';
+  $('endText').textContent=win?M.title+': ¡objetivos cumplidos en '+fmtT(G.t).replace(':',' min ')+' s!':({scntime:'Se ha agotado el tiempo.',scnlost:'Has perdido tu centro urbano.'}[how]||'Tu reino ha caído.')+' Puedes volver a intentarlo.';
+  if(win){campDone[M.id]=1;Store.write('campaign',JSON.stringify(campDone))}const nx=CAMP[CAMP.indexOf(M)+1];$('again').textContent=win?(nx?'Siguiente misión':'Ver la campaña'):'Reintentar'}
+ else $('again').textContent='Jugar otra vez';
  $('end').hidden=false;$('pause').hidden=true;drawGraph()}
 // gráficas del final de partida
 const GK={score:['Puntuación','score'],army:['Ejército','army'],pop:['Población','pop'],res:['Recursos','res']};
@@ -390,25 +396,27 @@ function handleEvents(){for(const e of G.ev){switch(e.ev){
  case'shoot':case'lob':R.onEvent(e,G);sfxAt(SHOTS[e.k]||e.ev,e.x,e.y,.8);break;
  case'boom':R.onEvent(e,G);sfxAt('boom',e.x,e.y,.8);break;
  case'elim':pings.push({x:MW/2,z:MH/2,t:0,c:'240,212,147'});break;
+ case'scnmsg':toast(e.text,false,'chatmsg');if(e.say)say(e.text,true);break;
+ case'scnobj':scnT=0;break;
  case'over':setTimeout(()=>showEnd(e.win,e.how),1400);break}}G.ev.length=0}
 function ambient(){const vw=[];for(const u of G.ul){if(u.dead||!u.work||!u.task||u.gar)continue;if(Math.abs(u.x/T-R.view.tx)>R.view.dist*.5||Math.abs(u.y/T-R.view.tz)>R.view.dist*.45)continue;if(!visUnit(u))continue;vw.push(u)}
  if(!vw.length)return;const u=vw[Math.floor(Math.random()*vw.length)],k={chop:'chop',mine:'mine',farm:'farm',forage:'forage',build:'build'}[u.task];if(k)sfxAt(k,u.x,u.y,.55)}
 
 // ---------- guardar, cargar y opciones
-async function saveSlot(n){if(!G||mode!=='play'||G.over||mp())return;try{const data=I.serialize();const p=PME();
+async function saveSlot(n,silent){if(!G||mode!=='play'||G.over||mp())return;try{const data=I.serialize();const p=PME();
  const meta={date:new Date().toISOString(),t:G.t,civ:p.civ,map:G.cfg.map,size:G.cfg.size,diff:G.cfg.diff,n:G.players.length,teams:G.cfg.teams,age:p.age};
  const ok=await Store.write('slot'+n,data);await Store.write('slot'+n+'meta',JSON.stringify(meta));
- toast(ok?'Partida guardada en la ranura '+n:'No se pudo guardar la partida',!ok);if(ok)sfx('built')}catch(err){toast('No se pudo guardar: '+err.message,true)}}
+ if(!silent){toast(ok?'Partida guardada en la ranura '+n:'No se pudo guardar la partida',!ok);if(ok)sfx('built')}}catch(err){toast('No se pudo guardar: '+err.message,true)}}
 async function loadSlot(n){const data=await Store.read('slot'+n);if(!data){toast('Esa ranura está vacía',true);return}
  try{AU.init();G=I.deserialize(data);R.build(G);setupHUD();tut.on=false;showTut();const tc=G.bl.find(e=>e.owner===ME()&&e.type==='tc')||G.list.find(e=>e.owner===ME());if(tc)R.centerOn(tc.x/T,tc.y/T);setSel([]);toast('Partida cargada')}
  catch(err){toast('No se pudo cargar: '+err.message,true);showMenu()}}
 async function showSlots(saving){$('slotsEye').textContent=saving?'Guardar partida':'Cargar partida';$('slotsTitle').textContent=saving?'Elige una ranura':'Partidas guardadas';
  const list=$('slotList');list.innerHTML='<div class="qnote">Leyendo…</div>';$('slots').hidden=false;const rows=[];
- for(let n=1;n<=3;n++){let m=null;try{m=JSON.parse(await Store.read('slot'+n+'meta')||'null')}catch(e){}
+ for(const n of saving?[1,2,3]:['A',1,2,3]){let m=null;try{m=JSON.parse(await Store.read('slot'+n+'meta')||'null')}catch(e){}
   const d=m?new Date(m.date):null;
-  rows.push(`<div class="slot"><div class="sn">${n}</div><div class="sd">${m?`<b>${CIVS[m.civ].name} · ${MAPS[m.map]?MAPS[m.map].name:m.map} · ${m.n} jugadores</b><span>${AGES[m.age]} · ${fmtT(m.t)} de partida · ${DIFF[m.diff].name} · ${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span>`:'<b style="color:var(--mut)">Vacía</b>'}</div>
+  if(n==='A'&&!m)continue;rows.push(`<div class="slot"><div class="sn">${n==='A'?'↻':n}</div><div class="sd">${m?`<b>${CIVS[m.civ].name} · ${MAPS[m.map]?MAPS[m.map].name:m.map} · ${m.n} jugadores</b><span>${AGES[m.age]} · ${fmtT(m.t)} de partida · ${DIFF[m.diff].name} · ${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span>`:'<b style="color:var(--mut)">Vacía</b>'}</div>
    <button class="btn sm${saving?'':' pri'}" data-slot="${n}" ${!saving&&!m?'disabled style="opacity:.35"':''}>${saving?(m?'Sobrescribir':'Guardar aquí'):'Cargar'}</button></div>`)}
- list.innerHTML=rows.join('');list.onclick=async ev=>{const b=ev.target.closest('[data-slot]');if(!b||b.disabled)return;const n=+b.dataset.slot;$('slots').hidden=true;if(saving){await saveSlot(n)}else{await loadSlot(n)}}}
+ list.innerHTML=rows.join('');list.onclick=async ev=>{const b=ev.target.closest('[data-slot]');if(!b||b.disabled)return;const n=b.dataset.slot==='A'?'A':+b.dataset.slot;$('slots').hidden=true;if(saving){await saveSlot(n)}else{await loadSlot(n)}}}
 const KEYROWS=[['idle','Aldeano inactivo'],['army','Todo el ejército'],['tc','Centro urbano'],['pause','Pausa'],['chat','Chat (en red)'],['save','Guardado rápido']];
 function renderKeys(){const K=opts.keys;
  $('keyGrid').innerHTML=K.grid.map((k,i)=>`<button class="kb${rebinding&&rebinding.i===i?' on':''}" data-i="${i}" title="Casilla ${i+1} del panel de órdenes">${esc(keyName(k))}</button>`).join('');
@@ -435,17 +443,32 @@ $('saveBtn').onclick=()=>showSlots(true);$('loadBtn').onclick=()=>{AU.init();sho
 
 // ---------- multijugador: búsqueda y sala
 function mpStatus(t,bad){const e=$('mpStatus');e.textContent=t||'';e.style.color=bad?'var(--bad)':''}
-function showMP(){AU.init();hideScreens();$('menu').hidden=true;$('mp').hidden=false;$('mpName').value=opts.name;mpStatus(Net.native?'Buscando partidas en tu red local…':'El multijugador necesita la app de Imperia para Mac.',!Net.native);
- renderFound([]);if(Net.native)Net.browse()}
+let mpTab='online';
+function showMP(){AU.init();hideScreens();$('menu').hidden=true;$('mp').hidden=false;$('mpName').value=opts.name;setMpTab(opts.mpTab||'online')}
+function setMpTab(k){mpTab=k;opts.mpTab=k;for(const b of $('mpTabs').children)b.classList.toggle('on',b.dataset.k===k);$('mpOnline').hidden=k!=='online';$('mpLan').hidden=k!=='lan';
+ $('mpHost').textContent=k==='online'?'Crear sala online':'Crear partida en red local';
+ if(k==='lan'){mpStatus(Net.native?'Buscando partidas en tu red local…':'La red local necesita la app de Chronosvisor para Mac o Windows.',!Net.native);renderFound([]);if(Net.native)Net.browse()}
+ else{Net.stopBrowse&&Net.stopBrowse();mpStatus('Juega con amigos por Internet: crea una sala y pásales el código, o únete a una partida pública.');refreshRooms()}}
+$('mpTabs').onclick=ev=>{const b=ev.target.closest('button');if(b){sfx('click');setMpTab(b.dataset.k)}};
+$('mpPub').onclick=()=>{const b=$('mpPub');b.classList.toggle('on');sfx('click')};
+async function refreshRooms(){const el=$('mpRooms');el.innerHTML='<div class="qnote">Buscando partidas…</div>';
+ try{const list=await Net.listOnline();el.innerHTML=list.length?list.map(r=>`<div class="slot"><div class="sd"><b>${esc(String(r.name||'Partida').replace(/ · (Imperia|Chronosvisor)$/,''))}</b><span>${r.n}/${r.max} jugadores · código ${esc(r.code)}</span></div><button class="btn sm pri" data-code="${esc(r.code)}">Unirse</button></div>`).join(''):'<div class="qnote">No hay partidas públicas ahora mismo. Crea una sala y comparte el código.</div>'}
+ catch(e){el.innerHTML='<div class="qnote">No se puede conectar con el servidor online. Comprueba tu conexión a Internet.</div>'}}
+$('mpRefresh').onclick=()=>{sfx('click');refreshRooms()};
+$('mpRooms').onclick=ev=>{const b=ev.target.closest('[data-code]');if(!b)return;sfx('click');Net.joinOnline(b.dataset.code,myName());mpStatus('Conectando…')};
+$('mpJoinCode').onclick=()=>{const c=$('mpCode').value.trim();if(!c){mpStatus('Escribe el código de la sala',true);return}sfx('click');Net.joinOnline(c,myName())};
+$('mpCode').addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter')$('mpJoinCode').click()});
 function renderFound(list){$('mpFound').innerHTML=list.length?list.map(n=>`<div class="slot"><div class="sd"><b>${esc(n.replace(/ · (Imperia|Chronosvisor)$/,''))}</b><span>Partida en tu red local</span></div><button class="btn sm pri" data-svc="${esc(n)}">Unirse</button></div>`).join(''):'<div class="qnote">No se ha encontrado ninguna partida todavía. También puedes escribir la dirección IP del anfitrión.</div>'}
 function myName(){const n=($('mpName').value||'').trim().slice(0,18)||'Jugador';opts.name=n;saveOpts();return n}
 $('mpFound').onclick=ev=>{const b=ev.target.closest('[data-svc]');if(!b)return;Net.stopBrowse();Net.joinService(b.dataset.svc,myName());mpStatus('Conectando…')};
-$('mpHost').onclick=()=>{if(!Net.native)return;Net.stopBrowse();Net.host(myName());showLobby()};
+$('mpHost').onclick=()=>{if(mpTab==='online'){mpStatus('Creando sala…');Net.hostOnline(myName(),$('mpPub').classList.contains('on')).then(()=>{if(Net.L)showLobby()});return}if(!Net.native)return;Net.stopBrowse();Net.setMode('lan');Net.host(myName());showLobby()};
 $('mpJoin').onclick=()=>{if(!Net.native)return;const a=$('mpAddr').value.trim();if(!a){mpStatus('Escribe la IP del anfitrión',true);return}Net.stopBrowse();Net.join(a,myName());mpStatus('Conectando con '+a+'…')};
 $('mpBack').onclick=()=>{Net.stopBrowse();Net.leave();showMenu()};
 function showLobby(){hideScreens();$('lobby').hidden=false;$('lobChat').innerHTML='';renderLobby()}
 function renderLobby(){const L=Net.L;if(!L)return;const host=Net.role==='host',you=Net.you;
- $('lobEye').textContent=host?'Eres el anfitrión'+(Net.ips.length?' · IP '+Net.ips.join(', ')+' · puerto '+Net.port:''):'Sala de '+esc((L.slots[0]&&L.slots[0].name)||'');
+ if(Net.mode==='online')$('lobEye').innerHTML=host?(Net.code&&Net.code!=='…'?`Sala online · código <b class="code">${esc(Net.code)}</b> <button class="btn sm" id="lobCopy">Copiar</button> · pásaselo a tus amigos`:'Creando sala online…'):'Sala online de '+esc((L.slots[0]&&L.slots[0].name)||'')+(Net.rtt?` · ping ${Net.rtt} ms`:'');
+ else $('lobEye').textContent=host?'Eres el anfitrión'+(Net.ips.length?' · IP '+Net.ips.join(', ')+' · puerto '+Net.port:''):'Sala de '+esc((L.slots[0]&&L.slots[0].name)||'');
+ const cp=$('lobCopy');if(cp)cp.onclick=()=>{try{navigator.clipboard.writeText(Net.code);cp.textContent='Copiado'}catch(e){}};
  const civOpts=sel=>Object.entries(CIVS).map(([k,v])=>`<option value="${k}"${k===sel?' selected':''}>${v.name}</option>`).join('');
  const teamOpts=t=>[0,1,2,3].map(i=>`<option value="${i}"${i===t?' selected':''}>Equipo ${i+1}</option>`).join('');
  $('lobSlots').innerHTML=L.slots.map((s,i)=>{const mine=i===you,canEdit=mine||(host&&s.k==='ai'),col=PCOLORS[i];
@@ -455,7 +478,7 @@ function renderLobby(){const L=Net.L;if(!L)return;const host=Net.role==='host',y
   const act=s.k!=='open'&&s.k!=='closed';
   return`<div class="lrow"><i style="background:${col}"></i><div class="lwho">${who}</div>${act?`<select data-civ="${i}" ${canEdit?'':'disabled'}>${civOpts(s.civ)}</select><select data-team="${i}" ${canEdit?'':'disabled'}>${teamOpts(s.team)}</select>`:'<span></span><span></span>'}${host&&s.k==='human'?`<button class="btn sm" data-kick="${i}">Expulsar</button>`:'<span></span>'}</div>`}).join('');
  const segH=(id,items,key)=>`<div class="lab">${id}</div><div class="seg lcfg" data-key="${key}">${items.map(([v,n])=>`<button data-v="${v}" class="${String(L.cfg[key])===v?'on':''}" ${host?'':'disabled'}>${n}</button>`).join('')}</div>`;
- $('lobCfg').innerHTML=segH('Mapa',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map')+segH('Tamaño',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size')+segH('IA',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff')+segH('Victoria',[['standard','Estándar'],['conquest','Conquista']],'win')+segH('Visibilidad',[['normal','Normal'],['explored','Explorado'],['all','Todo visible']],'reveal');
+ $('lobCfg').innerHTML=segH('Mapa',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map')+segH('Tamaño',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size')+segH('IA',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff')+segH('Victoria',[['standard','Estándar'],['conquest','Conquista']],'win')+segH('Visibilidad',[['normal','Normal'],['explored','Explorado'],['all','Todo visible']],'reveal')+segH('Época inicial',AGESHORT.map((n,i)=>[String(i),n]),'startAge');
  $('lobStart').hidden=!host}
 $('lobSlots').onchange=ev=>{const t=ev.target;if(t.dataset.k!=null)Net.setSlot(+t.dataset.k,{k:t.value});else if(t.dataset.civ!=null)Net.setSlot(+t.dataset.civ,{civ:t.value});else if(t.dataset.team!=null)Net.setSlot(+t.dataset.team,{team:+t.value})};
 $('lobSlots').onclick=ev=>{const b=ev.target.closest('[data-kick]');if(b)Net.kick(+b.dataset.kick)};
@@ -475,17 +498,31 @@ if(Net){Object.assign(Net.on,{
  lost:(was)=>{if(was&&mode==='play'&&!G.over){toast('Se ha perdido la conexión con el anfitrión',true,'chatmsg');G.over=true;setTimeout(()=>showEnd(false,'lost'),800)}else{showMP();mpStatus('Se ha perdido la conexión con el anfitrión',true)}}})}
 
 // ---------- menú principal
+// ---------- campaña
+const CAMP=window.CHRONO_CAMPAIGN||[],campM=id=>CAMP.find(m=>m.id===id);let campDone={},campSel=null,scnT=0;
+const isOpen=i=>i===0||!!campDone[CAMP[i-1].id]||!!campDone[CAMP[i].id];
+function showCamp(){AU.init();hideScreens();$('menu').hidden=true;$('camp').hidden=false;if(!campSel||!isOpen(CAMP.indexOf(campSel))){campSel=CAMP.find((m,i)=>isOpen(i)&&!campDone[m.id])||CAMP[0]}renderCamp()}
+function renderCamp(){$('campList').innerHTML=CAMP.map((m,i)=>`<button class="cm${m===campSel?' on':''}${campDone[m.id]?' done':''}" data-i="${i}" ${isOpen(i)?'':'disabled'}><span class="n">${campDone[m.id]?'✓':i+1}</span><span><b>${esc(m.title)}</b><small>${esc(m.year)} · ${AGES[m.startAge]}</small></span></button>`).join('');
+ const m=campSel;$('campBrief').innerHTML=`<div class="yr">${esc(m.year)} · ${AGES[m.startAge]} · ${esc(MAPS[m.map]?MAPS[m.map].name:m.map)}</div><h3>${esc(m.title)}</h3>${m.brief.map(p=>`<p>${esc(p)}</p>`).join('')}<div class="lab">Objetivos</div><ul>${m.objectives.map(o=>`<li>${esc(o.text)}</li>`).join('')}</ul>${(m.lose||[]).some(l=>l.k==='time')?`<p style="color:var(--mut)">Tiempo límite: ${Math.round(m.lose.find(l=>l.k==='time').t/60)} minutos.</p>`:''}<p style="color:var(--mut)">Dificultad: ${DIFF[m.diff].name} · Juegas con: ${esc(CIVS[m.players[0].civ].name)}${m.players.filter(p=>p.team===m.players[0].team).length>1?' · con un aliado':''}</p>`}
+$('campList').onclick=ev=>{const b=ev.target.closest('.cm');if(!b||b.disabled)return;sfx('click');campSel=CAMP[+b.dataset.i];renderCamp()};
+$('campPlay').onclick=()=>{sfx('click');playMission(campSel)};$('campBack').onclick=()=>{sfx('click');showMenu()};
+function playMission(m){campSel=m;$('menu').classList.add('fade');hideScreens();setTimeout(()=>{startGame({map:m.map,size:m.size,diff:m.diff,startAge:m.startAge,reveal:m.reveal,win:'scn',scn:m.id,players:m.players,civ:m.players[0].civ,tutorial:false});
+ m.brief.forEach((p,i)=>setTimeout(()=>{if(mode==='play'&&G.cfg.scn===m.id)toast(p,false,'chatmsg')},400+i*4500));say(m.title+'. '+m.brief[1],true)},380)}
+function drawScn(){const el=$('scnObj'),st=G&&I.scnStatus?I.scnStatus():null;if(!st){if(!el.hidden)el.hidden=true;return}el.hidden=false;
+ const M=campM(G.cfg.scn),tl=(M.lose||[]).find(l=>l.k==='time');
+ const html=`<h4>${esc(M.title)}${tl?' · '+fmtT(Math.max(0,tl.t-G.t)):''}</h4>`+st.map(o=>{let pr='';if(!o.ok){if(o.n>1&&o.n!==300&&o.v>=0)pr=`${o.v} / ${o.n}`;if(o.n===300||(M.objectives[o.i].k==='survive'))pr=fmtT(Math.max(0,o.n-o.v))+' restantes';if(o.extra>1)pr=o.extra+' en pie'}
+  return`<div class="o${o.ok?' ok':''}"><i></i><div>${esc(o.text)}${pr?`<small>${pr}</small>`:''}</div></div>`}).join('');if(el.dataset.h!==html){el.dataset.h=html;el.innerHTML=html}}
 function seg(id,items,key,after){const el=$(id);if(items)el.innerHTML=items.map(([v,n])=>`<button data-v="${v}">${n}</button>`).join('');
  const mark=()=>{for(const b of el.children)b.classList.toggle('on',String(cfg[key])===b.dataset.v)};mark();
  el.onclick=ev=>{const b=ev.target.closest('button');if(!b||b.disabled)return;AU.init();cfg[key]=key==='nAI'?+b.dataset.v:b.dataset.v;mark();sfx('click');if(after)after();Store.write('setup',JSON.stringify(cfg))};return mark}
 const marks={};
 function setupMenu(){
  marks.civ=seg('s-civ',Object.entries(CIVS).map(([k,v])=>[k,v.name]),'civ',descs);
- marks.map=seg('s-map',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map',()=>{descs();if(mode==='menu')showMenu()});
+ marks.map=seg('s-map',Object.entries(MAPS).map(([k,v])=>[k,v.name]),'map',descs);
  marks.size=seg('s-size',Object.entries(SIZES).map(([k,v])=>[k,v.name]),'size');
  marks.nAI=seg('s-nai',null,'nAI',descs);marks.teams=seg('s-teams',null,'teams',descs);
- marks.diff=seg('s-diff',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff');marks.win=seg('s-win',null,'win',descs);marks.reveal=seg('s-reveal',null,'reveal',descs);descs()}
-function descs(){$('civDesc').textContent=CIVS[cfg.civ].desc;$('mapDesc').textContent=MAPS[cfg.map].desc;
+ marks.startAge=seg('s-age',AGESHORT.map((n,i)=>[String(i),n]),'startAge',descs);marks.diff=seg('s-diff',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff');marks.win=seg('s-win',null,'win',descs);marks.reveal=seg('s-reveal',null,'reveal',descs);descs()}
+function descs(){{const a=+cfg.startAge||0;$('ageDesc').textContent=a?`Empiezas en la ${AGES[a]} (${AGEYEAR[a]}) con la aldea desarrollada, más aldeanos, edificios y recursos. Todos los jugadores igual.`:'Empiezas desde cero en la Edad Oscura, como siempre.'}$('civDesc').textContent=CIVS[cfg.civ].desc;$('mapDesc').textContent=MAPS[cfg.map].desc;
  const tb=$('s-teams').children[1];tb.disabled=cfg.nAI<2;if(cfg.nAI<2&&cfg.teams==='teams'){cfg.teams='ffa';marks.teams&&marks.teams()}
  $('teamDesc').textContent=cfg.nAI===1?'Duelo uno contra uno.':cfg.teams==='ffa'?'Cada reino lucha por su cuenta.':cfg.nAI===2?'Tú y un aliado contra un rival.':'Tú y un aliado contra dos rivales.';
 $('revealDesc').textContent={normal:'Niebla de guerra: solo ves lo que exploran tus unidades.',explored:'El terreno se ve desde el principio; las unidades enemigas, solo con visión.',all:'Todo el mapa y todas las unidades visibles en todo momento.'}[cfg.reveal];
@@ -493,7 +530,7 @@ $('revealDesc').textContent={normal:'Niebla de guerra: solo ves lo que exploran 
 $('start').onclick=()=>{AU.init();sfx('click');$('menu').classList.add('fade');setTimeout(()=>startGame(),380)};/* reveal viaja en cfg */
 {const nav=document.querySelector('#menu .mnav');const hasNative=!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.nativeApp);if(!hasNative)$('mQuit').hidden=true;
  nav.onclick=e=>{const b=e.target.closest('.mb');if(!b)return;AU.init();sfx('click');const g=b.dataset.go;
-  if(g==='play')menuStage('setup');else if(g==='mp')$('mpBtn').click();else if(g==='tut'){$('menu').classList.add('fade');setTimeout(()=>$('tutBtn').click(),380)}
+  if(g==='play')menuStage('setup');else if(g==='mp')$('mpBtn').click();else if(g==='camp')showCamp();else if(g==='tut'){$('menu').classList.add('fade');setTimeout(()=>$('tutBtn').click(),380)}
   else if(g==='load')$('loadBtn').click();else if(g==='opt')$('optBtn').click();else if(g==='how'){menuStage('setup');$('how').hidden=false}else if(g==='quit')quitApp()};
  nav.addEventListener('mouseover',e=>{const b=e.target.closest('.mb');if(b&&b!==nav._h){nav._h=b;sfx('hover')}});nav.addEventListener('mouseleave',()=>{nav._h=null});
  $('mBack').onclick=()=>{sfx('click');menuStage('title')}}$('tutBtn').onclick=()=>startGame({tutorial:true,map:'continental',size:'small',nAI:1,teams:'ffa',diff:'easy',win:'conquest'});
@@ -502,7 +539,7 @@ $('howBtn').onclick=()=>{$('how').hidden=!$('how').hidden;AU.init();sfx('click')
 $('resume').onclick=resume;$('restart').onclick=()=>startGame(G.cfg.tutorial?{tutorial:true,map:'continental',size:'small',nAI:1,teams:'ffa',diff:'easy',win:'conquest'}:G.cfg);$('toMenu').onclick=showMenu;
 $('mpPause').onclick=()=>{Net.setPause(!Net.paused);resume()};
 $('resign').onclick=()=>{cmd({c:'resign'});resume();toast('Te has rendido',true)};
-$('again').onclick=()=>{if(mp()||G.cfg.mp){showMP();return}startGame(G.cfg)};$('endMenu').onclick=showMenu;
+$('again').onclick=()=>{if(mp()||G.cfg.mp){showMP();return}const M=G.cfg.scn&&campM(G.cfg.scn);if(M&&G.over&&G.winTeam===G.players[G.me].team){const nx=CAMP[CAMP.indexOf(M)+1];if(nx)playMission(nx);else showCamp();return}if(M){playMission(M);return}startGame(G.cfg)};$('endMenu').onclick=showMenu;
 $('menuBtn').onclick=pause;$('idle').onclick=nextIdle;$('idleBig').onclick=()=>{sfx('click');nextIdle()};$('autoFarm').onclick=()=>{const p=G&&G.players[ME()];if(!p)return;sfx('click');cmd({c:'autofarm',on:!p.autoFarm})};$('armyBtn').onclick=ev=>selectArmy(ev.shiftKey);
 $('spd').onclick=()=>{speed=speed===1?1.5:speed===1.5?2:1;$('spd').textContent=speed+'×';if(mp())Net.setSpeed(speed)};
 
@@ -516,14 +553,14 @@ function loop(now,id){if(id!=null&&id!==chain)return;
  {const cap=mode==='menu'?30:(+opts.fpsCap||0);if(cap&&id!=null&&rafOK&&!document.hidden&&now-lastDraw<1000/cap-3){requestAnimationFrame(t=>loop(t,id));return}lastDraw=now}lastLoopT=performance.now();window.__loopN=(window.__loopN||0)+1;const dt=Math.min(document.hidden||!rafOK?.15:.05,Math.max(0,(now-last)/1000));last=now;
  try{
   if(G){
-   if(mode==='menu'&&menuArt()){}else if(mode==='menu'){I.update(dt);G.vis.fill(1);G.exp.fill(1);G.ev.length=0;menuA+=dt*.02;R.centerOn(MW/2+Math.cos(menuA)*MW*.1,MH/2+Math.sin(menuA)*MH*.1);R.view.yaw=Math.PI/4+menuA*.6}
+   if(menuArt()){}else if(mode==='menu'){I.update(dt);G.vis.fill(1);G.exp.fill(1);G.ev.length=0;menuA+=dt*.02;R.centerOn(MW/2+Math.cos(menuA)*MW*.1,MH/2+Math.sin(menuA)*MH*.1);R.view.yaw=Math.PI/4+menuA*.6}
    else if(mp()){if(!G.over)Net.pump(dt,runTurn)}
    else if(!paused&&!G.over){let s=dt*speed;while(s>1e-4){const h=Math.min(s,1/30);I.update(h);s-=h}}
    if(mode==='play'){handleEvents();if(!paused||mp())camKeys(dt);
     if(bm&&$('pause').hidden)R.setGhost(bm,ghostTiles());else R.setGhost(null)}
   }
-  if(!document.hidden&&!(mode==='menu'&&menuArt())){R.render(dt,G);drawOverlay()}
-  if(mode==='play'){uiT-=dt;if(uiT<=0){uiT=.12;refreshUI();tutCheck()}miniT-=dt;if(miniT<=0){miniT=.2;drawMini()}terT-=dt;if(terT<=0){terT=3;miniTerrain()}
+  if(!document.hidden&&mode!=='menu'){R.render(dt,G);drawOverlay()}
+  if(mode==='play'){uiT-=dt;if(uiT<=0){uiT=.12;refreshUI();tutCheck()}scnT-=dt;if(scnT<=0){scnT=.5;drawScn()}if(!mp()&&!G.over&&G.t-(G.autoT||0)>=300){G.autoT=G.t;saveSlot('A',true)}miniT-=dt;if(miniT<=0){miniT=.2;drawMini()}terT-=dt;if(terT<=0){terT=3;miniTerrain()}
    ambT-=dt;if(ambT<=0&&(!paused||mp())){ambT=.3+Math.random()*.25;ambient()}}
   fpsN++;fpsT+=dt;if(fpsT>=.5){if(opts.fps)$('fps').textContent=Math.round(fpsN/fpsT)+' fps';fpsN=0;fpsT=0}
  }catch(err){console.error(err&&err.stack||err);if(!window.__imperr){window.__imperr=1;toast('Error: '+err.message,true)}}
@@ -534,6 +571,7 @@ setInterval(()=>{if(performance.now()-lastLoopT>300){rafOK=false;chain++;loop(pe
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)last=performance.now()});
 async function boot(){R.init(cv);resize();window.addEventListener('resize',resize);
  try{const o=JSON.parse(await Store.read('options')||'null');if(o){const k=Object.assign(JSON.parse(JSON.stringify(DEFKEYS)),o.keys||{});Object.assign(opts,o);opts.keys=k;if(!Array.isArray(k.grid)||k.grid.length!==15)k.grid=DEFKEYS.grid.slice()}}catch(e){}
+ try{campDone=JSON.parse(await Store.read('campaign')||'null')||{}}catch(e){}
  try{const s=JSON.parse(await Store.read('setup')||'null');if(s)for(const k in cfg)if(s[k]!=null&&(k!=='map'||MAPS[s[k]]))cfg[k]=s[k]}catch(e){}
  applyOpts();setupMenu();
  for(const t in U)R.icon('u:'+t);for(const t in B)R.icon('b:'+t);for(const t in RDEF)R.icon('r:'+t);R.icon('r:relic');for(const t in TECH)R.icon('t:'+t);

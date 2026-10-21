@@ -1,6 +1,6 @@
 # Chronosvisor: La guerra de las eras
 
-Juego de estrategia en tiempo real en 3D, en español, para **macOS** y **Windows**: nueve edades de la Edad Oscura al año 2100, mapas de continentes con relieve y ríos reales, partidas contra la IA y en red local.
+Juego de estrategia en tiempo real en 3D, en español, para **macOS** y **Windows**: nueve edades de la Edad Oscura al año 2100, mapas de continentes con relieve y ríos reales, campaña, partidas contra la IA, multijugador por Internet y en red local.
 
 ![Menú principal](docs/menu.jpg)
 
@@ -20,6 +20,10 @@ En **[Releases](../../releases)**:
 - **9 edades**: Oscura, Feudal, de los Castillos, Imperial, Industrial, Mundial, Atómica, de la Información y del Futuro (2100), con edificios, unidades, vehículos e interfaz propios de cada una.
 - **13 mapas**: 5 generados (Continental, Arabia, Bosque negro, Río, Islas) y 8 continentes con datos reales: Península Ibérica, Europa, Mediterráneo, África, Asia oriental, Norteamérica, Sudamérica y Oceanía. Montañas, ríos, lagos, cascadas, nieve por altitud y color del suelo tomado del satélite.
 - **Personajes animados** (miles en pantalla con instancias en GPU), vegetación por bioma, agua con espuma y cascadas, bloom y resolución dinámica.
+- **Campaña «Crónicas del Chronosvisor»**: 9 misiones, una por edad (de la Iberia del siglo V a 2100), con objetivos, oleadas y límites de tiempo.
+- **Empieza en la época que quieras**: de la Edad Oscura a la del Futuro, con la aldea ya desarrollada.
+- **Civilizaciones con identidad en la era moderna**: cada una con su unidad única propia (legionarios, cañón de 75, ametralladoras Vickers, Panzer y Leopard, blindados ligeros) y bonificaciones.
+- **Multijugador por Internet** con código de sala y lista de partidas públicas (servidor en `online/`), además de la red local.
 - **IA** en tres niveles (fácil, normal y difícil), **red local** (hasta 4 jugadores, Mac y Windows juntos; búsqueda automática o por IP), tutorial, partidas guardadas, aldeanos ociosos, resembrado automático de granjas y límite de fotogramas para ahorrar batería.
 
 | | |
@@ -51,7 +55,11 @@ python3 tools/pack_terrain.py  # texturas del suelo → web/terrain_data.js
 node tools/bake_chars.mjs tools/chars.json   # personajes animados → web/chars_data.js
 ```
 
-Pruebas: `node pruebas/test_v3.js`, `test_fuzz.js`, `test_net.js`, `test_eras.js`, `test_mapas.js`, `test_guardado.js`, `test_granjas.js` (simulación determinista, red y mapas).
+Pruebas: `node pruebas/test_epocas.js`, `test_civs.js`, `test_campana.js`, `test_v3.js`, `test_fuzz.js`, `test_net.js`, `test_eras.js`, `test_mapas.js`, `test_guardado.js`, `test_granjas.js` (simulación determinista, red y mapas).
+
+## Servidor online
+
+Ver [online/README.md](online/README.md): un Worker de Cloudflare que retransmite las partidas. Su dirección se lee de `online.json`.
 
 ## Créditos
 

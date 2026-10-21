@@ -51,8 +51,9 @@ function buildModel(type,o,e,tier){const g=ART.building(type,o,tier??tierOf(o),e
  if(type==='farm'){const n=7,crop=new TH.InstancedMesh(gc('cropG',()=>{const k=new ART.Kit();for(let i=0;i<3;i++)k.add(new TH.ConeGeometry(.018,.3,4).translate(0,.15,0),'matte',[0xb8b04a,0xc8b85a,0x9aa844][i],(i-1)*.03,0,(i%2)*.02,0,(i-1)*.15,0);return k.geos().matte}),ART.M.matte,n*n);crop.castShadow=true;crop.receiveShadow=true;
   let i=0;for(let a=0;a<n;a++)for(let b=0;b<n;b++){dummy.position.set(-.78+a*.26,.06,-.78+b*.26);dummy.rotation.set(0,a*b*1.7,0);dummy.scale.set(1,1,1);dummy.updateMatrix();crop.setMatrixAt(i++,dummy.matrix)}g.add(crop);g.userData.crop=crop}
  return g}
-function unitModel(type,o,up,age){return(age!=null&&ART.unitEra&&ART.unitEra(type,o,age))||ART.unit(type,o,up)}
-const eraOf=e=>ART.unitEraTier?ART.unitEraTier(e.type,tierOf(e.owner)):null;
+// las unidades únicas modernas usan el modelo de su rama base, algo más grandes
+function unitModel(type,o,up,age){const vt=I.visType?I.visType(type,age||0):type;const g=(age!=null&&ART.unitEra&&ART.unitEra(vt,o,age))||ART.unit(vt,o,up);if(vt!==type)g.scale.multiplyScalar(1.12);return g}
+const eraOf=e=>{const a=tierOf(e.owner);return ART.unitEraTier?ART.unitEraTier(I.visType?I.visType(e.type,a):e.type,a):null};
 function relicModel(){return ART.relic()}
 // ---------- terreno
 let splatTex,splatData,depthTex;
@@ -336,8 +337,8 @@ function drawProj(G){let i=0,j=0,v=0,w=0;for(const p of G.proj){if(!I.isAlly(p.o
 const CHR=root.ImperiaChars,CH_TYPES={villager:1,militia:1,spear:1,archer:1,monk:1,almogavar:1,axeman:1,longbow:1,tknight:1,scout:1,knight:1,cataphract:1},CH_SKIP={scout:[5,6,7,8],knight:[5,6,7]};
 const _cm=new TH.Matrix4(),_cq=new TH.Quaternion(),_cy=new TH.Vector3(0,1,0),_c1=new TH.Vector3(1,1,1),_c0=new TH.Vector3(0,0,0);
 const TOOLBIT={axe:1,pick:2,hoe:3,hammer:4,basket:5};const CARRYC={food:0xc2533d,wood:0x8a5c33,gold:0xe8c24c,stone:0xa8adb2};
-function charKey(e){if(!CHR||!CHR.ok||!CH_TYPES[e.type])return null;const p=I.G.players[e.owner];let t=p?Math.min(8,p.age):0;if(t<2&&upOf(e))t++;if(CH_SKIP[e.type]&&CH_SKIP[e.type].includes(t))return null;
- for(let k=t;k>=0;k--){const key=e.type+'_'+k;if(CHR.has(key))return(e.id%3===1&&CHR.has(key+'f'))?key+'f':key}return null}
+function charKey(e){if(!CHR||!CHR.ok||!CH_TYPES[e.type])return null;const p=I.G.players[e.owner];let t=p?Math.min(8,p.age):0;if(t<2&&upOf(e))t++;const ty=I.visType?I.visType(e.type,t):e.type;if(!CH_TYPES[ty])return null;if(CH_SKIP[ty]&&CH_SKIP[ty].includes(t))return null;
+ for(let k=t;k>=0;k--){const key=ty+'_'+k;if(CHR.has(key))return(e.id%3===1&&CHR.has(key+'f'))?key+'f':key}return null}
 function dropObj(o){(o.e.kind==='bld'?bldRoot:unitRoot).remove(o.g);if(o.ch){CHR.free(o.ch);o.ch=null}}
 function charPose(o,e,dt,g,dying){const h=o.ch;const key=o.ck;const pc=(ART._&&ART._.PC||[0x2f6fd6,0xc8352a,0xe0b12a,0x8a4fcf])[e.owner%4];
  if(!g.visible){_cm.compose(_c0,_cq.identity(),_c0);CHRset(h,_cm,'idle',0,pc,0);return}

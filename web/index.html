@@ -223,14 +223,15 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
 .logosub{font-family:var(--disp);font-size:clamp(15px,1.6vw,21px);letter-spacing:.32em;text-transform:uppercase;color:rgba(240,212,147,.82);margin-top:6px}
 .logo{font-size:clamp(40px,5.4vw,78px)!important;letter-spacing:.1em!important;white-space:nowrap}
 /* Menú principal con ilustración de fondo: el título va en la cartela del cuadro y los botones sobre la niebla */
-#menubg{position:fixed;inset:0;z-index:0;background:#07080a url(menu_bg.jpg) center/cover no-repeat;animation:bgin 1.4s ease both;transition:filter .5s}
+#menubg{display:none;position:fixed;inset:0;z-index:1;background:#07080a url(menu_bg.jpg) center/cover no-repeat;animation:bgin 1.4s ease both;transition:filter .5s}
 #menubg::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,transparent 58%,rgba(0,0,0,.42) 100%),linear-gradient(180deg,transparent 72%,rgba(6,7,9,.28))}
 @keyframes bgin{from{opacity:0;transform:scale(1.03)}}
 #menu.hasbg{background:none}
 #menu.hasbg>:where(:not(#menubg):not(.ver)){position:relative;z-index:1}
 #menu.hasbg #mSetup{margin-block:auto}
 #mSetup h1{font-size:clamp(30px,3.3vw,52px)!important;letter-spacing:.12em!important;white-space:nowrap}
-#menu.hasbg.insetup #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
+body.inmenu #menubg{display:block}
+body.inmenu:not(.intitle) #menubg{filter:brightness(.5) saturate(.9) blur(3px)}
 #menu.hasbg #mTitle{position:absolute;inset:0;width:auto;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;animation:none}
 #menu.hasbg #mTitle>.eyebrow,#menu.hasbg #mTitle>.lede,#menu.hasbg #mTitle>.logobar{display:none}
 #menu.hasbg #mLogoWrap{position:absolute;left:var(--bx,30%);top:var(--by,4%);width:var(--bw,40%);height:var(--bh,12%);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:mrise .9s .2s cubic-bezier(.2,.8,.2,1) both}
@@ -243,6 +244,26 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
 #menu.hasbg .mb>span{white-space:nowrap}
 #menu.hasbg>.ver{position:fixed;letter-spacing:.18em;white-space:nowrap;overflow:hidden;left:var(--vx,auto);top:var(--vy,auto);width:var(--vw,auto);height:var(--vh,auto);right:auto;bottom:auto;display:flex;align-items:center;justify-content:center;color:rgba(240,226,196,.8);font-size:calc(var(--vh,40px)*.19)}
 @media (max-width:1150px){#menu.hasbg .mb{min-width:92px;padding:9px 10px;font-size:14px}#menu.hasbg .mb small{display:none}}
+#lobEye .code{font-size:20px;letter-spacing:.25em;color:var(--acc);margin:0 6px}
+#scnObj{position:fixed;top:66px;left:12px;z-index:5;pointer-events:none;min-width:230px;max-width:320px;padding:10px 12px;border-radius:4px 14px 4px 14px;background:linear-gradient(180deg,rgba(20,18,14,.78),rgba(10,10,12,.82));border:1px solid rgba(240,212,147,.22);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#scnObj h4{margin:0 0 6px;font:600 11px/1.2 var(--ui);letter-spacing:.22em;text-transform:uppercase;color:var(--acc)}
+#scnObj .o{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.35;margin:4px 0;color:var(--ink)}
+#scnObj .o i{flex:0 0 14px;height:14px;border-radius:50%;border:1.5px solid rgba(240,212,147,.6);margin-top:1px}
+#scnObj .o.ok{color:var(--mut)}#scnObj .o.ok i{background:var(--acc);border-color:var(--acc)}
+#scnObj .o small{display:block;color:var(--mut);font-size:11px}
+.box.camp{max-width:1080px;width:min(1080px,94vw)}
+.campgrid{display:grid;grid-template-columns:330px 1fr;gap:18px;margin-top:14px;min-height:420px}
+#campList{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto;padding-right:4px}
+#campList .cm{display:flex;gap:10px;align-items:center;text-align:left;padding:9px 12px;border-radius:4px 12px 4px 12px;border:1px solid rgba(240,212,147,.14);background:rgba(255,255,255,.03);color:var(--ink);cursor:pointer;font:inherit}
+#campList .cm:hover{border-color:rgba(240,212,147,.4)}#campList .cm.on{border-color:var(--acc);background:rgba(240,212,147,.1)}
+#campList .cm[disabled]{opacity:.38;cursor:default}
+#campList .cm b{display:block;font-size:14px}#campList .cm small{color:var(--mut);font-size:11.5px}
+#campList .cm .n{flex:0 0 30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--disp);border:1px solid rgba(240,212,147,.4);color:var(--acc)}
+#campList .cm.done .n{background:var(--acc);color:#1a1712}
+#campBrief{padding:18px 22px;border-radius:6px 18px 6px 18px;background:rgba(0,0,0,.25);border:1px solid rgba(240,212,147,.12)}
+#campBrief h3{margin:0;font:400 30px/1.1 var(--disp);color:#f3e6c8}#campBrief .yr{color:var(--acc);letter-spacing:.24em;font-size:11px;text-transform:uppercase}
+#campBrief p{color:#d8d0c0;line-height:1.55;font-size:14px}#campBrief ul{padding-left:18px;color:var(--ink);font-size:13.5px;line-height:1.6}
+@media (max-width:900px){.campgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -273,6 +294,7 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
  </header>
  <div id="msgs"></div>
  <div id="vict" hidden></div>
+ <div id="scnObj" hidden></div>
  <div id="groups" hidden></div>
  <div id="chat" class="panel" hidden><input id="chatIn" maxlength="160" placeholder="Mensaje para todos · Intro para enviar"></div>
  <div id="tut" class="panel" hidden>
@@ -293,15 +315,16 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
 </div>
 <div id="tip" hidden></div>
 
+<div id="menubg"></div>
 <div id="menu" class="screen hasbg" hidden>
- <div id="menubg"></div>
  <div class="title" id="mTitle">
   <div class="eyebrow">Estrategia en tiempo real · 9 edades</div>
   <div id="mLogoWrap"><h1 class="logo">CHRONOSVISOR</h1><div class="logosub">La guerra de las eras</div></div><div class="logobar"></div>
   <p class="lede">Del siglo V al año 2100: levanta tu aldea, avanza por nueve edades y conquista los reinos rivales.</p>
   <nav class="mnav">
    <button class="mb pri" data-go="play"><span>Jugar</span><small>Partida contra la IA</small></button>
-   <button class="mb" data-go="mp"><span>Multijugador</span><small>Red local</small></button>
+   <button class="mb" data-go="camp"><span>Campaña</span><small>9 misiones</small></button>
+   <button class="mb" data-go="mp"><span>Multijugador</span><small>Internet y red local</small></button>
    <button class="mb" data-go="tut"><span>Tutorial</span><small>Aprende lo básico</small></button>
    <button class="mb" data-go="load"><span>Cargar partida</span><small>Ranuras guardadas</small></button>
    <button class="mb" data-go="opt"><span>Opciones</span><small>Sonido, gráficos, voz</small></button>
@@ -309,7 +332,7 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
    <button class="mb quit" data-go="quit" id="mQuit"><span>Salir</span><small>Cerrar Chronosvisor</small></button>
   </nav>
  </div>
- <div class="ver">CHRONOSVISOR 6.3</div>
+ <div class="ver">CHRONOSVISOR 6.4</div>
  <div class="card" id="mSetup" hidden>
   <div class="eyebrow">Estrategia en tiempo real</div>
   <h1>CHRONOSVISOR</h1>
@@ -323,6 +346,8 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
    <div class="lab">Rivales</div><div class="seg" id="s-nai"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
    <div class="lab">Modo</div><div class="seg" id="s-teams"><button data-v="ffa">Todos contra todos</button><button data-v="teams">Por equipos</button></div>
    <div class="hintline" id="teamDesc"></div>
+   <div class="lab">Época inicial</div><div class="seg" id="s-age"></div>
+   <div class="hintline" id="ageDesc"></div>
    <div class="lab">Dificultad</div><div class="seg" id="s-diff"></div>
    <div class="lab">Victoria</div><div class="seg" id="s-win"><button data-v="standard">Estándar</button><button data-v="conquest">Conquista</button></div>
    <div class="hintline" id="winDesc"></div>
@@ -408,18 +433,39 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
  </div>
 </div>
 
+<div id="camp" class="screen center" hidden>
+ <div class="box wide camp">
+  <div class="eyebrow">Campaña · Crónicas del Chronosvisor</div>
+  <h2>De la Edad Oscura al futuro</h2>
+  <div class="campgrid"><div id="campList"></div><div id="campBrief"></div></div>
+  <div class="actions"><button class="btn pri" id="campPlay">Jugar misión</button><button class="btn" id="campBack">Volver</button></div>
+ </div>
+</div>
 <div id="mp" class="screen center" hidden>
  <div class="box">
-  <div class="eyebrow">Multijugador en red local</div>
-  <h2>Partida en red</h2>
-  <div id="mpStatus" style="color:var(--mut);min-height:18px"></div>
+  <div class="eyebrow">Multijugador · hasta 4 jugadores</div>
+  <h2>Partida multijugador</h2>
+  <div class="tabs seg" id="mpTabs"><button data-k="online" class="on">Por Internet</button><button data-k="lan">Red local</button></div>
+  <div id="mpStatus" style="color:var(--mut);min-height:18px;margin-top:10px"></div>
   <div class="opts" style="grid-template-columns:120px 1fr">
    <div class="lab">Tu nombre</div><input class="inp" id="mpName" maxlength="18">
-   <div class="lab">Dirección IP</div><div style="display:flex;gap:8px"><input class="inp" id="mpAddr" placeholder="192.168.1.20" style="width:200px"><button class="btn sm" id="mpJoin">Unirse</button></div>
   </div>
-  <div class="lab" style="margin-top:18px">Partidas encontradas</div>
-  <div class="slots" id="mpFound"></div>
-  <div class="actions"><button class="btn pri" id="mpHost">Crear partida</button><button class="btn" id="mpBack">Volver</button></div>
+  <div id="mpOnline">
+   <div class="opts" style="grid-template-columns:120px 1fr">
+    <div class="lab">Código de sala</div><div style="display:flex;gap:8px"><input class="inp" id="mpCode" placeholder="ABCDE" maxlength="5" style="width:120px;text-transform:uppercase;letter-spacing:.2em"><button class="btn sm" id="mpJoinCode">Unirse</button></div>
+    <div class="lab">Sala pública</div><div><button class="tgl on" id="mpPub" aria-label="Sala pública"></button><span class="hintline" style="margin-left:10px">Aparece en la lista para que cualquiera pueda unirse.</span></div>
+   </div>
+   <div class="lab" style="margin-top:18px;display:flex;justify-content:space-between;align-items:center">Partidas públicas <button class="btn sm" id="mpRefresh">Actualizar</button></div>
+   <div class="slots" id="mpRooms"></div>
+  </div>
+  <div id="mpLan" hidden>
+   <div class="opts" style="grid-template-columns:120px 1fr">
+    <div class="lab">Dirección IP</div><div style="display:flex;gap:8px"><input class="inp" id="mpAddr" placeholder="192.168.1.20" style="width:200px"><button class="btn sm" id="mpJoin">Unirse</button></div>
+   </div>
+   <div class="lab" style="margin-top:18px">Partidas encontradas</div>
+   <div class="slots" id="mpFound"></div>
+  </div>
+  <div class="actions"><button class="btn pri" id="mpHost">Crear sala online</button><button class="btn" id="mpBack">Volver</button></div>
  </div>
 </div>
 
@@ -439,6 +485,7 @@ body{transition:none}.panel{transition:border-radius .6s,box-shadow .6s,backgrou
 
 <script src="three.min.js"></script>
 <script src="maps_data.js"></script>
+<script src="campaign.js"></script>
 <script src="game.js"></script>
 <script src="art.js"></script>
 <script src="art_eras.js"></script>

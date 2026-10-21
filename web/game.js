@@ -15,11 +15,11 @@ const PCOLORS=['#4a86e8','#e0553f','#e2b534','#9a6ae0'];
 const WONDER_T=300,RELIC_T=300;
 
 const CIVS={
- iberos:{name:'Íberos',uu:'almogavar',desc:'Los aldeanos construyen un 30 % más rápido. Los piqueros cuestan un 25 % menos. Unidad única: almogávar.'},
- francos:{name:'Francos',uu:'axeman',desc:'Caballería con +20 % de vida. Las granjas rinden un 25 % más. Unidad única: lanzador de hachas.'},
- britanos:{name:'Britanos',uu:'longbow',desc:'Arqueros con +1 de alcance. La galería de tiro entrena un 25 % más rápido. Unidad única: arquero largo.'},
- teutones:{name:'Teutones',uu:'tknight',desc:'Infantería con +1 de armadura. Torres, castillos y centros urbanos con +2 de ataque. Unidad única: caballero teutónico.'},
- bizantinos:{name:'Bizantinos',uu:'cataphract',desc:'Edificios con +20 % de vida. Los monjes curan el doble de rápido. Unidad única: catafracto.'}
+ iberos:{name:'Íberos',uu:'almogavar',desc:'Los aldeanos construyen un 30 % más rápido. Los piqueros cuestan un 25 % menos. Unidad única: almogávar. Era moderna: infantería un 15 % más rápida; guerrilleros, legionarios e Infantería de Marina.'},
+ francos:{name:'Francos',uu:'axeman',desc:'Caballería con +20 % de vida (hasta la Edad Mundial). Las granjas rinden un 25 % más. Unidad única: lanzador de hachas. Era moderna: artillería con +15 % de ataque y +1 de alcance; cañón de 75 y obús CAESAR.'},
+ britanos:{name:'Britanos',uu:'longbow',desc:'Arqueros con +1 de alcance. La galería de tiro entrena un 25 % más rápido. Unidad única: arquero largo. Era moderna: buques de guerra con +25 % de vida y +1 de alcance; ametralladoras Vickers y francotiradores del SAS.'},
+ teutones:{name:'Teutones',uu:'tknight',desc:'Infantería con +1 de armadura. Torres, castillos y centros urbanos con +2 de ataque. Unidad única: caballero teutónico. Era moderna: vehículos blindados con +15 % de vida; carros Panzer y Leopard.'},
+ bizantinos:{name:'Bizantinos',uu:'cataphract',desc:'Edificios con +20 % de vida. Los monjes curan el doble de rápido. Unidad única: catafracto. Era moderna: defensas con +25 % de ataque y médicos que curan aún más; blindados ligeros y drones pesados.'}
 };
 const MAPS={
  continental:{name:'Continental',desc:'Lagos con peces, bosques repartidos y recursos equilibrados.'},
@@ -193,19 +193,31 @@ function gdAt(t,a){if(a<3&&!(a>=0&&GEN[t]&&GEN[t][a]))return U[t];const k=t+'|'+
  if(g)for(let i=0;i<=a;i++)if(g[i])Object.assign(d,g[i]);
  if(U[t].unique&&a>2){const m=1+.15*(a-2);d.hp=Math.round(d.hp*m);d.atk=Math.round(d.atk*m);d.name=U[t].name+' de élite'}
  return gdC[k]=d}
-const gd=(t,o)=>gdAt(t,ageOf(o));
+// unidades únicas modernas: desde la Edad Industrial cada civilización tiene su propia línea, basada en otra rama con nombres y mejoras propias
+const UUM={
+ almogavar:{base:'militia',names:{4:'Guerrillero',5:'Legionario',6:'Boina verde',7:'Infantería de Marina',8:'Exolegionario'},hp:1.2,atk:1.1,speed:1.15},
+ axeman:{base:'mangonel',names:{4:'Cañón Gribeauval',5:'Cañón de 75 mm',6:'Lanzacohetes ligero',7:'Obús CAESAR',8:'Cañón de plasma Rafale'},hp:1.15,atk:1.2,range:1},
+ longbow:{base:'archer',names:{4:'Fusilero Baker',5:'Ametrallador Vickers',6:'Ametrallador Bren',7:'Francotirador del SAS',8:'Tirador de raíles'},hp:1.1,atk:1.25,range:1},
+ tknight:{base:'knight',names:{4:'Coracero prusiano',5:'Panzer IV',6:'Leopard 1',7:'Leopard 2',8:'Panzer de fusión'},hp:1.15,atk:1.05,armor:1},
+ cataphract:{base:'scout',names:{4:'Jinete akrita',5:'Autoametralladora',6:'Blindado ligero',7:'Dron armado pesado',8:'Aerodeslizador de asalto'},hp:1.3,atk:1.25}};
+const uumC={};
+function uuModern(t,a){const k=t+'|'+a;if(uumC[k])return uumC[k];const M=UUM[t],b=gdAt(M.base,a),d=Object.assign({},b);
+ d.name=M.names[a]||M.names[4];d.unique=true;d.base=M.base;d.hp=Math.round(b.hp*(M.hp||1));d.atk=Math.round(b.atk*(M.atk||1));if(M.speed)d.speed=Math.round(b.speed*M.speed);if(M.range)d.range=b.range+M.range;if(M.armor)d.armor=(b.armor||0)+M.armor;
+ const c={};for(const r in b.cost)c[r]=Math.round(b.cost[r]*1.15);d.cost=c;d.desc='Unidad única de tu civilización en la era moderna: más fuerte que la versión normal.';return uumC[k]=d}
+const gd=(t,o)=>{const a=ageOf(o);return a>=4&&UUM[t]?uuModern(t,a):gdAt(t,a)};
+const visType=(t,a)=>a>=4&&UUM[t]?UUM[t].base:t;
 const genUp=(o,t)=>ageOf(o)<3&&up(o,t);
 function bName(t,o){const g=BGEN[t],a=ageOf(o);let n=B[t].name;if(g)for(let i=0;i<=a;i++)if(g[i])n=g[i];return n}
 const bAgeK=o=>1+.15*Math.max(0,ageOf(o)-2);
 
 function uName(type,o){const d=gd(type,o);if(d!==U[type])return d.name;return o!=null&&up(o,type)&&UPG[type]?UPG[type].name:U[type].name}
-function uMaxHp(type,o){const d=gd(type,o);const h=d.hp+(genUp(o,type)?UPG[type].hp:0);return Math.round(h*((d.cls==='cav'&&civ(o)==='francos')?1.2:1))}
-function uAtk(u,o){const t=u.type||u;o=o??u.owner;const d=gd(t,o);let a=d.atk+(genUp(o,t)?UPG[t].atk:0);if((d.cls==='inf'||d.cls==='cav')&&tech(o,'forge'))a+=1;if((d.cls==='arc'||t==='galley')&&tech(o,'fletch'))a+=1;return a}
+function uMaxHp(type,o){const d=gd(type,o);const h=d.hp+(genUp(o,type)?UPG[type].hp:0);const a=ageOf(o),c=civ(o);let m=(d.cls==='cav'&&c==='francos'&&a<5)?1.2:1;if(a>=4){if(c==='britanos'&&d.cls==='ship'&&d.atk>0)m*=1.25;if(c==='teutones'&&d.cls==='cav'&&a>=5)m*=1.15}return Math.round(h*m)}
+function uAtk(u,o){const t=u.type||u;o=o??u.owner;const d=gd(t,o);let a=d.atk+(genUp(o,t)?UPG[t].atk:0);if((d.cls==='inf'||d.cls==='cav')&&tech(o,'forge'))a+=1;if((d.cls==='arc'||t==='galley')&&tech(o,'fletch'))a+=1;if(d.cls==='siege'&&civ(o)==='francos'&&ageOf(o)>=4)a=Math.round(a*1.15);return a}
 function uArmor(u,ranged){const o=u.owner,d=gd(u.type,o);let a=d.armor+(genUp(o,u.type)&&UPG[u.type].armor||0);if(d.cls==='inf'||d.cls==='cav'){if(tech(o,'mail'))a+=1}
  if(d.cls==='cav'&&tech(o,'barding'))a+=2;if(d.cls==='inf'&&civ(o)==='teutones')a+=1;if(ranged&&d.parmor)a+=d.parmor;return a}
-function uRange(u,o){const t=u.type||u;o=o??u.owner;const d=gd(t,o);let r=d.range+(genUp(o,t)&&UPG[t].range||0);if(d.cls==='arc'||t==='galley'){if(tech(o,'fletch'))r+=1;if(civ(o)==='britanos'&&d.cls==='arc')r+=1}return r}
+function uRange(u,o){const t=u.type||u;o=o??u.owner;const d=gd(t,o);let r=d.range+(genUp(o,t)&&UPG[t].range||0);if(d.cls==='arc'||t==='galley'){if(tech(o,'fletch'))r+=1;if(civ(o)==='britanos'&&d.cls==='arc')r+=1}if(ageOf(o)>=4){const c=civ(o);if(c==='francos'&&d.cls==='siege'&&d.ranged)r+=1;if(c==='britanos'&&d.cls==='ship'&&d.atk>0)r+=1}return r}
 function uBonus(t,o,cls){const b=gd(t,o).bonus;let v=b&&b[cls]||0;if(t==='spear'&&cls==='cav'&&genUp(o,t))v+=UPG.spear.bcav;return v}
-function uSpeed(u){const d=gd(u.type,u.owner);let s=d.speed;if(u.type==='villager'&&tech(u.owner,'wheel'))s*=1.1;if(u.type==='monk'&&tech(u.owner,'fervor'))s*=1.15;const g=u.o&&u.o.gs;return g?Math.min(s,g):s}
+function uSpeed(u){const d=gd(u.type,u.owner);let s=d.speed;if(u.type==='villager'&&tech(u.owner,'wheel'))s*=1.1;if(u.type==='monk'&&tech(u.owner,'fervor'))s*=1.15;if((d.cls==='inf'||d.cls==='arc')&&civ(u.owner)==='iberos'&&ageOf(u.owner)>=4)s*=1.15;const g=u.o&&u.o.gs;return g?Math.min(s,g):s}
 function carryCap(o,type){return type==='fishship'?15:CAP+(tech(o,'wheel')?5:0)}
 function gatherRate(o,rt,farm,fish){const p=P(o);let r=fish?GR.fish:farm?GR.farm:GR[rt];
  if(fish){if(tech(o,'gillnets'))r*=1.25}
@@ -213,13 +225,13 @@ function gatherRate(o,rt,farm,fish){const p=P(o);let r=fish?GR.fish:farm?GR.farm
  else if(rt==='wood'&&tech(o,'axe'))r*=1.2;else if((rt==='gold'||rt==='stone')&&tech(o,'pick'))r*=1.2;return r*(p.mult||1)*(1+.08*Math.max(0,p.age-2))}
 function bMaxHp(type,o){return Math.round(B[type].hp*bAgeK(o)*(civ(o)==='bizantinos'?1.2:1)*(tech(o,'masonry')?1.15:1))}
 function bArmor(type,o){return(B[type].armor||0)+(tech(o,'masonry')?1:0)+Math.max(0,(ageOf(o)-2)>>1)}
-function bAtk(b){return Math.round(B[b.type].atk*(1+.22*Math.max(0,ageOf(b.owner)-2)))+(civ(b.owner)==='teutones'?2:0)+(tech(b.owner,'fletch')?1:0)}
+function bAtk(b){return Math.round(B[b.type].atk*(1+.22*Math.max(0,ageOf(b.owner)-2)))+(civ(b.owner)==='teutones'?2:0)+(tech(b.owner,'fletch')?1:0)+(civ(b.owner)==='bizantinos'&&ageOf(b.owner)>=4?Math.round(B[b.type].atk*.25*(1+.22*(ageOf(b.owner)-2))):0)}
 function bRange(b){return B[b.type].range+Math.min(3,Math.max(0,ageOf(b.owner)-2)*.5)+(tech(b.owner,'fletch')?1:0)}
 function unitCost(o,k){const c=gd(k,o).cost;if(k==='spear'&&civ(o)==='iberos'){const r={};for(const x in c)r[x]=Math.round(c[x]*.75);return r}return c}
 function trainTime(o,b,k){return gd(k,o).time*(b.type==='range'&&civ(o)==='britanos'?.75:1)}
 function buildRate(o){return civ(o)==='iberos'?1.3:1}
 function convTime(o){return CONVT*(tech(o,'fervor')?.8:1)}
-function healRate(o){return(civ(o)==='bizantinos'?3:1.5)*(tech(o,'fervor')?1.25:1)}
+function healRate(o){return(civ(o)==='bizantinos'?(ageOf(o)>=4?4.5:3):1.5)*(tech(o,'fervor')?1.25:1)}
 const trainsOf=(b)=>{const t=B[b.type].trains||[];return t[0]==='unique'?[CIVS[civ(b.owner)].uu]:t};
 
 // ---------- entidades
@@ -476,9 +488,9 @@ function nearestEnemy(s,range,mode){let bu=null,bd=range,bb=null,bbd=range;const
 
 // ---------- combate
 function unitDmg(u,t){const d=gd(u.type,u.owner);let a=uAtk(u);
- if(d.bonus||u.type==='spear'){if(t.kind==='unit')a+=uBonus(u.type,u.owner,U[t.type].cls);if(t.kind==='bld')a+=uBonus(u.type,u.owner,'bld')}
+ if(d.bonus||u.type==='spear'){if(t.kind==='unit')a+=uBonus(u.type,u.owner,gd(t.type,t.owner).cls);if(t.kind==='bld')a+=uBonus(u.type,u.owner,'bld')}
  const arm=t.kind==='unit'?uArmor(t,!!d.ranged):bArmor(t.type,t.owner);
- let dmg=Math.max(1,a-arm);if(t.kind==='bld'){if(d.ranged&&!d.fullBld&&u.type!=='mangonel'&&u.type!=='galley')dmg=Math.max(1,dmg*.3);if(u.type==='villager')dmg=1.5}return dmg*elevK(u,t)}
+ let dmg=Math.max(1,a-arm);if(t.kind==='bld'){if(d.ranged&&!d.fullBld&&!d.splash&&u.type!=='galley')dmg=Math.max(1,dmg*.3);if(u.type==='villager')dmg=1.5}return dmg*elevK(u,t)}
 function visFor0(x,y){return G.vis[idx(clampT(x/T,MW),clampT(y/T,MH))]===1}
 function shoot(s,t,dmg){const h0=s.kind==='bld'?(s.type==='tower'?2.4:s.type==='castle'?2.2:1.7):.45;const d=Math.hypot(t.x-s.x,t.y-s.y),kind=u2k(s),pk=PK[kind]||PK.arrow;
  G.proj.push({k:0,kind,x:s.x,y:s.y,h:h0,sx:s.x,sy:s.y,h0,tid:t.id,tx:t.x,ty:t.y,dmg,owner:s.owner,src:s.id,dur:Math.max(pk[0]>1000?.08:.22,d/pk[0]),arc:(.2+d/T*.07)*pk[1],vx:0,vy:0,vh:0});
@@ -507,7 +519,7 @@ function damage(t,dmg,src){if(t.dead)return;t.hp-=dmg;t.hitT=.18;
   else order(t,{t:'atk',id:src.id,auto:true,then:{t:'move',x:t.x,y:t.y},leash:t.st===1?{x:t.x,y:t.y}:null})}
  if(t.hp<=0)kill(t,src.owner)}
 function dropRelic(r,x,y){r.holder=0;r.x=x;r.y=y}
-function kill(e,by,silent){if(e.dead)return;const wall=e.kind==='bld'&&B[e.type].wall;
+function kill(e,by,silent){if(e.dead)return;if(G.scnS&&by!=null&&by>=0&&isEnemy(by,e.owner)){const K=G.scnS.kills[by]||(G.scnS.kills[by]={});const k=e.kind==='unit'?'u:'+gd(e.type,e.owner).cls:'b:'+e.type;K[k]=(K[k]||0)+1}const wall=e.kind==='bld'&&B[e.type].wall;
  if(e.kind==='unit'){P(e.owner).stats.lost++;if(by!=null&&by>=0&&isEnemy(by,e.owner))P(by).stats.killed++;
   if(e.relic){const r=G.ents.get(e.relic);if(r)dropRelic(r,e.x,e.y);e.relic=0}
   if(e.cargo&&e.cargo.length){for(const id of e.cargo){const c=G.ents.get(id);if(c&&!c.dead){c.gar=0;kill(c,by,true)}}e.cargo=[]}
@@ -528,7 +540,7 @@ function convert(t,no){const old=t.owner;P(old).stats.lost++;P(no).stats.convert
 // ---------- guarnición
 const contents=c=>c.kind==='unit'?(c.cargo||(c.cargo=[])):(c.gar||(c.gar=[]));
 function garCap(c){const g=GAR[c.type];return g?g.n:0}
-function canEnter(u,c){const g=GAR[c.type];if(!g||c.dead||c.owner!==u.owner||c===u)return false;if(c.kind==='bld'&&c.bp<1)return false;if(!g.cls.includes(U[u.type].cls)||U[u.type].naval)return false;return contents(c).length<g.n}
+function canEnter(u,c){const g=GAR[c.type];if(!g||c.dead||c.owner!==u.owner||c===u)return false;if(c.kind==='bld'&&c.bp<1)return false;if(!g.cls.includes(gd(u.type,u.owner).cls)||U[u.type].naval)return false;return contents(c).length<g.n}
 function enter(u,c){contents(c).push(u.id);u.gar=c.id;u.o={t:'idle'};u.oq=[];u.path=[];u.gk=null;u.x=c.x;u.y=c.y;u.walk=false;u.work=false;if(u.owner===ME())ev('gar',{id:u.id})}
 function ungarrison(c,gx,gy,only){const l=contents(c),keep=[];
  for(const id of l){const u=G.ents.get(id);if(!u||u.dead)continue;if(only&&!only(u)){keep.push(id);continue}
@@ -623,7 +635,7 @@ function doAttack(u,dt,o){
   const k=uSpeed(u)*dt/(dist||1),ax=u.x-(t.x-u.x)*k,ay=u.y-(t.y-u.y)*k;if(freeAtPx(ax,ay,u.owner)){u.x=ax;u.y=ay;u.walk=true}else order(u,o.then||{t:'idle'});return}
  if(dist<=reach){u.path=[];u.pi=0;u.gk=null;u.dir=Math.atan2(t.y-u.y,t.x-u.x);
   if(u.cd<=0){u.cd=d.rof;u.atkAnim=.32;
-   if(u.type==='mangonel')lob(u,t);else if(d.ranged)shoot(u,t,unitDmg(u,t));
+   if(d.splash)lob(u,t);else if(d.ranged)shoot(u,t,unitDmg(u,t));
    else{damage(t,unitDmg(u,t),u);if(isAlly(u.owner,ME())||visFor0(u.x,u.y))ev('hit',{x:t.x,y:t.y,k:u.type==='ram'?'ram':'melee'})}}
   return}
  if(o.hold){order(u,{t:'idle'});return}
@@ -688,7 +700,7 @@ function updUnit(u,dt){
  switch(o.t){
   case'idle':idle(u,dt);break;
   case'move':if(travel(u,dt,'m'+o.x+','+o.y,o.x/T,o.y/T,null,false,freeAtPx(o.x,o.y,u.owner,U[u.type].naval)?o.x:null,o.y))order(u,o.then||{t:'idle'});break;
-  case'amove':{if(U[u.type].atk>0){u.scan-=dt;if(u.scan<=0){u.scan=.3;const d=gd(u.type,u.owner);const e=nearestEnemy(u,d.sight*T,d.bldOnly?'bld':null);if(e&&!(u.type==='mangonel'&&e.kind==='unit'&&Math.hypot(e.x-u.x,e.y-u.y)<d.minr*T)){order(u,{t:'atk',id:e.id,auto:true,then:o});break}}}
+  case'amove':{if(U[u.type].atk>0){u.scan-=dt;if(u.scan<=0){u.scan=.3;const d=gd(u.type,u.owner);const e=nearestEnemy(u,d.sight*T,d.bldOnly?'bld':null);if(e&&!(d.splash&&e.kind==='unit'&&Math.hypot(e.x-u.x,e.y-u.y)<d.minr*T)){order(u,{t:'atk',id:e.id,auto:true,then:o});break}}}
    if(travel(u,dt,'m'+o.x+','+o.y,o.x/T,o.y/T,null,false,freeAtPx(o.x,o.y,u.owner,U[u.type].naval)?o.x:null,o.y))order(u,{t:'idle'});break}
   case'gather':doGather(u,dt,o);break;
   case'build':doBuild(u,dt,o);break;
@@ -734,7 +746,7 @@ function applyTech(o,id){const p=P(o),t=TECH[id];p.tech[id]=1;delete p.tq[id];
  if(id==='plow')for(const e of G.list){if(!e.dead&&e.kind==='bld'&&e.owner===o&&B[e.type].farm){e.amt+=100;e.max+=100;e.chg=true}}
  if(o===ME()){msg('Investigación completada: '+t.name);sfx('tech')}}
 function spawnFrom(b,k){const p=P(b.owner),nav=!!U[k].naval;let gx=MW/2,gy=MH/2;if(b.rally){gx=b.rally.x/T;gy=b.rally.y/T}
- const t=freeTileNear(b,gx,gy,nav)||(nav?null:[b.tx,b.ty+b.size]);if(!t)return null;const u=mkUnit(k,b.owner,(t[0]+.5)*T,(t[1]+.5)*T);p.pop++;p.stats.trained++;
+ const t=freeTileNear(b,gx,gy,nav)||(nav?null:[b.tx,b.ty+b.size]);if(!t)return null;const u=mkUnit(k,b.owner,(t[0]+.5)*T,(t[1]+.5)*T);p.pop++;p.stats.trained++;if(G.scnS){const tr=G.scnS.tr[b.owner]||(G.scnS.tr[b.owner]={});tr[k]=(tr[k]||0)+1}
  if(b.owner===ME())sfx('train');
  if(b.rally){const re=b.rally.id&&G.ents.get(b.rally.id);
   if(re&&!re.dead&&k==='villager'&&(re.kind==='res'&&re.type!=='fish'||(re.kind==='bld'&&B[re.type].farm)))order(u,{t:'gather',id:re.id,rt:re.kind==='res'?RDEF[re.type].r:'food',s:'go'});
@@ -781,7 +793,7 @@ function formMove(us,wx,wy,am,q){const n=us.length;if(!n)return;
 // ---------- IA
 function aiUpdate(dt){for(const p of G.players){if(!p.ai||p.out)continue;const A=G.ai[p.i];A.tick-=dt;if(A.tick>0)continue;A.tick=DIFF[G.cfg.diff].tick;aiThink(p,A)}}
 function enemyComp(me){const c={inf:0,arc:0,cav:0,siege:0,monk:0,vil:0,ship:0,trade:0,towers:0,walls:0,n:0};
- for(const e of G.ul){if(e.dead||!isEnemy(me,e.owner))continue;c[U[e.type].cls]++;if(e.type!=='villager')c.n++}
+ for(const e of G.ul){if(e.dead||!isEnemy(me,e.owner))continue;c[gd(e.type,e.owner).cls]++;if(e.type!=='villager')c.n++}
  for(const e of G.bl){if(e.dead||!isEnemy(me,e.owner))continue;if(e.type==='tower'||e.type==='castle')c.towers++;if(B[e.type].wall)c.walls++}return c}
 function coastOK(tx,ty,s){let w=0;for(let y=ty-1;y<=ty+s;y++)for(let x=tx-1;x<=tx+s;x++){if(x>=tx&&x<tx+s&&y>=ty&&y<ty+s)continue;if(inb(x,y)&&G.ter[idx(x,y)]===1)w++}return w>=3}
 function sameLand(a,b){return !G.land||G.land[tidx(a)]===G.land[tidx(b)]}
@@ -926,8 +938,15 @@ function aiBuildAt(p,type,s,vills){if(!canAfford(p,B[type].cost)||!bldAvail(p,ty
 function findSpot(type,cx,cy,rmin,rmax,o){const s=B[type].size;
  for(let r=rmin;r<=rmax;r++){const c=[];for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const tx=cx+dx-(s>>1),ty=cy+dy-(s>>1);if(spotOK(type,tx,ty,o))c.push([tx,ty])}
   if(c.length)return c[Math.floor(rnd()*c.length)]}return null}
+// colocación al preparar la partida (época avanzada, escenarios): admite pendientes y allana el terreno bajo el edificio
+let relaxH=0;
+function setupSpot(type,cx,cy,r0,r1,o){let sp=findSpot(type,cx,cy,r0,r1,o);if(sp)return sp;relaxH=1.8;try{sp=findSpot(type,cx,cy,r0,r1,o)}finally{relaxH=0}
+ if(sp){const z=B[type].size;for(let y=sp[1]-1;y<=sp[1]+z;y++)for(let x=sp[0]-1;x<=sp[0]+z;x++){if(!inb(x,y))continue;const i=idx(x,y);if(isTreeAt(i))remove(G.ents.get(G.occ[i]))}if(G.hgt)flatten(sp[0],sp[1],z)}return sp}
+function isTreeAt(i){const e=G.occ[i]&&G.ents.get(G.occ[i]);return!!(e&&e.kind==='res'&&e.type==='tree')}
+function flatten(tx,ty,s){let sum=0,n=0;for(let y=ty;y<ty+s;y++)for(let x=tx;x<tx+s;x++){sum+=G.hgt[idx(x,y)];n++}const m=sum/n;
+ for(let y=ty-1;y<=ty+s;y++)for(let x=tx-1;x<=tx+s;x++){if(!inb(x,y))continue;const i=idx(x,y),inside=x>=tx&&y>=ty&&x<tx+s&&y<ty+s;G.hgt[i]=inside?m:(G.hgt[i]+m)/2}}
 function spotOK(type,tx,ty,o){const s=B[type].size;if(!canPlace(type,tx,ty,o))return false;
- for(let y=ty-1;y<=ty+s;y++)for(let x=tx-1;x<=tx+s;x++){if(!inb(x,y))return false;const oc=G.occ[idx(x,y)];if(oc){const e=G.ents.get(oc);if(e&&e.kind==='bld')return false;if(e&&type!=='store'&&type!=='dock'&&e.kind==='res'&&e.type!=='fish')return false}}return true}
+ for(let y=ty-1;y<=ty+s;y++)for(let x=tx-1;x<=tx+s;x++){if(!inb(x,y))return false;const oc=G.occ[idx(x,y)];if(oc){const e=G.ents.get(oc);if(e&&e.kind==='bld')return false;if(relaxH&&e&&e.kind==='res'&&e.type==='tree')continue;if(e&&type!=='store'&&type!=='dock'&&e.kind==='res'&&e.type!=='fish')return false}}return true}
 
 // ---------- visión por equipo (determinista) y memoria de la niebla (solo del jugador local)
 function calcFog(){if(G.cfg.reveal==='all'){for(const t of G.humanTeams){G.visT[t].fill(1);G.expT[t].fill(1)}G.fogV++;return}
@@ -943,8 +962,8 @@ function updMemory(){if(!G.vis)return;const me=ME();
  for(const [id,m] of G.mem){const e=G.ents.get(id);if((!e||e.dead)&&anyVis(m))G.mem.delete(id)}}
 function isVisible(e){if(e.kind==='unit')return !e.gar&&(isAlly(e.owner,ME())||G.vis[tidx(e)]===1);if(e.kind==='relic')return G.exp[tidx(e)]===1&&!e.holder;if(e.kind==='res')return G.exp[idx(e.tx,e.ty)]===1;return isAlly(e.owner,ME())||anyVis(e)}
 function canPlace(type,tx,ty,owner){const s=B[type].size;let hmin=99,hmax=-99;
- for(let y=ty;y<ty+s;y++)for(let x=tx;x<tx+s;x++){if(!inb(x,y))return false;const i=idx(x,y);if(G.ter[i]!==0||G.occ[i])return false;if(!P(owner).ai&&!expOf(owner)[i])return false;const h=G.hgt?G.hgt[i]:0;if(h<hmin)hmin=h;if(h>hmax)hmax=h}
- if(hmax-hmin>.6&&!B[type].wall)return false;
+ for(let y=ty;y<ty+s;y++)for(let x=tx;x<tx+s;x++){if(!inb(x,y))return false;const i=idx(x,y);if(G.ter[i]!==0)return false;if(G.occ[i]&&!(relaxH&&isTreeAt(i)))return false;if(!P(owner).ai&&!expOf(owner)[i])return false;const h=G.hgt?G.hgt[i]:0;if(h<hmin)hmin=h;if(h>hmax)hmax=h}
+ if(hmax-hmin>(relaxH||.6)&&!B[type].wall)return false;
  if(B[type].coast&&!coastOK(tx,ty,s))return false;return true}
 
 // ---------- victoria
@@ -954,7 +973,7 @@ function finish(team,how){if(G.over)return;G.over=true;G.winTeam=team;G.how=how;
 function checkEnd(){
  for(const p of G.players){if(p.out)continue;const alive=G.bl.some(e=>!e.dead&&e.owner===p.i&&!B[e.type].wall)||G.ul.some(e=>!e.dead&&e.owner===p.i&&e.type==='villager');if(!alive)eliminate(p)}
  const teams=new Set(G.players.filter(p=>!p.out).map(p=>p.team));
- if(G.cfg.win!=='conquest'){
+ if(G.cfg.win!=='conquest'&&G.cfg.win!=='scn'){
   if(G.wonder){const w=G.ents.get(G.wonder.id);if(!w||w.dead)G.wonder=null;else if(G.t-G.wonder.t0>=WONDER_T)return finish(P(w.owner).team,'wonder')}
   if(G.relicN>0){let team=null,all=true;for(const e of G.rel){if(e.dead)continue;const h=e.holder&&G.ents.get(e.holder);if(!h||h.kind!=='bld'){all=false;break}const tm=P(h.owner).team;if(team==null)team=tm;else if(team!==tm){all=false;break}}
    if(all&&team!=null){if(!G.relicHold||G.relicHold.team!==team){G.relicHold={team,t0:G.t};msg(team===P(ME()).team?'Tu bando tiene todas las reliquias: '+Math.round(RELIC_T/60)+' minutos para la victoria':'Un bando rival tiene todas las reliquias',team!==P(ME()).team)}
@@ -975,11 +994,50 @@ function update(dt){if(!G||G.over)return;G.t+=dt;G.pb=40;G.nb=14000;G.ug=null;
  G.fogT-=dt;if(G.fogT<=0){G.fogT=.2;calcFog()}
  G.endT-=dt;if(G.endT<=0){G.endT=1;checkEnd();for(const r in G.price)G.price[r]+=(({food:100,wood:100,stone:130})[r]-G.price[r])*.004}
  G.histT-=dt;if(G.histT<=0){G.histT=30;G.hist.push({t:Math.round(G.t),s:G.players.map(p=>{let army=0;for(const e of G.ul)if(!e.dead&&e.owner===p.i&&e.type!=='villager'&&U[e.type].atk>0)army++;return{pop:p.pop,army,res:p.stats.gathered,score:score(p)}})})}
+ if(G.scnS){G.scnT-=dt;if(G.scnT<=0){G.scnT=1;scnTick()}}
  G.alertT-=dt;
  if(G.dirty){const al=e=>!e.dead;G.list=G.list.filter(al);G.ul=G.ul.filter(al);G.bl=G.bl.filter(al);G.rl=G.rl.filter(al);G.rel=G.rel.filter(al);G.dirty=false}}
+// ---------- escenarios y campaña: objetivos, derrotas y sucesos guionizados (datos en campaign.js; el estado va en G.scnS y se guarda con la partida)
+const scnDef=()=>G.cfg.scn&&root.CHRONO_CAMPAIGN&&root.CHRONO_CAMPAIGN.find(m=>m.id===G.cfg.scn);
+function scnInit(){const M=scnDef();if(!M)return;G.scnS={done:{},ev:{},tr:{},kills:{},won:false,t0:0};G.scnT=1;
+ for(const st of M.setup||[]){const p=P(st.owner);if(!p)continue;const tc=G.bl.find(b=>!b.dead&&b.owner===st.owner&&b.type==='tc');if(!tc)continue;const wasAI=p.ai;p.ai=true;
+  const cx=(tc.x/T)|0,cy=(tc.y/T)|0,en=G.bl.find(b=>!b.dead&&b.type==='tc'&&isEnemy(st.owner,b.owner));
+  for(const [type,n,r0,r1,toward] of st.blds||[])for(let k=0;k<(n||1);k++){let c=[cx,cy];if(toward&&en){const f=toward;c=[Math.round(cx+((en.x/T)-cx)*f),Math.round(cy+((en.y/T)-cy)*f)]}const sp=findSpot(type,c[0],c[1],r0||4,r1||14,st.owner)||setupSpot(type,c[0],c[1],r0||4,r1||14,st.owner)||setupSpot(type,cx,cy,3,24,st.owner);if(sp)mkBld(type,st.owner,sp[0],sp[1],true)}
+  for(const [type,n] of st.units||[])for(let k=0;k<n;k++){const t=freeTileNear(tc,MW/2,MH/2,!!U[type].naval);if(t)mkUnit(type,st.owner,(t[0]+.5)*T,(t[1]+.5)*T)}
+  if(st.res)for(const r in st.res)p.res[r]+=st.res[r];if(st.passive&&G.ai[st.owner])G.ai[st.owner].passive=true;if(st.wave&&G.ai[st.owner])Object.assign(G.ai[st.owner],st.wave);
+  p.ai=wasAI}
+ for(const e of G.list)if(!e.dead&&e.kind==='bld'){e.maxhp=bMaxHp(e.type,e.owner);e.hp=e.maxhp}}
+function objVal(o){const me=ME(),p=P(me),S=G.scnS;
+ switch(o.k){
+ case'age':return[p.age,o.n];
+ case'units':{let n=0;for(const e of G.ul)if(!e.dead&&e.owner===me&&(!o.type||e.type===o.type)&&(!o.cls||gd(e.type,me).cls===o.cls)&&(o.type||e.type!=='villager'))n++;return[n,o.n]}
+ case'build':{let n=0;for(const e of G.bl)if(!e.dead&&e.owner===me&&e.type===o.type&&e.bp>=1)n++;return[n,o.n||1]}
+ case'trained':return[(S.tr[me]&&S.tr[me][o.type])||0,o.n];
+ case'kill':{const K=S.kills[me]||{};let n=0;for(const k in K)if(k===(o.cls?'u:'+o.cls:'b:'+o.type)||(o.any&&k.startsWith('u:')))n+=K[k];return[n,o.n]}
+ case'destroy':{let n=0;for(const e of G.bl)if(!e.dead&&e.type===o.type&&(o.owner!=null?e.owner===o.owner:isEnemy(me,e.owner)))n++;return[n===0?1:0,1,n]}
+ case'eliminate':{const alive=G.players.filter(q=>!q.out&&isEnemy(me,q.i)).length;return[alive===0?1:0,1,alive]}
+ case'survive':return[Math.min(o.t,Math.floor(G.t)),o.t];
+ case'gather':return[Math.floor(p.res[o.r]),o.n];
+ case'wonder':{const w=G.wonder&&G.ents.get(G.wonder.id);const held=w&&!w.dead&&w.owner===me?Math.floor(G.t-G.wonder.t0):0;return[Math.min(held,WONDER_T),WONDER_T]}
+ case'relics':{let n=0;for(const e of G.rel){const h=e.holder&&G.ents.get(e.holder);if(h&&h.kind==='bld'&&h.owner===me)n++}return[n,o.n]}}
+ return[0,1]}
+function scnStatus(){const M=scnDef();if(!M||!G.scnS)return null;return M.objectives.map((o,i)=>{const [v,n,extra]=objVal(o);return{i,text:o.text,v,n,extra,ok:!!G.scnS.done[i]||v>=n,opt:!!o.opt}})}
+function scnTick(){const M=scnDef();if(!M)return;const S=G.scnS,me=ME();
+ M.objectives.forEach((o,i)=>{if(S.done[i])return;const [v,n]=objVal(o);if(v>=n&&(o.k!=='survive'||true)){S.done[i]=1;if(!o.hidden){msg('Objetivo cumplido: '+o.text);sfx('tech');ev('scnobj',{i})}}});
+ if(M.objectives.every((o,i)=>o.opt||S.done[i]))return finish(P(me).team,'scn');
+ for(const l of M.lose||[]){
+  if(l.k==='time'&&G.t>=l.t)return finish(-1,'scntime');
+  if(l.k==='lost'&&!G.bl.some(e=>!e.dead&&e.owner===me&&e.type===l.type&&e.bp>=1)&&G.t>3)return finish(-1,'scnlost')}
+ (M.events||[]).forEach((e,i)=>{const due=e.every?G.t>=(e.from||e.every)&&G.t>=(S.ev[i]||0):(!S.ev[i]&&G.t>=e.t);if(!due)return;S.ev[i]=e.every?G.t+e.every:1;
+  if(e.msg){msg(e.msg,!!e.warn);ev('scnmsg',{text:e.msg,say:e.say})}
+  if(e.res){const p=P(e.owner??me);for(const r in e.res)p.res[r]+=e.res[r]}
+  if(e.wave){const W=e.wave,src=G.bl.find(b=>!b.dead&&b.owner===W.owner&&b.type==='tc')||G.bl.find(b=>!b.dead&&b.owner===W.owner);const tg=G.bl.find(b=>!b.dead&&b.owner===me&&b.type==='tc')||G.bl.find(b=>!b.dead&&b.owner===me);
+   if(src&&tg&&!P(W.owner).out){const us=[];const k=e.every?Math.min(3,Math.floor((S.ev[i]-(e.from||e.every))/e.every)):0;
+    for(const [type,n] of W.units)for(let j=0;j<n+k*(W.grow||0);j++){const t=freeTileNear(src,tg.x/T,tg.y/T,!!U[type].naval);if(t)us.push(mkUnit(type,W.owner,(t[0]+.5)*T,(t[1]+.5)*T))}
+    formMove(us,tg.x,tg.y,true);if(W.alert!==false){msg(W.alert||'¡Un ejército enemigo se dirige hacia ti!',true);sfx('alert')}}}})}
 function score(p){return Math.round(p.stats.gathered*.1+p.stats.killed*6+p.stats.razed*25+Object.keys(p.tech).length*40+p.age*250+(p.stats.converted||0)*10)}
 function teamsFor(n,mode){if(mode!=='teams'||n<3)return Array.from({length:n},(_,i)=>i);return n===3?[0,0,1]:[0,0,1,1]}
-function newGame(cfg,s){cfg=Object.assign({diff:'normal',map:'continental',size:'medium',civ:'iberos',nAI:1,teams:'ffa',tutorial:false,win:'standard',reveal:'normal',me:0,mp:false},cfg||{});
+function newGame(cfg,s){cfg=Object.assign({diff:'normal',map:'continental',size:'medium',civ:'iberos',nAI:1,teams:'ffa',tutorial:false,win:'standard',reveal:'normal',me:0,mp:false,startAge:0},cfg||{});
  seed=(s||Date.now())%2147483647|0;if(!seed)seed=7;
  MW=MH=SIZES[cfg.size].n;NN=MW*MH;GW=Math.ceil(MW/GC);const D=DIFF[cfg.diff];
  let spec=cfg.players;if(!spec){const n=1+Math.max(1,Math.min(3,cfg.nAI)),teams=teamsFor(n,cfg.teams);const pool=shuffle(Object.keys(CIVS).filter(c=>c!==cfg.civ));
@@ -993,9 +1051,28 @@ function newGame(cfg,s){cfg=Object.assign({diff:'normal',map:'continental',size:
   if(sp.ai)G.ai[i]={tick:2+i*.37,next:D.first+rnd()*60,wave:D.wave,attacking:false,passive:!!cfg.tutorial}});
  initFogArrays();
  genMap(cfg.map,G.players.length,G.players.map(p=>p.team));
+ const SA=Math.max(0,Math.min(MAXAGE,cfg.startAge|0));
  G.bases.forEach((b,i)=>{const tc=mkBld('tc',i,b.x,b.y,true);for(let k=0;k<3;k++){const t=freeTileNear(tc,MW/2,MH/2)||[b.x,b.y+3];mkUnit('villager',i,(t[0]+.25+k*.25)*T,(t[1]+.3+(k%2)*.4)*T)}
-  const t=freeTileNear(tc,MW/2,MH/2);if(t)mkUnit('scout',i,(t[0]+.5)*T,(t[1]+.5)*T)});
- G.list=G.list.filter(e=>!e.dead);reindex();calcFog();return G}
+  const t=freeTileNear(tc,MW/2,MH/2);if(t)mkUnit('scout',i,(t[0]+.5)*T,(t[1]+.5)*T);if(SA>0)startAt(i,tc,SA)});
+ G.list=G.list.filter(e=>!e.dead);reindex();if(cfg.scn){scnInit();G.list=G.list.filter(e=>!e.dead);reindex()}calcFog();return G}
+// empezar en una época avanzada: aldea ya desarrollada, recursos y tecnologías acordes (igual para todos los jugadores)
+const SA_VILL=[3,8,14,19,23,25,27,29,30];
+// casillas libres alrededor de un edificio, en anillos, mirando primero hacia el centro del mapa (para repartir las unidades iniciales)
+function spotsAround(b,n){const out=[],s=b.size,cx=b.tx+s/2,cy=b.ty+s/2;for(let r=Math.ceil(s/2)+1;r<Math.ceil(s/2)+7&&out.length<n;r++){const ring=[];
+ for(let y=Math.floor(cy-r);y<=Math.ceil(cy+r);y++)for(let x=Math.floor(cx-r);x<=Math.ceil(cx+r);x++){if(Math.max(Math.abs(x+.5-cx),Math.abs(y+.5-cy))<r-.5)continue;if(free(x,y)&&G.ter[idx(x,y)]===0)ring.push([x,y,Math.hypot(x-MW/2,y-MH/2)])}
+ ring.sort((a,b)=>a[2]-b[2]);for(const t of ring){if(out.length>=n)break;out.push([t[0],t[1]])}}return out}
+function startAt(i,tc,a){const p=P(i),wasAI=p.ai;p.ai=true;p.age=a;p.res={food:200+250*a,wood:200+200*a,gold:100+250*a,stone:200+120*a};
+ const techs=a>=3?['wheel','axe','pick','plow','gillnets','forge','fletch','mail','masonry','barding']:a>=2?['wheel','axe','pick','plow','gillnets','forge','fletch']:['wheel'];
+ for(const t of techs)p.tech[t]=1;if(a>=2)for(const k of['militia','spear','archer','scout','knight','galley'])(p.up||(p.up={}))[k]=1;
+ const cx=(tc.x/T)|0,cy=(tc.y/T)|0,put=(type,r0,r1,near)=>{const c=near||[cx,cy];const s=setupSpot(type,c[0],c[1],r0,r1,i);if(s)return mkBld(type,i,s[0],s[1],true);return null};
+ const nv=SA_VILL[a]-3,army=[['militia',2],['spear',a>=2?2:0],['archer',a>=1?2:0],['knight',a>=3?1:0]];
+ if(a>=2)for(let k=0;k<4;k++)put('farm',3,7);put('barracks',5,11);const want=SA_VILL[a]+1+army.reduce((s,x)=>s+x[1],0)+6;let cap=B.tc.pop;while(cap<want&&cap<POPMAX){if(!put('house',5,13))break;cap+=B.house.pop}
+ if(a>=1){put('range',5,12);put('store',4,9);put('smith',5,12)}if(a>=2){put('stable',5,13);put('market',6,14)}if(a>=3){put('siege',6,14);put('monastery',6,14)}
+ const wood=findRes('wood',tc.x,tc.y,30*T,i,false);if(wood&&a>=1){const s=findSpot('store',(wood.x/T)|0,(wood.y/T)|0,1,4,i);if(s)mkBld('store',i,s[0],s[1],true)}
+ const ring=spotsAround(tc,nv+12);let si=0;const at=()=>ring[si++%Math.max(1,ring.length)]||[cx,cy+3];
+ for(let k=0;k<nv;k++){const t=at();mkUnit('villager',i,(t[0]+.3+(k%2)*.4)*T,(t[1]+.5)*T)}
+ for(const [ut,n] of army)for(let k=0;k<n;k++){const t=at();mkUnit(ut,i,(t[0]+.5)*T,(t[1]+.5)*T)}
+ for(const e of G.list)if(!e.dead&&e.owner===i){if(e.kind==='unit'){e.maxhp=uMaxHp(e.type,i);e.hp=e.maxhp}else if(e.kind==='bld'){e.maxhp=bMaxHp(e.type,i);e.hp=e.maxhp}}p.ai=wasAI}
 function initFogArrays(){G.humanTeams=[...new Set(G.players.filter(p=>!p.ai||p.i===G.me).map(p=>p.team))];
  for(const p of G.players){if(!G.visT[p.team]){G.visT[p.team]=new Uint8Array(NN);if(!G.expT[p.team]){G.expT[p.team]=new Uint8Array(NN);if(G.cfg.reveal==='explored'||G.cfg.reveal==='all')G.expT[p.team].fill(1)}}}
  G.vis=G.visT[G.players[G.me].team];G.exp=G.expT[G.players[G.me].team];if(!G.humanTeams.includes(G.players[G.me].team))G.humanTeams.push(G.players[G.me].team)}
@@ -1007,12 +1084,13 @@ const dec=s=>{const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s
 function serialize(){const ents=[];for(const e of G.list){if(e.dead)continue;const o=Object.assign({},e);delete o.path;delete o.gk;delete o.lx;delete o.ly;delete o.stall;ents.push(o)}
  const exps={};for(const t in G.expT)exps[t]=enc(G.expT[t]);
  return JSON.stringify({v:3,MW,MH,seed,cfg:G.cfg,t:G.t,nid:G.nid,players:G.players,ai:G.ai,bases:G.bases,ter:enc(G.ter),exps,hgt:Array.from(G.hgt,h=>Math.round(h*100)),ents,
-  price:G.price,wonder:G.wonder,relicHold:G.relicHold,relicN:G.relicN,hist:G.hist,mem:[...G.mem.values()],real:G.real||null})}
+  price:G.price,wonder:G.wonder,relicHold:G.relicHold,relicN:G.relicN,hist:G.hist,mem:[...G.mem.values()],real:G.real||null,scnS:G.scnS||null})}
 function deserialize(str){const d=JSON.parse(str);if(d.v!==3)throw new Error('Formato de partida no compatible con esta versión');
  MW=d.MW;MH=d.MH;NN=MW*MH;GW=Math.ceil(MW/GC);seed=d.seed;
  G={t:d.t,ents:new Map(),list:[],nid:d.nid,proj:[],ev:[],cfg:d.cfg,over:false,win:null,dirty:false,fogT:0,endT:1,histT:30,alertT:0,msgT:{},fogV:0,pb:60,nb:30000,players:d.players,ai:d.ai,bases:d.bases,
   visT:{},expT:{},me:0,mp:false,ter:dec(d.ter),occ:new Int32Array(NN),block:new Uint8Array(NN),gate:new Uint8Array(NN),hgt:Float32Array.from(d.hgt,h=>h/100),
   price:d.price,wonder:d.wonder,relicHold:d.relicHold,relicN:d.relicN,hist:d.hist||[],mem:new Map((d.mem||[]).map(m=>[m.id,m])),real:d.real&&root.IMPERIA_MAPS&&root.IMPERIA_MAPS[d.real]?d.real:undefined};
+ if(d.scnS){G.scnS=d.scnS;G.scnT=1}
  for(const t in d.exps)G.expT[t]=dec(d.exps[t]);
  for(let i=0;i<NN;i++)G.block[i]=G.ter[i]===1||G.ter[i]===3?1:0;
  for(const e of d.ents){if(e.kind==='unit'){e.path=[];e.pi=0;e.gk=null}G.ents.set(e.id,e);G.list.push(e);if(e.kind==='bld'||e.kind==='res')setOcc(e,true)}
@@ -1121,7 +1199,7 @@ function stateText(u){if(u.gar){const c=G.ents.get(u.gar);return'Dentro de '+(c?
  case'heal':return'Curando';case'conv':return u.faith<1?'Recuperando fe para convertir':'Convirtiendo';case'gar':return u.relic?'Llevando la reliquia al monasterio':'Buscando refugio';
  case'relic':return'Yendo a por la reliquia';case'trade':return'Comerciando';case'unload':return'Navegando para desembarcar';default:return u.relic?'Lleva una reliquia':'Inactivo'}}
 
-root.Imperia={T,get MW(){return MW},get MH(){return MH},get NN(){return NN},POPMAX,CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
+root.Imperia={scnStatus,scnDef,visType,UUM,T,get MW(){return MW},get MH(){return MH},get NN(){return NN},POPMAX,CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
  newGame,update,get G(){return G},exec,hash,setMe,canAfford,unitAvail,bldAvail,techState,canPlace,wallLine,pickAt,isVisible,stateText,entDist,idx:(x,y)=>y*MW+x,hAt,hAtT,realCells:()=>G&&G.real&&root.IMPERIA_MAPS&&root.IMPERIA_MAPS[G.real]?realCells(G.real,MW,MH):null,
  isAlly,isEnemy,uAtk,uArmor,uRange,uSpeed,uMaxHp,uName,bArmor,bAtk,bRange,unitCost,trainTime,carryCap,convTime,trainsOf,tradeGold,garCap,contents,canEnter,
  serialize,deserialize,formMove,_dbg:{mkUnit,mkBld,applyTech,order,enter,kill}};

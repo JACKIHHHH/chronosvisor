@@ -14,7 +14,7 @@ lipo -create build/imperia-arm64 build/imperia-x86 -output "$APP/Contents/MacOS/
 
 echo "› Copiando juego"
 mkdir -p "$APP/Contents/Resources/web/voces"; cp -R web/voces/ "$APP/Contents/Resources/web/voces/" 2>/dev/null
-cp web/index.html web/three.min.js web/game.js web/art.js web/art_eras.js web/art_units.js web/chars_data.js web/chars.js web/maps_data.js web/nature_data.js web/nature.js web/terrain_data.js web/render3d.js web/audio.js web/net.js web/ui.js web/menu_bg.jpg "$APP/Contents/Resources/web/"
+cp web/index.html web/three.min.js web/game.js web/art.js web/art_eras.js web/art_units.js web/chars_data.js web/chars.js web/maps_data.js web/nature_data.js web/nature.js web/terrain_data.js web/render3d.js web/audio.js web/net.js web/ui.js web/campaign.js web/menu_bg.jpg "$APP/Contents/Resources/web/"
 
 echo "› Icono"
 swift icon.swift build/icon_1024.png >/dev/null
@@ -34,7 +34,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
  <key>CFBundleIdentifier</key><string>es.jack.imperia</string>
  <key>CFBundleIconFile</key><string>AppIcon</string>
  <key>CFBundlePackageType</key><string>APPL</string>
- <key>CFBundleShortVersionString</key><string>6.3</string>
+ <key>CFBundleShortVersionString</key><string>6.4</string>
  <key>CFBundleVersion</key><string>6</string>
  <key>CFBundleDevelopmentRegion</key><string>es</string>
  <key>LSMinimumSystemVersion</key><string>13.0</string>
