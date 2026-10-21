@@ -6,7 +6,7 @@ SD="$HOME/Library/Application Support/Imperia"; rm -f "$SD/online_code.json"
 pkill -f "build/Chronosvisor.app/Contents/MacOS/Chronosvisor"; sleep 1
 if [ "$SRV" = "ws://127.0.0.1:8787" ]; then pkill -f "wrangler dev"; (cd online && nohup npx wrangler dev --port 8787 --ip 127.0.0.1 > ../build/wdev.txt 2>&1 &); for i in $(seq 1 30); do sleep 1; curl -s http://127.0.0.1:8787/ >/dev/null && break; done; fi
 APPB=build/Chronosvisor.app/Contents/MacOS/Chronosvisor
-LOGJS='setInterval(function(){var G=window.__imperia&&__imperia.G,N=ImperiaNet;console.log("ESTADO modo="+N.mode+" rol="+N.role+" código="+N.code+" enJuego="+N.inGame+" turno="+N.execTurn+" t="+(G?G.t.toFixed(1):0)+" edad="+(G&&N.inGame?G.players[G.me].age:"-")+" hash="+(G&&N.inGame?Imperia.hash():0)+" desync="+N.desync+" rtt="+N.rtt)},3000);'
+LOGJS='setInterval(function(){var G=window.__imperia&&__imperia.G,N=ImperiaNet;console.log("ESTADO modo="+N.mode+" rol="+N.role+" código="+N.code+" enJuego="+N.inGame+" turno="+N.execTurn+" t="+(G?G.t.toFixed(1):0)+" edad="+(G&&N.inGame?G.players[G.me].age:"-")+" hash="+(G&&N.inGame?Imperia.hash():0)+" desync="+N.desync+" rtt="+N.rtt+" cola="+N.q.length+" espera="+(N.hostWait||0).toFixed(1)+" pend="+N.pending.length)},3000);'
 PRE='ImperiaNet.server="'$SRV'";ImperiaNet.cfgOK=true;'
 HJS=$LOGJS$PRE'setTimeout(function(){ImperiaNet.hostOnline("Ana",true)},500);setTimeout(function(){window.webkit.messageHandlers.store.postMessage({id:9,op:"write",key:"online_code",data:ImperiaNet.code})},3000);
 setTimeout(function(){ImperiaNet.setCfg({map:"arabia",size:"small",startAge:"5"});console.log("SALA "+JSON.stringify(ImperiaNet.L.slots.map(function(s){return s.k+":"+(s.name||"")})))},14000);setTimeout(function(){console.log("START "+ImperiaNet.start())},16000);'
