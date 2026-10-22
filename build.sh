@@ -13,7 +13,7 @@ swiftc -O -swift-version 5 -target x86_64-apple-macos13 main.swift -o build/impe
 lipo -create build/imperia-arm64 build/imperia-x86 -output "$APP/Contents/MacOS/Chronosvisor"
 
 echo "› Copiando juego"
-mkdir -p "$APP/Contents/Resources/web/voces" "$APP/Contents/Resources/web/musica" "$APP/Contents/Resources/web/sfx"; cp -R web/voces/ "$APP/Contents/Resources/web/voces/" 2>/dev/null; cp -R web/musica/ "$APP/Contents/Resources/web/musica/" 2>/dev/null; cp -R web/sfx/ "$APP/Contents/Resources/web/sfx/" 2>/dev/null
+mkdir -p "$APP/Contents/Resources/web/voces" "$APP/Contents/Resources/web/musica" "$APP/Contents/Resources/web/sfx"; cp -R web/voces/ "$APP/Contents/Resources/web/voces/" 2>/dev/null || true; cp -R web/musica/ "$APP/Contents/Resources/web/musica/" 2>/dev/null || true; cp -R web/sfx/ "$APP/Contents/Resources/web/sfx/" 2>/dev/null || true
 cp web/index.html web/three.min.js web/game.js web/art.js web/art_eras.js web/art_units.js web/chars_data.js web/chars.js web/maps_data.js web/nature_data.js web/nature.js web/terrain_data.js web/render3d.js web/audio.js web/net.js web/ui.js web/campaign.js web/conquest.js web/menu_bg.jpg "$APP/Contents/Resources/web/"
 
 echo "› Icono"

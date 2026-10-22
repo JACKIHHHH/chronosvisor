@@ -111,5 +111,5 @@ function scene(s,age){scn=s;scnAge=age|0;if(MUS()){stopMusic();sync();if(!mTimer
 function stinger(win){const M=MUS();if(!M)return false;const k=win?'victoria':'derrota';if(!M[k])return false;scn='end';if(mEl){const o=mEl;fadeTo(o,0,800,()=>o.pause());mEl=null;mK=null}
  const el=new Audio([].concat(M[k])[0]);el.volume=mVol();el.play().catch(()=>{});return true}
 
-root.ImperiaAudio={init,sfx,setVolumes,startMusic,stopMusic,setTension,scene,stinger,ambient,get track(){return mK},get samples(){return Object.keys(SB).length},get ready(){return!!AC}};
+root.ImperiaAudio={init,sfx,setVolumes,startMusic,stopMusic,setTension,scene,stinger,ambient,get track(){return mK},get pos(){return mEl?mEl.currentTime:-1},get samples(){return Object.keys(SB).length},get ready(){return!!AC}};
 })(window);
