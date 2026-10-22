@@ -54,8 +54,8 @@ const U={
  axeman:{name:'Lanzador de hachas',cls:'inf',hp:60,atk:8,armor:0,range:3,rof:2,speed:58,cost:{food:55,gold:25},time:14,sight:6,r:7,age:2,ranged:true,unique:true,bonus:{inf:2},desc:'Unidad única franca: infantería que lanza hachas a corta distancia.'},
  longbow:{name:'Arquero largo',cls:'arc',hp:35,atk:6,armor:0,range:8,rof:2,speed:52,cost:{wood:35,gold:40},time:16,sight:9,r:6,age:2,ranged:true,unique:true,bonus:{inf:2},desc:'Unidad única britana: el mayor alcance del juego.'},
  tknight:{name:'Caballero teutónico',cls:'inf',hp:100,atk:12,armor:5,range:.35,rof:2,speed:42,cost:{food:85,gold:40},time:18,sight:5,r:8,age:2,unique:true,bonus:{bld:6},desc:'Unidad única teutona: infantería lenta y casi indestructible.'},
- fighter:{name:'Caza',cls:'air',air:true,hp:160,atk:14,armor:1,range:4.5,rof:1.1,speed:170,cost:{wood:80,gold:180},time:30,sight:10,r:8,age:5,ranged:true,proj:'bullet',aa:true,bonus:{air:10},desc:'Avión de combate: derriba aviones y ametralla tropas. Solo le alcanzan los antiaéreos, los cazas, los buques modernos y algunas defensas.'},
- bomber:{name:'Bombardero',cls:'air',air:true,hp:280,atk:60,armor:2,range:.7,rof:4,speed:115,cost:{wood:120,gold:300},time:45,sight:8,r:10,age:5,ranged:true,proj:'bomb',splash:.9,fullBld:true,noAir:true,bonus:{bld:60},desc:'Suelta bombas sobre edificios y tropas. No puede atacar a otros aviones.'},
+ fighter:{name:'Caza',cls:'air',air:true,hp:160,atk:14,armor:1,range:4.5,rof:1.1,speed:170,cost:{wood:80,gold:180},time:30,sight:15,r:8,age:5,ranged:true,proj:'bullet',aa:true,bonus:{air:10},desc:'Avión de combate: derriba aviones y ametralla tropas. Solo le alcanzan los cazas y los antiaéreos. Sin órdenes vuelve a aparcar en la pista del aeródromo.'},
+ bomber:{name:'Bombardero',cls:'air',air:true,hp:300,atk:110,armor:2,range:.7,rof:4,speed:115,cost:{wood:220,gold:480},time:60,sight:13,r:10,age:5,ranged:true,proj:'bomb',splash:.9,fullBld:true,noAir:true,bonus:{bld:110},desc:'Suelta bombas muy potentes sobre edificios y tropas. Caro de construir. No puede atacar a otros aviones; solo le alcanzan los cazas y los antiaéreos.'},
  aagun:{name:'Cañón antiaéreo',cls:'siege',hp:150,atk:24,armor:1,range:8,rof:1.4,speed:46,cost:{wood:100,gold:120},time:25,sight:9,r:9,age:5,ranged:true,proj:'bullet',aa:true,airOnly:true,bonus:{air:20},desc:'Defensa antiaérea móvil: solo dispara a aviones.'},
  sub:{name:'Submarino',cls:'ship',naval:true,sub:true,hp:200,atk:48,armor:2,range:5,rof:4,speed:78,cost:{wood:150,gold:200},time:40,sight:7,r:11,age:5,ranged:true,proj:'torpedo',shipOnly:true,bonus:{ship:25},desc:'El enemigo no lo ve salvo con barcos muy cerca. Hunde barcos con torpedos; no ataca a tierra.'},
  battleship:{name:'Acorazado',cls:'ship',naval:true,hp:650,atk:42,armor:4,parmor:4,range:10,minr:2,rof:5,speed:52,cost:{wood:300,gold:350},time:60,sight:11,r:15,age:5,ranged:true,proj:'shell',splash:.9,fullBld:true,bonus:{bld:40},desc:'Buque pesado: bombardea la costa desde muy lejos.'},
@@ -194,7 +194,7 @@ const GEN={
   5:{name:'Destructor',hp:300,atk:15,range:8,speed:85,proj:'shell',cost:{wood:120,gold:80}},6:{name:'Crucero lanzamisiles',hp:360,atk:18,range:9,proj:'rocket'},
   7:{name:'Fragata furtiva',hp:400,atk:21,range:9.5},8:{name:'Hidroala de plasma',hp:460,atk:25,range:10,proj:'plasma'}},
  fighter:{6:{name:'Caza a reacción',hp:200,atk:18,speed:210,proj:'rocket'},7:{name:'Caza furtivo',hp:240,atk:22,range:6,speed:230},8:{name:'Interceptor orbital',hp:290,atk:27,armor:3,speed:260,proj:'laser'}},
- bomber:{6:{name:'Bombardero estratégico',hp:340,atk:75,speed:140},7:{name:'Bombardero furtivo',hp:380,atk:90,armor:3,speed:150},8:{name:'Bombardero orbital',hp:440,atk:110,armor:4,speed:170,proj:'plasma'}},
+ bomber:{6:{name:'Bombardero estratégico',hp:360,atk:135,speed:140},7:{name:'Bombardero furtivo',hp:400,atk:160,armor:3,speed:150},8:{name:'Bombardero orbital',hp:460,atk:190,armor:4,speed:170,proj:'plasma'}},
  aagun:{6:{name:'Antiaéreo autopropulsado',hp:220,atk:30,armor:3,speed:60},7:{name:'Batería tierra-aire',hp:240,atk:40,range:10,rof:2,speed:62,proj:'rocket'},8:{name:'Láser antiaéreo',hp:280,atk:46,armor:4,range:11,rof:1.2,proj:'laser'}},
  sub:{6:{name:'Submarino nuclear',hp:280,atk:60,speed:88},7:{name:'Submarino furtivo',hp:320,atk:70,range:6,speed:94},8:{name:'Dron submarino',hp:340,atk:82,armor:4,speed:110}},
  battleship:{6:{name:'Crucero de batalla',hp:760,atk:48,range:11,proj:'rocket',aa:true},7:{name:'Buque arsenal',hp:840,atk:56,range:12,aa:true},8:{name:'Acorazado de plasma',hp:960,atk:66,armor:6,range:12.5,proj:'plasma',aa:true}},
@@ -282,8 +282,29 @@ function ringSearch(g,x,y,maxD,f){const cx=gcell(x),cy=gcell(y),CP=T*GC,R=Math.c
 function setOcc(e,on){const s=e.size||1;const d=e.kind==='bld'?B[e.type]:null;const farm=d&&d.farm;
  for(let y=e.ty;y<e.ty+s;y++)for(let x=e.tx;x<e.tx+s;x++){if(!inb(x,y))continue;const i=idx(x,y);G.occ[i]=on?e.id:0;G.block[i]=(G.ter[i]===1||(on&&!farm))?1:0;G.gate[i]=on&&d&&d.gate?e.owner+1:0}}
 function mkRes(type,tx,ty){const d=RDEF[type];const e=addEnt({kind:'res',type,tx,ty,size:1,amt:d.amt,max:d.amt,v:rnd(),x:(tx+.5)*T,y:(ty+.5)*T});setOcc(e,true);return e}
+
+// ---------- la ciudad crece: viviendas decorativas (2×2) alrededor de cada centro urbano, más y más grandes con cada edad.
+// Bloquean el paso como un edificio, pero se puede construir encima (se derriban solas) y nunca cierran caminos:
+// cada una deja libre un anillo de una casilla a su alrededor y se aleja de edificios y minas.
+const CITY_N=[2,4,7,10,13,16,19,22,25];
+const isTree=i=>{const o=G.occ[i],e=o&&G.ents.get(o);return!!(e&&e.kind==='res'&&e.type==='tree')};
+function decoOK(x,y){let nt=0;for(let yy=y-1;yy<=y+2;yy++)for(let xx=x-1;xx<=x+2;xx++){if(!inb(xx,yy))return false;const i=idx(xx,yy);if(G.ter[i]!==0||G.dmap[i])return false;
+  if(G.block[i]||G.occ[i]){if(!isTree(i))return false;if(xx>=x&&xx<=x+1&&yy>=y&&yy<=y+1)nt++}}if(nt>2)return false
+ let h0=99,h1=-99;for(let yy=y;yy<=y+1;yy++)for(let xx=x;xx<=x+1;xx++){const h=G.hgt?G.hgt[idx(xx,yy)]:0;h0=Math.min(h0,h);h1=Math.max(h1,h)}if(h1-h0>.5)return false;
+ for(let yy=y-3;yy<=y+4;yy++)for(let xx=x-3;xx<=x+4;xx++){if(!inb(xx,yy))continue;const o=G.occ[idx(xx,yy)];if(!o)continue;const e=G.ents.get(o);if(!e)continue;const gap=Math.max(xx-x-1,x-xx,yy-y-1,y-yy)-1;
+  if(e.kind==='bld'&&gap<1&&!B[e.type].farm)return false;if(e.kind==='bld'&&gap<2&&(e.type==='tc'||B[e.type].drop))return false;if(e.kind==='res'&&e.type!=='tree')return false}
+ for(const u of G.ul)if(!u.dead&&u.x>=(x-.5)*T&&u.x<=(x+2.5)*T&&u.y>=(y-.5)*T&&u.y<=(y+2.5)*T)return false;return true}
+function growCity(o,max){const p=P(o);if(!p||p.out)return 0;let made=0;
+ for(const tc of G.bl){if(tc.dead||tc.owner!==o||tc.type!=='tc'||tc.bp<1)continue;const cx=tc.tx+1.5,cy=tc.ty+1.5,a=Math.min(8,p.age),want=CITY_N[a],rmax=9+a*1.4;
+  let have=0;for(const d of G.deco)if(!d.dead&&d.o===o&&Math.hypot(d.tx+1-cx,d.ty+1-cy)<rmax+2)have++;
+  if(have>=want)continue;const cand=[];for(let y=Math.floor(cy-rmax);y<=cy+rmax;y++)for(let x=Math.floor(cx-rmax);x<=cx+rmax;x++){const r=Math.hypot(x+1-cx,y+1-cy);if(r>=4.5&&r<=rmax)cand.push([r+rnd()*4,x,y])}cand.sort((p,q)=>p[0]-q[0]);
+  for(const [,x,y] of cand){if(have>=want||made>=max)break;if(!decoOK(x,y))continue;
+   for(let yy=y;yy<=y+1;yy++)for(let xx=x;xx<=x+1;xx++){const t=G.ents.get(G.occ[idx(xx,yy)]);if(t&&t.kind==='res'){ev('depleted',{id:t.id,type:t.type,x:t.x,y:t.y});remove(t)}}
+   const d={id:G.deco.length+1,o,tx:x,ty:y,v:rnd()};G.deco.push(d);for(let yy=y;yy<=y+1;yy++)for(let xx=x;xx<=x+1;xx++){const i=idx(xx,yy);G.dmap[i]=d.id;G.block[i]=1}have++;made++;G.dv=(G.dv||0)+1}}return made}
+function clearDeco(tx,ty,s){for(let y=ty;y<ty+s;y++)for(let x=tx;x<tx+s;x++){if(!inb(x,y))continue;const id=G.dmap[idx(x,y)];if(!id)continue;const d=G.deco[id-1];if(!d||d.dead)continue;d.dead=true;G.dv=(G.dv||0)+1;
+  for(let yy=d.ty;yy<=d.ty+1;yy++)for(let xx=d.tx;xx<=d.tx+1;xx++){const i=idx(xx,yy);G.dmap[i]=0;if(!G.occ[i])G.block[i]=G.ter[i]===1||G.ter[i]===3?1:0}}}
 function mkBld(type,owner,tx,ty,built){const d=B[type],mh=bMaxHp(type,owner),food=d.farm?d.food+(tech(owner,'plow')?100:0):0;
- const e=addEnt({kind:'bld',type,owner,tx,ty,size:d.size,hp:built?mh:Math.max(1,mh*.05),maxhp:mh,bp:built?1:0,q:[],rally:null,cd:0,x:(tx+d.size/2)*T,y:(ty+d.size/2)*T,amt:food,max:food,wk:0,gar:[],relics:[]});setOcc(e,true);return e}
+ if(G.dmap)clearDeco(tx,ty,d.size);const e=addEnt({kind:'bld',type,owner,tx,ty,size:d.size,hp:built?mh:Math.max(1,mh*.05),maxhp:mh,bp:built?1:0,q:[],rally:null,cd:0,x:(tx+d.size/2)*T,y:(ty+d.size/2)*T,amt:food,max:food,wk:0,gar:[],relics:[]});setOcc(e,true);return e}
 function mkUnit(type,owner,x,y){const d=U[type],mh=uMaxHp(type,owner);return addEnt({kind:'unit',type,owner,x,y,hp:mh,maxhp:mh,o:{t:'idle'},oq:[],path:[],pi:0,gk:null,fx:null,fy:null,cd:0,dir:rnd()*6.283,carry:{t:null,a:0},anim:rnd()*10,scan:rnd()*.4,rp:0,walk:false,work:false,atkAnim:0,r:d.r,faith:1,st:0,gar:0,relic:0,cargo:d.naval&&type==='transport'?[]:null})}
 function mkRelic(x,y){return addEnt({kind:'relic',type:'relic',x,y,holder:0,owner:null})}
 function remove(e){if(e.dead)return;e.dead=true;G.ents.delete(e.id);if(e.kind==='bld'||e.kind==='res')setOcc(e,false);if(e.kind==='bld')G.bv++;G.dirty=true}
@@ -311,7 +332,7 @@ function genBases(n,teams,m){if(n>4){// más de cuatro: en anillo, los aliados j
  return order.map(k=>{const [x,y]=C[k];return{x,y,cx:x+1.5,cy:y+1.5,corner:k}})}
 function genMap(type,n,teams){
  if(root.IMPERIA_MAPS&&root.IMPERIA_MAPS[type])return genReal(type,n,teams);
- G.ter=new Uint8Array(NN);G.occ=new Int32Array(NN);G.block=new Uint8Array(NN);G.gate=new Uint8Array(NN);
+ G.ter=new Uint8Array(NN);G.occ=new Int32Array(NN);G.block=new Uint8Array(NN);G.gate=new Uint8Array(NN);G.dmap=new Int32Array(NN);
  const isl=type==='islas';G.bases=genBases(n,teams,isl?Math.round(MW*.15):7);const K=NN/7744;
  const far=(x,y,d)=>G.bases.every(b=>Math.hypot(x+.5-b.cx,y+.5-b.cy)>d);
  if(type==='continental'){let tries=0,lakes=0;const nl=Math.round(ri(3,5)*K);while(lakes<nl&&tries++<400){const x=ri(10,MW-11),y=ri(10,MH-11);if(!far(x,y,21))continue;lake(x,y,ri(3,6));lakes++}}
@@ -322,10 +343,11 @@ function genMap(type,n,teams){
  if(open)carveForest(open);
  const clampC=v=>Math.max(3,Math.min(MW-4,v)),sc=type==='bosque'||isl?.8:1;
  for(const b of G.bases){const a=Math.atan2(MH/2-b.cy,MW/2-b.cx);const at=(da,d)=>[clampC(b.cx+Math.cos(a+da)*d*sc),clampC(b.cy+Math.sin(a+da)*d*sc)];
-  cluster('berry',...at(1.35,6),6);cluster('gold',...at(-1.35,7.5),6);cluster('stone',...at(.7,9.5),5);cluster('gold',...at(-.45,14),5);
+  cluster('berry',...at(1.35,6),6);cluster('gold',...at(-1.35,7.5),6);cluster('stone',...at(.7,9.5),5);cluster('gold',...at(-.45,14),5);cluster('stone',...at(1.75,15),4);
   if(type!=='bosque'){forest(...at(2.3,10.5),type==='arabia'?30:60,far,6);forest(...at(-2.3,10.5),type==='arabia'?20:45,far,6);if(type!=='arabia'&&!isl)forest(...at(.2,17),40,far,9)}}
- const extra=(t,cnt,d,lo,hi)=>{for(let k=0;k<Math.round(cnt*K);k++)for(let tr=0;tr<80;tr++){const x=ri(6,MW-7),y=ri(6,MH-7);if(far(x,y,d)&&G.ter[idx(x,y)]===0&&(!open||open[idx(x,y)])){cluster(t,x,y,ri(lo,hi));break}}};
- extra('gold',3,17,4,6);extra('stone',3,17,4,5);extra('berry',isl?1:3,15,4,6);
+ const mineFar=(x,y,d)=>{for(const r of G.rl)if((r.type==='gold'||r.type==='stone')&&Math.abs(r.tx-x)<d&&Math.abs(r.ty-y)<d)return false;return true};
+ const extra=(t,cnt,d,lo,hi)=>{for(let k=0;k<Math.round(cnt*K);k++)for(let tr=0;tr<120;tr++){const x=ri(6,MW-7),y=ri(6,MH-7);if(far(x,y,d)&&G.ter[idx(x,y)]===0&&(!open||open[idx(x,y)])&&(t==='berry'||mineFar(x,y,tr<80?8:4))){cluster(t,x,y,ri(lo,hi));break}}};
+ extra('gold',5,17,4,6);extra('stone',5,17,4,5);extra('berry',isl?1:3,15,4,6);
  if(type==='bosque'){for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=idx(x,y);if(!open[i]&&free(x,y)&&G.ter[i]===0&&rnd()<.93)mkRes('tree',x,y)}}
  else{const nf={continental:17,arabia:6,rio:12,islas:10}[type],sz=type==='arabia'?[12,30]:[25,70],sct={continental:90,arabia:170,rio:90,islas:70}[type];
   for(let k=0;k<Math.round(nf*K);k++)for(let t=0;t<60;t++){const x=ri(3,MW-4),y=ri(3,MH-4);if(far(x,y,13)&&G.ter[idx(x,y)]===0){forest(x,y,ri(sz[0],sz[1]),far,12);break}}
@@ -346,7 +368,7 @@ function realCells(type,mw,mh){const {S,E,W,R,C}=realData(type);const n=mw*mh,el
   const i=y*mw+x;el[i]=e/c;wa[i]=w*2>c?1:0;rv[i]=wa[i]?0:r;col[i*3]=cr/c;col[i*3+1]=cg/c;col[i*3+2]=cb/c}}
  return{el,wa,rv,col}}
 function genReal(type,n,teams){
- G.ter=new Uint8Array(NN);G.occ=new Int32Array(NN);G.block=new Uint8Array(NN);G.gate=new Uint8Array(NN);const K=NN/7744;
+ G.ter=new Uint8Array(NN);G.occ=new Int32Array(NN);G.block=new Uint8Array(NN);G.gate=new Uint8Array(NN);G.dmap=new Int32Array(NN);const K=NN/7744;
  const {el,wa,rv,col}=realCells(type,MW,MH);
  // bordes del mapa: mar si el dato es agua; montañas = cumbres que sobresalen de su entorno (las mesetas altas son transitables)
  const loc=new Float32Array(NN);const RR=2;for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){let s=0,c=0;for(let dy=-RR;dy<=RR;dy++)for(let dx=-RR;dx<=RR;dx++){const xx=x+dx,yy=y+dy;if(!inb(xx,yy))continue;s+=wa[idx(xx,yy)]?0:el[idx(xx,yy)];c++}loc[idx(x,y)]=s/c}
@@ -382,14 +404,15 @@ function genReal(type,n,teams){
  const lum=i=>col[i*3]*.3+col[i*3+1]*.59+col[i*3+2]*.11;
  const forestP=i=>{const r=col[i*3],g=col[i*3+1],b=col[i*3+2],l=lum(i);if(G.ter[i]!==0)return 0;if(l>150)return .004;const green=g-Math.max(r,b);if(green>6&&l<70)return .5;if(green>2&&l<95)return .22;if(r>g&&l>110)return .01;return .07};
  for(const b of G.bases){const a=rnd()*6.283;const at=(da,d)=>[Math.max(3,Math.min(MW-4,b.cx+Math.cos(a+da)*d)),Math.max(3,Math.min(MH-4,b.cy+Math.sin(a+da)*d))];
-  cluster('berry',...at(1.35,6),6);cluster('gold',...at(-1.35,7.5),6);cluster('stone',...at(.7,9.5),5);cluster('gold',...at(-.45,14),5);forest(...at(2.3,10),50,far,6);forest(...at(-2.3,11),35,far,6)}
+  cluster('berry',...at(1.35,6),6);cluster('gold',...at(-1.35,7.5),6);cluster('stone',...at(.7,9.5),5);cluster('gold',...at(-.45,14),5);cluster('stone',...at(1.75,15),4);forest(...at(2.3,10),50,far,6);forest(...at(-2.3,11),35,far,6)}
  // claro de 10 casillas alrededor de cada base y bosque más ralo hasta las 16: sitio para granjas y edificios
  for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++){const i=idx(x,y);let p=forestP(i);if(p>0&&!far(x,y,16))p*=.35;if(p>0&&free(x,y)&&far(x,y,10)&&rnd()<p)mkRes('tree',x,y)}
  // oro y piedra en las faldas de las montañas y colinas; bayas en praderas
  const hills=[];for(let i=0;i<NN;i++){if(G.ter[i]!==0)continue;const x=i%MW,y=(i/MW)|0;let m=0;for(const [dx,dy] of[[1,0],[-1,0],[0,1],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]){const xx=x+dx,yy=y+dy;if(inb(xx,yy)&&G.ter[idx(xx,yy)]===3)m++}if(m||el[i]-loc[i]>120*mScale)hills.push(i)}
- shuffle(hills);let gp=0,sp=0;const want=Math.round(5*K);for(const i of hills){const x=i%MW,y=(i/MW)|0;if(!far(x,y,15))continue;if(gp<want){cluster('gold',x,y,ri(4,6));gp++}else if(sp<want){cluster('stone',x,y,ri(4,5));sp++}else break}
- const extra=(t,cnt,d,lo,hi)=>{for(let k=0;k<Math.round(cnt*K);k++)for(let tr=0;tr<80;tr++){const x=ri(6,MW-7),y=ri(6,MH-7);if(far(x,y,d)&&G.ter[idx(x,y)]===0){cluster(t,x,y,ri(lo,hi));break}}};
- extra('gold',Math.max(0,3-gp/2),17,4,6);extra('stone',Math.max(0,3-sp/2),17,4,5);extra('berry',3,15,4,6);
+ shuffle(hills);let gp=0,sp=0;const want=Math.round(5*K);for(const i of hills){const x=i%MW,y=(i/MW)|0;if(!far(x,y,15))continue;let ok=true;for(const r of G.rl)if((r.type==='gold'||r.type==='stone')&&Math.abs(r.tx-x)<8&&Math.abs(r.ty-y)<8){ok=false;break}if(!ok)continue;if(gp<=sp&&gp<want){cluster('gold',x,y,ri(4,6));gp++}else if(sp<want){cluster('stone',x,y,ri(4,5));sp++}else if(gp<want){cluster('gold',x,y,ri(4,6));gp++}else break}
+ const mineFar=(x,y,d)=>{for(const r of G.rl)if((r.type==='gold'||r.type==='stone')&&Math.abs(r.tx-x)<d&&Math.abs(r.ty-y)<d)return false;return true};
+ const extra=(t,cnt,d,lo,hi)=>{for(let k=0;k<Math.round(cnt*K);k++)for(let tr=0;tr<120;tr++){const x=ri(6,MW-7),y=ri(6,MH-7);if(far(x,y,d)&&G.ter[idx(x,y)]===0&&(t==='berry'||mineFar(x,y,tr<80?8:4))){cluster(t,x,y,ri(lo,hi));break}}};
+ extra('gold',Math.max(1,4-gp/2),17,4,6);extra('stone',Math.max(1,4-sp/2),17,4,5);extra('berry',3,15,4,6);
  for(const e of G.list.slice())if(e.kind==='res'&&!far(e.tx,e.ty,4.3))remove(e);G.list=G.list.filter(e=>!e.dead);
  for(const b of G.bases)for(let y=b.y-1;y<=b.y+3;y++)for(let x=b.x-1;x<=b.x+3;x++){const i=idx(x,y);G.ter[i]=0;G.block[i]=G.occ[i]?1:0}
  fish('continental',K*1.6);labelLand();
@@ -474,7 +497,7 @@ function pathTo(u,tx,ty,rect,inside){if(G.pb<=0||G.nb<1500)return false;G.pb--;
  let maxN=Math.min(12000,G.nb);const lab=nav?G.sea:G.land;
  if(lab){const src=lab[idx(sx,sy)];if(src>=0){let reach=false;const [x0,y0,x1,y1]=rect||[tx,ty,tx,ty];
   for(let y=y0-1;y<=y1+1&&!reach;y++)for(let x=x0-1;x<=x1+1;x++)if(inb(x,y)&&lab[idx(x,y)]===src){reach=true;break}
-  if(!reach)maxN=Math.min(maxN,500)}}
+  if(!reach)maxN=Math.min(maxN,500);u.unreach=!reach}else u.unreach=false}
  u.path=astar(sx,sy,test,hx,hy,maxN,o,nav);G.nb-=lastN;u.pi=0;
  // sin volver atrás al centro de la casilla de salida: se empieza por la siguiente (evita tirones al recalcular el camino)
  if(u.path.length>1&&u.path[0]===idx(sx,sy))u.pi=1;return true}
@@ -495,7 +518,7 @@ function travel(u,dt,key,tx,ty,rect,inside,fx,fy){if(U[u.type].air){let x,y;if(r
  if(u.fx!=null){const dx=u.fx-u.x,dy=u.fy-u.y,d=Math.hypot(dx,dy);if(d>1.5&&!(d<T*.35&&(u.stall||0)>.5)&&(u.stall||0)<1.6){stallCheck(u,u.x,u.y,dt);const s=Math.min(d,uSpeed(u)*dt),nx=u.x+dx/d*s,ny=u.y+dy/d*s;if(!freeAtPx(nx,ny,u.owner,U[u.type].naval)){u.fx=null;return true}u.x=nx;u.y=ny;u.dir=Math.atan2(dy,dx);u.walk=true;return false}}
  return true;
 }
-function order(u,o){u.o=o;u.gk=null;u.path=[];u.pi=0}
+function order(u,o){u.o=o;u.gk=null;u.path=[];u.pi=0;u.unreach=false}
 function issue(u,o,q){if(q&&(u.o.t!=='idle'||u.oq.length)){u.oq.push(o);if(u.oq.length>12)u.oq.shift()}else{u.oq=[];order(u,o)}}
 function approach(u,dt,e,want){const x0=e.tx*T,y0=e.ty*T,x1=x0+e.size*T,y1=y0+e.size*T;const qx=Math.max(x0,Math.min(x1,u.x)),qy=Math.max(y0,Math.min(y1,u.y));
  const dx=qx-u.x,dy=qy-u.y,d=Math.hypot(dx,dy);if(d<=want)return true;const s=Math.min(d-want+.5,uSpeed(u)*dt),nx=u.x+dx/d*s,ny=u.y+dy/d*s;
@@ -518,8 +541,9 @@ function findRes(rt,x,y,maxD,owner,farms,ex,fish){const hum=!P(owner).ai,exp=hum
  if(farms&&rt==='food'){let bd=best?Math.hypot(best.x-x,best.y-y):maxD;for(const e of G.bl){if(e.dead||e.owner!==owner||!B[e.type].farm||e.bp<1||e.id===ex)continue;if(e.wk&&workerOn(e))continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;best=e}}}
  return best}
 function nearestDrop(owner,a,fish){let best=null,bd=1e9;for(const e of G.bl){if(e.dead||e.kind!=='bld'||e.owner!==owner||e.bp<1)continue;const dr=B[e.type].drop;if(!dr||(fish?dr!=='fish':dr!==true))continue;const d=entDist(a,e);if(d<bd){bd=d;best=e}}return best}
-// quién puede atacar a quién: aviones solo con antiaéreo; submarinos solo con barcos y de cerca
-function canAA(s){if(s.kind==='bld')return(s.type==='tower'||s.type==='castle'||s.type==='tc')&&ageOf(s.owner)>=5;const d=gd(s.type,s.owner),a=ageOf(s.owner),t=d.base||s.type;return!!d.aa||(t==='archer'&&a>=5)||(t==='spear'&&a>=6)||(t==='galley'&&a>=5)}
+// quién puede atacar a quién: submarinos solo con barcos y de cerca
+// a los aviones solo los alcanzan los cazas y los antiaéreos
+function canAA(s){if(s.kind!=='unit')return false;const t=gd(s.type,s.owner).base||s.type;return t==='fighter'||t==='aagun'}
 function subSeen(e,team){for(const u of G.ul){if(u.dead||u.gar||P(u.owner).team!==team||!U[u.type].naval)continue;if(Math.abs(u.x-e.x)<4.5*T&&Math.abs(u.y-e.y)<4.5*T&&Math.hypot(u.x-e.x,u.y-e.y)<4.5*T)return true}return false}
 function canHit(s,e){const sd=s.kind==='unit'?gd(s.type,s.owner):null;
  if(sd&&(sd.airOnly||sd.shipOnly)&&e.kind!=='unit')return false;
@@ -540,7 +564,7 @@ function unitDmg(u,t){const d=gd(u.type,u.owner);let a=uAtk(u);
  const arm=t.kind==='unit'?uArmor(t,!!d.ranged):bArmor(t.type,t.owner);
  let dmg=Math.max(1,a-arm);if(t.kind==='unit'&&U[t.type].air&&!d.aa&&!(d.base==='fighter'))dmg*=.5;if(t.kind==='bld'){if(d.ranged&&!d.fullBld&&!d.splash&&u.type!=='galley')dmg=Math.max(1,dmg*.3);if(u.type==='villager')dmg=1.5}return dmg*elevK(u,t)}
 function visFor0(x,y){return G.vis[idx(clampT(x/T,MW),clampT(y/T,MH))]===1}
-const airH=e=>e&&e.kind==='unit'&&U[e.type].air?(U[e.type].type==='bomber'||e.type==='bomber'?2.4:1.9):null;
+const airH=e=>e&&e.kind==='unit'&&U[e.type].air?(e.landed?.35:U[e.type].type==='bomber'||e.type==='bomber'?2.4:1.9):null;
 function shoot(s,t,dmg){const h0=airH(s)??(s.kind==='bld'?(s.type==='tower'?2.4:s.type==='castle'?2.2:1.7):.45);const d=Math.hypot(t.x-s.x,t.y-s.y),kind=u2k(s),pk=PK[kind]||PK.arrow;
  G.proj.push({k:0,kind,th:airH(t)??undefined,x:s.x,y:s.y,h:h0,sx:s.x,sy:s.y,h0,tid:t.id,tx:t.x,ty:t.y,dmg,owner:s.owner,src:s.id,dur:Math.max(pk[0]>1000?.08:.22,d/pk[0]),arc:(.2+d/T*.07)*pk[1],vx:0,vy:0,vh:0});
  if(isAlly(s.owner,ME())||visFor0(s.x,s.y))ev('shoot',{x:s.x,y:s.y,k:kind})}
@@ -645,6 +669,7 @@ function reseedFarm(pl,tx,ty,u){const p=P(pl);if(!p||!p.autoFarm)return null;con
  if(!canPlace('farm',tx,ty,pl))return null;pay(p,c);const b=mkBld('farm',pl,tx,ty,false);order(u,{t:'build',id:b.id});if(pl===ME())msg('Granja resembrada');return b}
 function doBuild(u,dt,o){
  const b=G.ents.get(o.id);
+ if(b&&u.unreach&&!b.dead&&entDist(u,b)>T*1.5){u.unreach=false;order(u,{t:'idle'});return}
  if(!b||b.dead||b.owner!==u.owner||(b.bp>=1&&b.hp>=b.maxhp)){
   if(u.oq.length){order(u,{t:'idle'});return}
   if(b&&!b.dead&&b.owner===u.owner){
@@ -675,6 +700,8 @@ function chase(u,dt,t,o){if(U[u.type].air){flyTo(u,dt,t.x,t.y,4);return true}con
 function doAttack(u,dt,o){
  const t=G.ents.get(o.id);
  if(!t||t.dead||inGar(t)||!isEnemy(u.owner,t.owner)||!canHit(u,t)){order(u,o.then||{t:'idle'});return}
+ // objetivo en otra masa de tierra y fuera de alcance: se abandona en vez de buscar camino una y otra vez
+ if(u.unreach&&!U[u.type].naval&&!U[u.type].air&&entDist(u,t)>reachOf(u,t)){u.unreach=false;order(u,o.then&&o.then.t!=='atk'?o.then:{t:'idle'});return}
  const d=gd(u.type,u.owner);
  if(d.bldOnly&&t.kind==='unit'){order(u,o.then||{t:'idle'});return}
  const reach=reachOf(u,t);
@@ -741,14 +768,26 @@ function idle(u,dt){u.scan-=dt;if(u.scan>0)return;u.scan=.4;
  const e=nearestEnemy(u,range,d.bldOnly?'bld':null);
  if(e){if(u.type==='mangonel'&&e.kind==='unit'&&Math.hypot(e.x-u.x,e.y-u.y)<d.minr*T)return;
   order(u,{t:'atk',id:e.id,auto:true,hold:u.st===2,leash:u.st===1?{x:u.x,y:u.y}:null,then:u.st===2?null:{t:'move',x:u.x,y:u.y}})}}
+// plazas de aparcamiento: cazas en la pista, bombarderos (más grandes) en la explanada; si no caben, alrededor del aeródromo
+const PADS={f:[[-1.3,.95],[0,.95],[1.3,.95]],b:[[-.95,.15],[.95,.15]]},PADX=[[-2.6,-1.6],[-2.6,0],[-2.6,1.6],[2.6,-1.6],[2.6,0],[2.6,1.6],[-1.2,2.6],[1.2,2.6],[-1.2,-2.6],[1.2,-2.6]];
+function padPos(b,k,big){const L=big?PADS.b:PADS.f;const p=k<L.length?L[k]:PADX[(k-L.length)%PADX.length];return[b.x+p[0]*T,b.y+p[1]*T]}
+function airIdle(u,dt){const d=gd(u.type,u.owner);u.scan-=dt;
+ if(u.scan<=0){u.scan=.4;const e=nearestEnemy(u,d.sight*T*(u.landed?.7:1),d.bldOnly?'bld':null);
+  if(e&&u.st!==2){u.landed=false;order(u,{t:'atk',id:e.id,auto:true,then:{t:'idle'}});return}}
+ let b=u.pad?G.ents.get(u.pad):null;if(b&&(b.dead||b.owner!==u.owner||b.bp<1)){b=null;u.pad=0;u.landed=false}
+ if(!b){let bd=1e9;for(const x of G.bl)if(!x.dead&&x.owner===u.owner&&x.type==='airfield'&&x.bp>=1){const dd=Math.hypot(x.x-u.x,x.y-u.y);if(dd<bd){bd=dd;b=x}}
+  if(b){const big=U[u.type].type==='bomber'||u.type==='bomber',used=new Set();for(const v of G.ul)if(v!==u&&!v.dead&&v.pad===b.id&&(v.type==='bomber')===big)used.add(v.slot);let k=0;while(used.has(k))k++;u.pad=b.id;u.slot=k}}
+ if(b){if(u.landed)return;const [x,y]=padPos(b,u.slot||0,u.type==='bomber');if(flyTo(u,dt,x,y,2)){u.x=x;u.y=y;u.dir=0;u.landed=true}return}
+ // sin aeródromo: vuela en círculo sobre el punto donde se quedó
+ if(u.ocx==null){u.ocx=u.x;u.ocy=u.y;u.orb=0}u.orb+=dt*uSpeed(u)/(1.8*T);const r=1.8*T;flyTo(u,dt,u.ocx+Math.cos(u.orb)*r,u.ocy+Math.sin(u.orb)*r,1)}
 function updUnit(u,dt){
  u.cd=Math.max(0,u.cd-dt);u.atkAnim=Math.max(0,u.atkAnim-dt);if(u.hitT)u.hitT=Math.max(0,u.hitT-dt);u.walk=false;u.work=false;u.anim+=dt;
  if(u.type==='monk'&&u.faith<1)u.faith=Math.min(1,u.faith+dt/20);
  if(u.o.t==='idle'&&u.oq.length)order(u,u.oq.shift());
  if(u.stunT&&u.stunT>G.t)return;
- const o=u.o;
+ const o=u.o;if(o.t!=='idle'&&U[u.type].air){u.landed=false;u.ocx=null}
  switch(o.t){
-  case'idle':idle(u,dt);break;
+  case'idle':if(U[u.type].air)airIdle(u,dt);else idle(u,dt);break;
   case'move':if(travel(u,dt,'m'+o.x+','+o.y,o.x/T,o.y/T,null,false,freeAtPx(o.x,o.y,u.owner,U[u.type].naval)?o.x:null,o.y))order(u,o.then||{t:'idle'});break;
   case'amove':{if(U[u.type].atk>0){u.scan-=dt;if(u.scan<=0){u.scan=.3;const d=gd(u.type,u.owner);const e=nearestEnemy(u,d.sight*T,d.bldOnly?'bld':null);if(e&&!(d.splash&&e.kind==='unit'&&Math.hypot(e.x-u.x,e.y-u.y)<d.minr*T)){order(u,{t:'atk',id:e.id,auto:true,then:o});break}}}
    if(travel(u,dt,'m'+o.x+','+o.y,o.x/T,o.y/T,null,false,freeAtPx(o.x,o.y,u.owner,U[u.type].naval)?o.x:null,o.y))order(u,{t:'idle'});break}
@@ -1014,8 +1053,10 @@ function aiBuild(p,type,near,rmin,rmax,vills){if(!canAfford(p,B[type].cost)||!bl
  const s=findSpot(type,(near.x/T)|0,(near.y/T)|0,rmin,rmax,p.i)||findSpot(type,(near.x/T)|0,(near.y/T)|0,rmax+1,rmax+(type==='store'?3:9),p.i);if(!s){if(A)A.ns[key]=G.t+12;return}aiBuildAt(p,type,s,vills)}
 function aiBuildAt(p,type,s,vills){if(!canAfford(p,B[type].cost)||!bldAvail(p,type)||!canPlace(type,s[0],s[1],p.i))return;pay(p,B[type].cost);const b=mkBld(type,p.i,s[0],s[1],false);const v=pickBuilder(vills,b);if(v)order(v,{t:'build',id:b.id})}
 function findSpot(type,cx,cy,rmin,rmax,o){const s=B[type].size;
- for(let r=rmin;r<=rmax;r++){const c=[];for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const tx=cx+dx-(s>>1),ty=cy+dy-(s>>1);if(spotOK(type,tx,ty,o))c.push([tx,ty])}
-  if(c.length)return c[Math.floor(rnd()*c.length)]}return null}
+ const onDeco=(tx,ty)=>{for(let y=ty;y<ty+s;y++)for(let x=tx;x<tx+s;x++)if(G.dmap&&G.dmap[idx(x,y)])return true;return false};let alt=null;
+ // la IA prefiere no derribar viviendas: solo construye encima si no hay otro sitio
+ for(let r=rmin;r<=rmax;r++){const c=[];for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const tx=cx+dx-(s>>1),ty=cy+dy-(s>>1);if(spotOK(type,tx,ty,o)){if(onDeco(tx,ty)){if(!alt)alt=[tx,ty]}else c.push([tx,ty])}}
+  if(c.length)return c[Math.floor(rnd()*c.length)]}return alt}
 // colocación al preparar la partida (época avanzada, escenarios): admite pendientes y allana el terreno bajo el edificio
 let relaxH=0;
 function setupSpot(type,cx,cy,r0,r1,o){let sp=findSpot(type,cx,cy,r0,r1,o);if(sp)return sp;relaxH=1.8;try{sp=findSpot(type,cx,cy,r0,r1,o)}finally{relaxH=0}
@@ -1072,7 +1113,7 @@ function update(dt){if(!G||G.over)return;G.t+=dt;G.pb=40;G.nb=14000;G.ug=null;
  for(const e of G.rel)if(e.holder){const h=G.ents.get(e.holder);if(!h||h.dead)e.holder=0;else if(h.kind==='unit'){e.x=h.x;e.y=h.y}}
  separate();updProj(dt);aiUpdate(dt);
  G.fogT-=dt;if(G.fogT<=0){G.fogT=.2;calcFog()}
- G.endT-=dt;if(G.endT<=0){G.endT=1;wxTick();checkEnd();for(const r in G.price)G.price[r]+=(({food:100,wood:100,stone:130})[r]-G.price[r])*.004}
+ G.endT-=dt;if(G.endT<=0){G.endT=1;wxTick();checkEnd();if(G.t>=(G.cityT||20)){G.cityT=G.t+10;for(const p of G.players)growCity(p.i,2)}for(const r in G.price)G.price[r]+=(({food:100,wood:100,stone:130})[r]-G.price[r])*.004}
  G.histT-=dt;if(G.histT<=0){G.histT=30;G.hist.push({t:Math.round(G.t),s:G.players.map(p=>{let army=0;for(const e of G.ul)if(!e.dead&&e.owner===p.i&&e.type!=='villager'&&U[e.type].atk>0)army++;return{pop:p.pop,army,res:p.stats.gathered,score:score(p)}})})}
  if(G.scnS){G.scnT-=dt;if(G.scnT<=0){G.scnT=1;scnTick()}}
  G.alertT-=dt;
@@ -1144,7 +1185,7 @@ function newGame(cfg,s){cfg=Object.assign({diff:'normal',map:'continental',size:
  MW=MH=Math.min(144,SIZES[cfg.size].n+(nP>4?(nP-4)*8:0));NN=MW*MH;GW=Math.ceil(MW/GC);const D=DIFF[cfg.diff];
  let spec=cfg.players;if(!spec){const n=1+Math.max(1,Math.min(7,cfg.nAI)),teams=teamsFor(n,cfg.teams);const pool=shuffle(Object.keys(CIVS).filter(c=>c!==cfg.civ));
   spec=Array.from({length:n},(_,i)=>({civ:i===0?cfg.civ:pool[(i-1)%pool.length],team:teams[i],ai:i>0,name:i===0?'Tú':null}))}
- G={t:0,ents:new Map(),list:[],nid:1,proj:[],ev:[],cfg,over:false,win:null,dirty:false,fogT:0,endT:3,histT:1,alertT:0,msgT:{},fogV:0,pb:60,nb:30000,players:[],ai:{},visT:{},expT:{},me:cfg.me,mp:!!cfg.mp,
+ G={deco:[],dv:0,t:0,ents:new Map(),list:[],nid:1,proj:[],ev:[],cfg,over:false,win:null,dirty:false,fogT:0,endT:3,histT:1,alertT:0,msgT:{},fogV:0,pb:60,nb:30000,players:[],ai:{},visT:{},expT:{},me:cfg.me,mp:!!cfg.mp,
   price:{food:100,wood:100,stone:130},mem:new Map(),hist:[],wonder:null,relicHold:null,ul:[],bl:[],rl:[],rel:[],bv:0,rv:0};
  const used={};
  spec.forEach((sp,i)=>{const c=sp.civ;used[c]=(used[c]||0)+1;
@@ -1174,7 +1215,7 @@ function startAt(i,tc,a){const p=P(i),wasAI=p.ai;p.ai=true;p.age=a;p.res={food:2
  const ring=spotsAround(tc,nv+12);let si=0;const at=()=>ring[si++%Math.max(1,ring.length)]||[cx,cy+3];
  for(let k=0;k<nv;k++){const t=at();mkUnit('villager',i,(t[0]+.3+(k%2)*.4)*T,(t[1]+.5)*T)}
  for(const [ut,n] of army)for(let k=0;k<n;k++){const t=at();mkUnit(ut,i,(t[0]+.5)*T,(t[1]+.5)*T)}
- for(const e of G.list)if(!e.dead&&e.owner===i){if(e.kind==='unit'){e.maxhp=uMaxHp(e.type,i);e.hp=e.maxhp}else if(e.kind==='bld'){e.maxhp=bMaxHp(e.type,i);e.hp=e.maxhp}}p.ai=wasAI}
+ for(const e of G.list)if(!e.dead&&e.owner===i){if(e.kind==='unit'){e.maxhp=uMaxHp(e.type,i);e.hp=e.maxhp}else if(e.kind==='bld'){e.maxhp=bMaxHp(e.type,i);e.hp=e.maxhp}}growCity(i,CITY_N[Math.min(8,a)]);p.ai=wasAI}
 function initFogArrays(){G.humanTeams=[...new Set(G.players.filter(p=>!p.ai||p.i===G.me).map(p=>p.team))];
  for(const p of G.players){if(!G.visT[p.team]){G.visT[p.team]=new Uint8Array(NN);if(!G.expT[p.team]){G.expT[p.team]=new Uint8Array(NN);if(G.cfg.reveal==='explored'||G.cfg.reveal==='all')G.expT[p.team].fill(1)}}}
  G.vis=G.visT[G.players[G.me].team];G.exp=G.expT[G.players[G.me].team];if(!G.humanTeams.includes(G.players[G.me].team))G.humanTeams.push(G.players[G.me].team)}
@@ -1188,7 +1229,7 @@ const dec=s=>{const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s
 function serialize(){const ents=[];for(const e of G.list){if(e.dead)continue;const o=Object.assign({},e);delete o.path;delete o.gk;delete o.lx;delete o.ly;delete o.stall;ents.push(o)}
  const exps={};for(const t in G.expT)exps[t]=enc(G.expT[t]);
  return JSON.stringify({v:3,MW,MH,seed,cfg:G.cfg,t:G.t,nid:G.nid,players:G.players,ai:G.ai,bases:G.bases,ter:enc(G.ter),exps,hgt:Array.from(G.hgt,h=>Math.round(h*100)),ents,
-  price:G.price,wx:G.wx||'clear',wxT:G.wxT||0,wonder:G.wonder,relicHold:G.relicHold,relicN:G.relicN,hist:G.hist,mem:[...G.mem.values()],real:G.real||null,scnS:G.scnS||null})}
+  price:G.price,wx:G.wx||'clear',wxT:G.wxT||0,wonder:G.wonder,relicHold:G.relicHold,relicN:G.relicN,hist:G.hist,mem:[...G.mem.values()],real:G.real||null,scnS:G.scnS||null,deco:G.deco.filter(x=>!x.dead).map(x=>[x.o,x.tx,x.ty,Math.round(x.v*1000)])})}
 function deserialize(str){const d=JSON.parse(str);if(d.v!==3)throw new Error('Formato de partida no compatible con esta versión');
  MW=d.MW;MH=d.MH;NN=MW*MH;GW=Math.ceil(MW/GC);seed=d.seed;POPMAX=Math.max(50,Math.min(300,+(d.cfg&&d.cfg.pop)||200));
  G={t:d.t,ents:new Map(),list:[],nid:d.nid,proj:[],ev:[],cfg:d.cfg,over:false,win:null,dirty:false,fogT:0,endT:1,histT:30,alertT:0,msgT:{},fogV:0,pb:60,nb:30000,players:d.players,ai:d.ai,bases:d.bases,
@@ -1199,6 +1240,7 @@ function deserialize(str){const d=JSON.parse(str);if(d.v!==3)throw new Error('Fo
  for(const t in d.exps)G.expT[t]=dec(d.exps[t]);
  for(let i=0;i<NN;i++)G.block[i]=G.ter[i]===1||G.ter[i]===3?1:0;
  for(const e of d.ents){if(e.kind==='unit'){e.path=[];e.pi=0;e.gk=null}G.ents.set(e.id,e);G.list.push(e);if(e.kind==='bld'||e.kind==='res')setOcc(e,true)}
+ G.deco=[];G.dv=1;G.dmap=new Int32Array(NN);for(const [o,tx,ty,v] of d.deco||[]){const x={id:G.deco.length+1,o,tx,ty,v:v/1000};G.deco.push(x);for(let yy=ty;yy<=ty+1;yy++)for(let xx=tx;xx<=tx+1;xx++){const i=idx(xx,yy);if(G.occ[i])continue;G.dmap[i]=x.id;G.block[i]=1}}
  labelLand();reindex();initFogArrays();calcFog();return G}
 
 // ---------- órdenes de los jugadores (todas pasan por exec para el multijugador)
@@ -1324,5 +1366,5 @@ function stateText(u){if(u.gar){const c=G.ents.get(u.gar);return'Dentro de '+(c?
 root.Imperia={PERS,FORMS,WX,get wx(){return G&&G.wx||'clear'},POWERS,canHitT:(a,b)=>canHit(a,b),subSeen,canAA,score,goSolo,scnStatus,scnDef,visType,UUM,T,get MW(){return MW},get MH(){return MH},get NN(){return NN},get POPMAX(){return POPMAX},CAP,RES,RN,AGES,AGEYEAR,MAXAGE,AGECOST,AGETIME,GEN,BGEN,gd,gdAt,bName,U,B,BPAGES,TECH,UPG,GAR,RDEF,DIFF,CIVS,MAPS,SIZES,PCOLORS,WONDER_T,RELIC_T,
  newGame,update,get G(){return G},exec,hash,setMe,canAfford,unitAvail,bldAvail,techState,canPlace,wallLine,pickAt,isVisible,stateText,entDist,idx:(x,y)=>y*MW+x,hAt,hAtT,realCells:()=>G&&G.real&&root.IMPERIA_MAPS&&root.IMPERIA_MAPS[G.real]?realCells(G.real,MW,MH):null,
  isAlly,isEnemy,uAtk,uArmor,uRange,uSpeed,uMaxHp,uName,bArmor,bAtk,bRange,unitCost,trainTime,carryCap,convTime,trainsOf,tradeGold,garCap,contents,canEnter,
- serialize,deserialize,formMove,_dbg:{mkUnit,mkBld,applyTech,order,enter,kill}};
+ serialize,deserialize,formMove,_dbg:{mkUnit,mkBld,applyTech,order,enter,kill,decoOK,growCity}};
 })(typeof window!=='undefined'?window:globalThis);

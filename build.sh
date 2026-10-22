@@ -34,8 +34,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
  <key>CFBundleIdentifier</key><string>es.jack.imperia</string>
  <key>CFBundleIconFile</key><string>AppIcon</string>
  <key>CFBundlePackageType</key><string>APPL</string>
- <key>CFBundleShortVersionString</key><string>6.6</string>
- <key>CFBundleVersion</key><string>6</string>
+ <key>CFBundleShortVersionString</key><string>6.7</string>
+ <key>CFBundleVersion</key><string>7</string>
  <key>CFBundleDevelopmentRegion</key><string>es</string>
  <key>LSMinimumSystemVersion</key><string>13.0</string>
  <key>LSApplicationCategoryType</key><string>public.app-category.strategy-games</string>

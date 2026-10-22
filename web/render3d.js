@@ -70,7 +70,8 @@ function waterInfo(G){const n=MW*MH,sea=new Uint8Array(n),RC=I.realCells?I.realC
   const thick=q.length/Math.max(1,Math.max(maxx-minx,maxy-miny));if(q.length>=40&&thick>3)for(const i of q)sea[i]=1}}
  const dist=src=>{const d=new Float32Array(n).fill(99),q=[];for(let i=0;i<n;i++)if(src(i)){d[i]=0;q.push(i)}for(let h=0;h<q.length;h++){const i=q[h],x=i%MW,y=(i/MW)|0;for(const [dx,dy] of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=MW||ny>=MH)continue;const j=ny*MW+nx;if(d[j]>d[i]+1){d[j]=d[i]+1;q.push(j)}}}return d};
  return WI={sea,seaD:dist(i=>sea[i]===1),wD:dist(i=>G.ter[i]===1||G.ter[i]===2),RC}}
-function buildSplat(G){splatData=new Uint8Array(MW*MH*4);paveData=new Uint8Array(MW*MH*4);waterInfo(G);const ld=WI.seaD,wd0=WI.wD,arid=G.cfg&&G.cfg.map==='arabia';
+const PR=3;// resolución de la máscara de pavimento (texeles por casilla): calles finas y curvas
+function buildSplat(G){splatData=new Uint8Array(MW*MH*4);paveData=new Uint8Array(MW*PR*MH*PR*4);waterInfo(G);const ld=WI.seaD,wd0=WI.wD,arid=G.cfg&&G.cfg.map==='arabia';
  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=y*MW+x,t=G.ter[i];let dirt=0,sand=0,rock=0;
   if(t===1)sand=WI.sea[i]?255:150;else if(t===2)sand=200;else{const cd=ld[i];if(cd<=1)sand=240;else if(cd<=2)sand=120;else if(wd0[i]<=1)dirt=150;
    const h=G.hgt?G.hgt[i]:0,hx=G.hgt?Math.abs((G.hgt[Math.min(MW*MH-1,i+1)]||0)-(G.hgt[Math.max(0,i-1)]||0))+Math.abs((G.hgt[Math.min(MW*MH-1,i+MW)]||0)-(G.hgt[Math.max(0,i-MW)]||0)):0;
@@ -80,13 +81,14 @@ function buildSplat(G){splatData=new Uint8Array(MW*MH*4);paveData=new Uint8Array
  for(const b of G.bases)stampDirt(b.cx-1.5,b.cy-1.5,3,5.5,1);
  for(const e of G.list)if(e.kind==='res'&&(e.type==='gold'||e.type==='stone'))stampRock(e.tx,e.ty);
  if(splatTex)splatTex.dispose();splatTex=new TH.DataTexture(splatData,MW,MH);splatTex.magFilter=TH.LinearFilter;splatTex.minFilter=TH.LinearFilter;splatTex.needsUpdate=true;
- if(paveTex)paveTex.dispose();paveTex=new TH.DataTexture(paveData,MW,MH);paveTex.magFilter=TH.LinearFilter;paveTex.minFilter=TH.LinearFilter;paveTex.needsUpdate=true}
+ if(paveTex)paveTex.dispose();paveTex=new TH.DataTexture(paveData,MW*PR,MH*PR);paveTex.magFilter=TH.LinearFilter;paveTex.minFilter=TH.LinearFilter;paveTex.needsUpdate=true}
 function stampRock(tx,ty){for(let y=ty-1;y<=ty+1;y++)for(let x=tx-1;x<=tx+1;x++){if(x<0||y<0||x>=MW||y>=MH)continue;const i=(y*MW+x)*4;splatData[i+2]=Math.max(splatData[i+2],x===tx&&y===ty?170:45)}}
 // tierra pisada alrededor de un edificio (como en los RTS clásicos)
 function stampDirt(tx,ty,size,rad,k){if(!splatData)return;const cx=tx+size/2,cy=ty+size/2,R=size/2+rad;
  for(let y=Math.floor(cy-R-1);y<=cy+R+1;y++)for(let x=Math.floor(cx-R-1);x<=cx+R+1;x++){if(x<0||y<0||x>=MW||y>=MH)continue;const d=Math.hypot(x+.5-cx,y+.5-cy);if(d>R)continue;
   const i=(y*MW+x)*4;if(splatData[i+1]>200)continue;const v=Math.round(255*Math.min(1,(R-d)/Math.max(.8,rad*.7))*(k??1));splatData[i]=Math.max(splatData[i],v);
-  if(paveData){const R2=size/2+Math.min(rad*.9,2);if(d<R2)paveData[i]=Math.max(paveData[i],Math.round(255*Math.min(1,(R2-d)/1.1)))}}
+}
+ if(paveData){const R2=size/2+Math.min(rad*.9,2),W2=MW*PR;for(let py=Math.max(0,Math.floor((cy-R2)*PR));py<Math.min(MH*PR,Math.ceil((cy+R2)*PR));py++)for(let px=Math.max(0,Math.floor((cx-R2)*PR));px<Math.min(W2,Math.ceil((cx+R2)*PR));px++){const d=Math.hypot((px+.5)/PR-cx,(py+.5)/PR-cy);if(d<R2){const j=(py*W2+px)*4;paveData[j]=Math.max(paveData[j],Math.round(255*Math.min(1,(R2-d)/1.1)))}}}
  if(splatTex)splatTex.needsUpdate=true;if(paveTex)paveTex.needsUpdate=true}
 const timeU=()=>ART.timeU;
 // texturas fotográficas del suelo (ambientCG, CC0) empaquetadas en terrain_data.js
@@ -255,7 +257,7 @@ function buildNat(items,reg,place,col){const CS=16,groups=new Map();
     if(P.leaf){NAT.tint(key,it.u,col,it.arid);im.setColorAt(i,col)}});
    im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;resRoot.add(im);natChunks.push({m:im,g0:P.g0,g1:P.g1,x:cx,z:cz})}}}
 function natLod(){if(!natChunks.length)return;const far=view.dist>48,R2=(view.dist*.62+9)**2;for(const c of natChunks){const d=(c.x-view.tx)**2+(c.z-view.tz)**2;const g=!far&&d<R2?c.g0:c.g1;if(c.m.geometry!==g)c.m.geometry=g}}
-function buildResources(G){if(!VEG)VEG=ART.trees();
+function buildResources(G){if(!VEG)VEG=ART.trees();metalRes=null;
  const L={tree:[],gold:[],stone:[],berry:[],fish:[]};for(const e of G.list)if(e.kind==='res'&&!e.dead)L[e.type].push(e);
  const col=new TH.Color();
  const IM=(geo,m,n,shadow)=>{const im=new TH.InstancedMesh(geo,m,Math.max(1,n));im.count=n;im.castShadow=shadow!==false;im.receiveShadow=true;im.userData.ids=new Array(n);instMeshes.push(im);resRoot.add(im);return im};
@@ -283,6 +285,10 @@ function buildResources(G){if(!VEG)VEG=ART.trees();
   for(let q=0;q<5;q++){const a=e.v*9+q*1.3,rec=reg(e,nug,ni++,e.tx+.5+Math.cos(a)*.24,.12+q%2*.08,e.ty+.5+Math.sin(a)*.24,1+(q%3)*.3,a,1);rec.rx=a;place(rec)}}
  const stoneRock=IM(VEG.rock[1],ART.M.stone,L.stone.length*4);let si=0;
  for(const e of L.stone)for(let q=0;q<4;q++){const a=e.v*20+q*1.6,rec=reg(e,stoneRock,si,e.tx+.5+Math.cos(a)*(q?.24:0),.02,e.ty+.5+Math.sin(a)*(q?.24:0),(q?1.1:1.7)+q*.1,a,q?1.1:1.5);place(rec);col.setRGB(1.05,1.05,1.08);stoneRock.setColorAt(si++,col)}
+ // vetas de metal: aparecen cuando el jugador llega a la Edad Industrial y la roca se vuelve mineral oscuro
+ const oreM=gc('oreM',()=>new TH.MeshStandardMaterial({color:0xa9b8c6,metalness:.9,roughness:.28})),ore=IM(gc('oreG',()=>new TH.OctahedronGeometry(.075,0).scale(1,1.8,1)),oreM,L.stone.length*6);let oi=0;
+ for(const e of L.stone)for(let q=0;q<6;q++){const a=e.v*13+q*1.05,r=.12+(q%3)*.1,rec=reg(e,ore,oi++,e.tx+.5+Math.cos(a)*r,.16+(q%2)*.1,e.ty+.5+Math.sin(a)*r,.9+(q%3)*.35,a,1);rec.rx=.4*(q%2?1:-1);rec.rz=a*.3;place(rec)}
+ ore.visible=false;metalRes={rock:stoneRock,ore,on:false,m0:stoneRock.material};
  // arbustos de bayas
  const bush=IM(VEG.bush[1],ART.M.leaf,L.berry.length),berry=IM(sphG(.03,1),mat(0xa81c30,{roughness:.35,flatShading:false}),L.berry.length*9,false);
  let ui=0,bj=0;for(const e of L.berry){place(reg(e,bush,ui++,e.tx+.5,0,e.ty+.5,1.5,e.v*9,1.3));for(let q=0;q<9;q++){const a=q*.7+e.v*5,rr2=.12+(q%3)*.08,rec=reg(e,berry,bj++,e.tx+.5+Math.cos(a)*rr2,.2+(q%3)*.09,e.ty+.5+Math.sin(a)*rr2,1,0,1);rec.kind='b'+q;place(rec)}}
@@ -391,7 +397,7 @@ function updUnitObj(o,e,dt,G){const g=o.g,p=g.userData.parts;
  if(e.stunT&&e.stunT>G.t&&Math.random()<dt*4)puff(g.position.x,g.position.y+.4,g.position.z,0x8fe8ff,1,{add:true,spread:.4,size:.25,life:.3,vy:.3});
  if(p.sub)g.position.y=-.36+Math.sin(frame*.03+e.id)*.015;
  // aviones: vuelan alto (los bombarderos más), se inclinan en los giros y las hélices giran
- if(p.plane){const gh=Math.max(0,hT(px,pz));g.position.y=gh+(p.big?2.4:1.9)+Math.sin(frame*.03+e.id)*.06;const turn=angLerp(0,(-e.dir)-o.rot,1);p.body.rotation.x=Math.max(-.6,Math.min(.6,-turn*3));if(p.props)for(const r of p.props)r.rotation.x+=dt*60}
+ if(p.plane){const gh=Math.max(0,hT(px,pz)),alt=e.landed?.06:(p.big?2.4:1.9);o.alt=o.alt==null?alt:o.alt+(alt-o.alt)*Math.min(1,dt*1.6);g.position.y=gh+o.alt+(e.landed?0:Math.sin(frame*.03+e.id)*.06);const turn=e.landed?0:angLerp(0,(-e.dir)-o.rot,1);p.body.rotation.x=Math.max(-.6,Math.min(.6,-turn*3));if(p.props)for(const r of p.props)r.rotation.x+=dt*(e.landed?(o.alt>.3?30:0):60)}
  if(p.turret){let ta=0;const tg=(e.o&&(e.o.t==='attack'||e.o.t==='atk'))&&G.ents.get(e.o.id);if(tg){ta=Math.atan2(-(tg.y-e.y),tg.x-e.x)-g.rotation.y}p.turret.rotation.y=angLerp(p.turret.rotation.y,ta,Math.min(1,dt*3))}
  o.rot=angLerp(o.rot,-e.dir,Math.min(1,dt*(p.ship?3:12)));g.rotation.y=o.rot;
  if(p.relic)p.relic.visible=!!e.relic;
@@ -519,7 +525,9 @@ function updWeather(dt,G){const k=(G&&G.wx)||'clear';if(!wxObj)wxBuild();
  wxObj.geometry.attributes.position.needsUpdate=true}
 
 // ruta de patrulla de las unidades seleccionadas (línea azul entre los puntos)
-let patLine=null;
+let patLine=null,metalRes=null;
+function updMetal(){if(!metalRes)return;const on=tierOf(ME())>=4;if(on===metalRes.on)return;metalRes.on=on;metalRes.ore.visible=on;
+ if(!metalRes.m1){metalRes.m1=metalRes.m0.clone();metalRes.m1.color=new TH.Color(0x5d6670);metalRes.m1.metalness=.45;metalRes.m1.roughness=.55}metalRes.rock.material=on?metalRes.m1:metalRes.m0}
 function updPatrol(G){if(frame%8)return;if(!patLine){const g=new TH.BufferGeometry();g.setAttribute('position',new TH.BufferAttribute(new Float32Array(16*2*3*6),3));patLine=new TH.LineSegments(g,new TH.LineDashedMaterial({color:0x8fd0ff,dashSize:.5,gapSize:.35,transparent:true,opacity:.85,depthTest:false}));patLine.renderOrder=6;patLine.frustumCulled=false;world.add(patLine)}
  const pos=patLine.geometry.attributes.position.array;let n=0;const seen=new Set();
  for(const id of selSet){const e=G.ents.get(id);if(!e||e.dead||e.kind!=='unit'||e.owner!==ME())continue;const o=e.o.t==='patrol'?e.o:(e.o.then&&e.o.then.t==='patrol'?e.o.then:null);if(!o||!o.pts)continue;
@@ -527,6 +535,44 @@ function updPatrol(G){if(frame%8)return;if(!patLine){const g=new TH.BufferGeomet
   for(let i=0;i<L&&n<pos.length/6;i++){if(L===2&&i===1)break;const a=o.pts[i],b=o.pts[(i+1)%L],ax=a[0]/T,az=a[1]/T,bx=b[0]/T,bz=b[1]/T;pos.set([ax,hT(ax,az)+.15,az,bx,hT(bx,bz)+.15,bz],n*6);n++}
   if(seen.size>=6)break}
  patLine.geometry.setDrawRange(0,n*2);patLine.geometry.attributes.position.needsUpdate=true;if(n)patLine.computeLineDistances();patLine.visible=n>0}
+
+// ---------- ciudad: viviendas que crecen con cada edad y calles que unen los edificios
+let decoRoot=null,decoV=-1;const decoObjs=new Map();
+function decoY(d){let m=99;for(const [x,z] of[[d.tx,d.ty],[d.tx+2,d.ty],[d.tx,d.ty+2],[d.tx+2,d.ty+2],[d.tx+1,d.ty+1]])m=Math.min(m,hT(x,z));return m}
+function updDeco(G){if(!G.deco||!ART.civic)return;if(!decoRoot){decoRoot=new TH.Group();world.add(decoRoot)}
+ if(G.dv===decoV&&frame%45)return;decoV=G.dv;const alive=new Set();
+ for(const d of G.deco){if(d.dead)continue;alive.add(d.id);const t=tierOf(d.o);let o=decoObjs.get(d.id);
+  if(o&&o.t!==t){decoRoot.remove(o.g);o=null}
+  if(!o){const g=ART.civic(d.o,t,d.v);g.position.set(d.tx+1,decoY(d),d.ty+1);g.rotation.y=Math.floor(d.v*4)*Math.PI/2;decoRoot.add(g);if(!decoObjs.has(d.id))stampDirt(d.tx,d.ty,2,.9,.8);o={g,t};decoObjs.set(d.id,o)}
+  o.g.visible=!!G.exp[I.idx(d.tx,d.ty)]}
+ for(const [id,o] of decoObjs)if(!alive.has(id)){decoRoot.remove(o.g);decoObjs.delete(id);if(o.g.visible)puff(o.g.position.x,o.g.position.y+.3,o.g.position.z,0xc8b8a0,10,{spread:.8})}}
+// calles: cada edificio (y vivienda) se une por el camino más corto a la red de su dueño, que nace en el centro urbano.
+// Se calculan poco a poco (un jugador cada medio segundo) y quedan marcadas en el suelo: tierra al principio, adoquín y asfalto después.
+const roadNet=new Map();
+function roadsFor(G,o){let N=roadNet.get(o);if(!N){N={tiles:new Set(),done:new Set()};roadNet.set(o,N)}
+ const nodes=[];for(const b of G.bl){if(b.dead||b.owner!==o||b.bp<1)continue;const d=B[b.type];if(d.wall||d.farm)continue;nodes.push({id:b.id,tx:b.tx,ty:b.ty,s:b.size,tc:b.type==='tc'})}
+ for(const d of G.deco||[])if(!d.dead&&d.o===o)nodes.push({id:'d'+d.id,tx:d.tx,ty:d.ty,s:2});
+ const ring=n=>{const r=[];for(let y=n.ty-1;y<=n.ty+n.s;y++)for(let x=n.tx-1;x<=n.tx+n.s;x++){if(x>=n.tx&&x<n.tx+n.s&&y>=n.ty&&y<n.ty+n.s)continue;if(x<0||y<0||x>=MW||y>=MH)continue;const i=y*MW+x;if(!I.G.block[i]&&I.G.ter[i]===0)r.push(i)}return r};
+ const tcs=nodes.filter(n=>n.tc);if(!tcs.length)return;for(const t of tcs)if(!N.done.has(t.id)){N.done.add(t.id);for(const i of ring(t))N.tiles.add(i)}
+ let work=0;const todo=nodes.filter(n=>!N.done.has(n.id)).map(n=>{let d=1e9;for(const t of tcs)d=Math.min(d,Math.hypot(n.tx-t.tx,n.ty-t.ty));return[d,n]}).filter(x=>x[0]<26).sort((a,b)=>a[0]-b[0]);
+ for(const [,n] of todo){if(work>6)break;work++;N.done.add(n.id);const src=ring(n);if(!src.length)continue;if(src.some(i=>N.tiles.has(i)))continue;
+  const path=roadPath(G,src,N.tiles,2600);if(path){for(const i of path)N.tiles.add(i);stampRoad(path)}}}
+function roadPath(G,src,goal,maxN){const dist=new Map(),prev=new Map(),h=[];const push=(c,i)=>{h.push([c,i]);let k=h.length-1;while(k>0){const p=(k-1)>>1;if(h[p][0]<=h[k][0])break;[h[p],h[k]]=[h[k],h[p]];k=p}};
+ const pop=()=>{const top=h[0],last=h.pop();if(h.length){h[0]=last;let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<h.length&&h[l][0]<h[m][0])m=l;if(r<h.length&&h[r][0]<h[m][0])m=r;if(m===k)break;[h[m],h[k]]=[h[k],h[m]];k=m}}return top};
+ for(const i of src){dist.set(i,0);push(0,i)}let n=0;
+ while(h.length&&n++<maxN){const [c,i]=pop();if(c>dist.get(i))continue;if(goal.has(i)){const p=[i];let k=i;while(prev.has(k)){k=prev.get(k);p.push(k)}return p}
+  const x=i%MW,y=(i/MW)|0;for(const [dx,dy,w] of[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.42],[1,-1,1.42],[-1,1,1.42],[-1,-1,1.42]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=MW||ny>=MH)continue;const j=ny*MW+nx;
+   if(G.block[j]||G.ter[j]!==0)continue;if(dx&&dy&&(G.block[y*MW+nx]||G.block[ny*MW+x]))continue;const nc=c+w*(goal.has(j)?.3:1)+(G.hgt?Math.abs(G.hgt[j]-G.hgt[i])*2:0);
+   if(nc<(dist.get(j)??1e9)){dist.set(j,nc);prev.set(j,i);push(nc,j)}}}return null}
+function stampRoad(path){if(path.length<2)return;let pts=path.map(i=>[(i%MW)+.5,((i/MW)|0)+.5]);
+ for(let it=0;it<2;it++){const q=[pts[0]];for(let k=0;k<pts.length-1;k++){const a=pts[k],b=pts[k+1];q.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}q.push(pts[pts.length-1]);pts=q}
+ const W2=MW*PR,rw=.42;
+ for(let k=0;k<pts.length-1;k++){const a=pts[k],b=pts[k+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L*4));for(let s=0;s<=n;s++){const cx=a[0]+(b[0]-a[0])*s/n,cy=a[1]+(b[1]-a[1])*s/n;
+  for(let py=Math.floor((cy-rw)*PR);py<=Math.ceil((cy+rw)*PR);py++)for(let px=Math.floor((cx-rw)*PR);px<=Math.ceil((cx+rw)*PR);px++){if(px<0||py<0||px>=W2||py>=MH*PR)continue;const d=Math.hypot((px+.5)/PR-cx,(py+.5)/PR-cy);if(d>rw)continue;const j=(py*W2+px)*4;paveData[j]=Math.max(paveData[j],Math.round(255*Math.min(1,(rw-d)/.22)))}
+  const tx=cx|0,ty=cy|0;if(tx>=0&&ty>=0&&tx<MW&&ty<MH){const i=(ty*MW+tx)*4;splatData[i]=Math.max(splatData[i],200)}}}
+ if(splatTex)splatTex.needsUpdate=true;if(paveTex)paveTex.needsUpdate=true}
+let roadTurn=0;
+function updRoads(G){if(frame%30)return;const ps=G.players.filter(p=>!p.out);if(!ps.length)return;roadTurn=(roadTurn+1)%ps.length;roadsFor(G,ps[roadTurn].i)}
 
 // ---------- API
 const R={};
@@ -581,7 +627,7 @@ R.build=function(G){
  fogData=new Uint8Array(MW*MH*4);fogCur=new Float32Array(MW*MH);if(fogTex)fogTex.dispose();fogTex=new TH.DataTexture(fogData,MW,MH);fogTex.magFilter=fogTex.minFilter=TH.LinearFilter;
  for(let i=0;i<MW*MH;i++)fogCur[i]=G.vis[i]?1:(G.exp[i]?.42:0);writeFog();fogU.value=fogTex;
  const b=G.bases[G.me||0]||G.bases[0];R.centerOn(b.cx,b.cy+1.5);view.dist=view.tdist=34;
- patLine=null;memObjs.clear();memRoot=new TH.Group();world.add(memRoot);
+ patLine=null;decoRoot=null;decoV=-1;decoObjs.clear();roadNet.clear();memObjs.clear();memRoot=new TH.Group();world.add(memRoot);
 };
 function writeFog(){for(let i=0;i<MW*MH;i++){const v=Math.round(fogCur[i]*255);fogData[i*4]=v;fogData[i*4+1]=v;fogData[i*4+2]=v;fogData[i*4+3]=255}fogTex.needsUpdate=true}
 function fwd(){return[-Math.sin(view.yaw),-Math.cos(view.yaw)]}
@@ -591,7 +637,7 @@ R.pan=function(dx,dy){const k=view.dist/H*.9,[fx,fz]=fwd(),[rx,rz]=rgt();view.tx
 R.move=function(ax,ay,dt){const k=view.dist*.65*dt,[fx,fz]=fwd(),[rx,rz]=rgt();view.tx+=(ax*rx+ay*fx)*k;view.tz+=(ax*rz+ay*fz)*k;clampView()};
 R.zoom=function(f){view.tdist=Math.max(15,Math.min(72,view.tdist*f))};
 R.centerOn=function(x,z){view.tx=x;view.tz=z;clampView()};
-R.view=view;R._wxSet=(v,k)=>{wxA=v;if(k)wxCur=k};R._wx=()=>({wxCur,wxA,vis:wxObj&&wxObj.visible,q:quality});R._objs=()=>objs;R._world=()=>world;R._renderer=()=>renderer;
+R.view=view;R._cityNow=()=>{const G=I.G;decoV=-1;updDeco(G);for(let k=0;k<20;k++)for(const p of G.players)roadsFor(G,p.i)};R._wxSet=(v,k)=>{wxA=v;if(k)wxCur=k};R._wx=()=>({wxCur,wxA,vis:wxObj&&wxObj.visible,q:quality});R._objs=()=>objs;R._world=()=>world;R._renderer=()=>renderer;
 function updCamera(){const cp=Math.cos(view.pitch),sp=Math.sin(view.pitch);view.ty+=(hT(view.tx,view.tz)*.7-view.ty)*.08;
  camera.position.set(view.tx+Math.sin(view.yaw)*cp*view.dist,view.ty+sp*view.dist,view.tz+Math.cos(view.yaw)*cp*view.dist);camera.lookAt(view.tx,view.ty,view.tz);
  sun.position.set(view.tx+sunOff[0],sunOff[1],view.tz+sunOff[2]);sun.target.position.set(view.tx,0,view.tz);
@@ -605,6 +651,8 @@ R.pickEntity=function(sx,sy){ndc.set(sx/W*2-1,-(sy/H)*2+1);ray.setFromCamera(ndc
  for(const h of hits){if(!h.object.visible||h.object.isLine)continue;let o=h.object,vis=true;while(o){if(!o.visible){vis=false;break}o=o.parent}if(!vis)continue;
   const id=h.object.isInstancedMesh?(h.object.userData.ids?h.object.userData.ids[h.instanceId]:0):h.object.userData.id;if(id){const e=I.G.ents.get(id);if(e&&!e.dead&&(!objs.get(id)||objs.get(id).dying===undefined))return e}}
  return null};
+R.entY=function(e){const o=objs.get(e.id);return o&&o.g?o.g.position.y:null};
+R.airPick=function(sx,sy){let best=null,bd=26;for(const [id,o] of objs){if(o.dying!==undefined||!o.g.visible||!o.g.userData.parts||!o.g.userData.parts.plane)continue;const e=I.G.ents.get(id);if(!e||e.dead)continue;const q=R.project(o.g.position.x,o.g.position.y,o.g.position.z);const d=Math.hypot(q.x-sx,q.y-sy);if(d<bd){bd=d;best=e}}return best};
 R.project=function(x,y,z){tmpV.set(x,y,z).project(camera);return{x:(tmpV.x+1)/2*W,y:(1-tmpV.y)/2*H,z:tmpV.z}};
 R.frustum=function(){const pts=[];for(const [sx,sy] of[[0,0],[W,0],[W,H],[0,H]]){const p=R.screenToWorld(sx,sy)||{x:view.tx,z:view.tz};pts.push([p.x,p.z])}return pts};
 R.setSelection=function(ids){selSet=new Set(ids)};
@@ -622,7 +670,7 @@ const DR={ema:1/60,t:0,max:0};
 function dynRes(dt){if(!renderer||dt<=0||dt>.25)return;DR.ema+=(dt-DR.ema)*.05;DR.t+=dt;if(DR.t<1.5)return;DR.t=0;
  const dpr=root.devicePixelRatio||1,top=quality==='low'?1:quality==='medium'?Math.min(1.5,dpr):Math.min(2,dpr);const pr=renderer.getPixelRatio();let np=pr;
  const tf=fpsCap?1/fpsCap:1/60;if(DR.ema>tf*1.18&&pr>1)np=Math.max(1,pr-.15);else if(DR.ema<tf*.9&&pr<top)np=Math.min(top,pr+.1);if(np!==pr){renderer.setPixelRatio(np);R.resize()}}
-R.render=function(dt,G){frame++;dynRes(dt);ART.timeU.value+=dt;{const tr=tierOf(ME());const pm=tr>=8?ART.TE&&ART.TE.tech:tr>=5?ART.TE&&ART.TE.asphalt:tr>=3?ART.T.cobble:null;paveU.value=pm?1:0;paveTU.value=pm||ART.T.dirt}
+R.render=function(dt,G){frame++;dynRes(dt);ART.timeU.value+=dt;{const tr=tierOf(ME());const pm=tr>=8?ART.TE&&ART.TE.tech:tr>=5?ART.TE&&ART.TE.asphalt:tr>=3?ART.T.cobble:null;paveU.value=1;paveTU.value=pm||ART.T.dirt}
  view.dist+=(view.tdist-view.dist)*Math.min(1,dt*10);if(G)updLight(G.t);updCamera();if(G&&scene)updWeather(dt,G);
  if(G&&world){
   for(const e of G.list){if(e.dead)continue;if(e.kind==='res'){if(e.chg){e.chg=false;updateRes(e)}continue}
@@ -633,7 +681,7 @@ R.render=function(dt,G){frame++;dynRes(dt);ART.timeU.value+=dt;{const tr=tierOf(
   for(const [id,o] of objs){if(o.seen!==frame&&o.dying===undefined)o.dying=0;if(o.dying!==undefined){if(animDying(o,dt)){dropObj(o);objs.delete(id)}}}
   if(CHR&&CHR.ok)CHR.frame(view.dist>48);
   if(frame%6===0)natLod();if(falls.length&&frame%5===0){for(let k=0;k<2;k++){const f=falls[Math.floor(Math.random()*falls.length)];if(Math.abs(f[0]-view.tx)<view.dist&&Math.abs(f[2]-view.tz)<view.dist)puff(f[0],f[1]+.05,f[2],0xe8f2f4,1,{spread:.5,vy:.25,life:.9,grow:2.4,size:.9})}}
-  drawProj(G);updFx(dt);updFx2(dt);updPatrol(G);
+  drawProj(G);updFx(dt);updFx2(dt);updPatrol(G);updMetal();updDeco(G);updRoads(G);
   let ch=false;const n=MW*MH;const rv=R.reveal;for(let i=0;i<n;i++){const tgt=rv||G.vis[i]?1:(G.exp[i]?.42:0),c=fogCur[i];if(c!==tgt){const d=tgt-c,s=dt*3.5;fogCur[i]=Math.abs(d)<s?tgt:c+Math.sign(d)*s;ch=true}}if(ch)writeFog();
   const a=flagGeo.attributes.position;for(let i=0;i<a.count;i++){const x=flagBase[i*3];a.setZ(i,Math.sin(x*9-frame*.12)*.05*x*2)}a.needsUpdate=true;
   if(waterMat){waterMat.normalMap.offset.x=(frame*.0004)%1;waterMat.normalMap.offset.y=(frame*.00025)%1}

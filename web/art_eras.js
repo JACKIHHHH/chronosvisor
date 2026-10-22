@@ -297,6 +297,22 @@ function build(type,o,t,dir){const k=new Kit(),ud={};seed(311+type.length*7+t*31
 function beam(k,m,col,a,b,r){const va=new TH.Vector3(...a),vb=new TH.Vector3(...b),d=vb.clone().sub(va),L=d.length();const g=new TH.CylinderGeometry(r,r,L,6);g.translate(0,L/2,0);g.applyQuaternion(new TH.Quaternion().setFromUnitVectors(new TH.Vector3(0,1,0),d.normalize()));g.translate(va.x,va.y,va.z);k.add(g,m,col)}
 function stairs(k,x,z,n){for(let i=0;i<n;i++)k.add(box(.1,.04*(n-i),.5,3),'marble',0xffffff,x+i*.08,0,z)}
 A.eraBuilding=function(type,o,tier,dir){return build(type,o,tier,dir)};
+// ---------- viviendas y bloques de la ciudad (decorado que crece con cada edad; 2×2 casillas)
+const civCache=new Map();
+A.civic=function(o,t,v){t=Math.max(0,Math.min(8,t|0));const vi=Math.floor((v||0)*4)%4,key=o+':'+t+':'+vi;let gs=civCache.get(key);
+ if(!gs){let k;
+  if(t<3){const g=A.building('house',o,t,0);g.scale.setScalar(.82+vi*.04);civCache.set(key,{grp:g});return g.clone()}
+  k=new Kit();seed(907+t*13+vi*5);const tint=[0xffffff,0xf0e0d0,0xe0e8f0,0xf4ecd8][vi];
+  if(t<=4){pad(k,t,1.75,1.75);const n=vi%2?3:2,w=1.5/n;for(let i=0;i<n;i++){const h=(t===3?.85:1.05)+((vi+i)%3)*.28,x=-.75+w*(i+.5);block(k,t,w-.03,h,1.05,x,.05,-.2,{col:i%2?tint:0xffffff,door:i===0});roofE(k,t,w-.03,1.05,x,.05+h,-.2,{ry:Math.PI/2})}
+   lamp(k,t,.7,.62);lamp(k,t,-.7,.62)}
+  else if(t<=6){pad(k,t,1.75,1.75);const h=1.5+vi*.42,w=vi%2?1.35:1.15,d=vi%2?1.0:1.2;block(k,t,w,h,d,0,.05,-.1,{col:tint,neon:vi===3});roofE(k,t,w,d,0,.05+h,-.1,{});
+   if(t===5&&vi<2){k.add(cyl(.13,.13,.24,10),'planks',0x8a6a4a,w*.25,.12+h,-.25);k.add(cone(.15,.1,10),'zinc',0x9aa2a8,w*.25,.36+h,-.25)}lamp(k,t,.78,.7)}
+  else if(t===7){pad(k,t,1.75,1.75);const h=2.4+vi*.6,w=vi%2?1.1:.95;block(k,t,w,h,w,0,.05,0,{});if(vi>1)block(k,t,w*.7,h*.35,w*.7,0,.05+h,0,{neon:false});roofE(k,t,w,w,0,.05+h,0,{});lamp(k,t,.8,.75)}
+  else{pad(k,t,1.75,1.75);const h=2.6+vi*.7,r=.5+(vi%2)*.08;k.add(cyl(r,r*.82,h,24,1.2),'glass',0xffffff,0,.05,0);for(let i=1;i<5;i++)k.add(new TH.TorusGeometry(r*(1-i/5*.18)+.01,.018,6,30).rotateX(Math.PI/2),'neon',NEON[8],0,.05+h*i/5,0);
+   k.add(cyl(r*.84,r*.84,.08,24),'poly',0xffffff,0,.05+h,0);k.add(sph(.18,10,8),'green',0x5a8a44,0,.18+h,0);planter(k,.72,.72);planter(k,-.72,.72)}
+  gs={gs:k.geos()};civCache.set(key,gs)}
+ if(gs.grp)return gs.grp.clone();const g=new TH.Group();for(const m in gs.gs){const me=new TH.Mesh(gs.gs[m],M[m]||M.matte);me.castShadow=true;me.receiveShadow=true;g.add(me)}return g};
+
 // piezas animadas: radar giratorio y anillos holográficos
 A.eraDecor=function(g,ud){const nos=m=>{m.traverse(c=>{if(c.isMesh&&(c.material===M.neon||c.material===M.holo||c.material===M.holoWire))c.castShadow=false})};nos(g);
  if(ud.dish){const d=new TH.Group(),k=new Kit();k.add(cyl(.015,.015,.12,5),'steel',0xffffff,0,-.12,0);const s=new TH.SphereGeometry(.32,16,6,0,Math.PI*2,0,Math.PI/3);s.rotateX(-Math.PI/2.3);k.add(s,'panel',0xffffff,0,0,0);k.add(cyl(.01,.01,.25,4),'steel',0xffffff,0,0,0,0,Math.PI/2.3);

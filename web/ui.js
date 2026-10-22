@@ -71,7 +71,7 @@ function setSel(ids){sel=ids;R.setSelection(ids);bm=null;amode=false;pmode=false
 function toast(t,warn,cls){if(t===lastToast&&$('msgs').lastChild)return;lastToast=t;const m=document.createElement('div');m.className='msg'+(warn?' warn':'')+(cls?' '+cls:'');m.textContent=t;const box=$('msgs');box.appendChild(m);while(box.children.length>5)box.firstChild.remove();
  setTimeout(()=>{m.style.opacity=0;m.style.transform='translateY(-6px)'},cls?7000:3800);setTimeout(()=>{m.remove();if(lastToast===t)lastToast=''},cls?7600:4400)}
 function centerSel(ids){const es=ids.map(i=>G.ents.get(i)).filter(Boolean);if(!es.length)return;let x=0,z=0;for(const e of es){x+=e.x;z+=e.y}R.centerOn(x/es.length/T,z/es.length/T)}
-function entAtScreen(sx,sy){const e=R.pickEntity(sx,sy);if(e)return e;const w=R.screenToWorld(sx,sy);return w?I.pickAt(w.x*T,w.z*T,10):null}
+function entAtScreen(sx,sy){const ap=R.airPick&&R.airPick(sx,sy);if(ap)return ap;const e=R.pickEntity(sx,sy);if(e)return e;const w=R.screenToWorld(sx,sy);return w?I.pickAt(w.x*T,w.z*T,10):null}
 function visUnit(e){return !e.gar&&(I.isAlly(e.owner,ME())||G.vis[I.idx(Math.min(MW-1,Math.max(0,e.x/T|0)),Math.min(MH-1,Math.max(0,e.y/T|0)))]===1)}
 function costHTML(c,p){return'<div class="cost">'+Object.keys(c).map(k=>`<span class="${p&&p.res[k]<c[k]?'no':''}">${RICON[k]}${c[k]}</span>`).join('')+'</div>'}
 function pName(o){return o===ME()?'Tú':G.players[o].name}
@@ -188,7 +188,12 @@ function drawPowers(force){const el=$('powers');if(!el)return;const p=G&&G.playe
  const list=Object.entries(I.POWERS).filter(([k,W])=>W.age<=p.age);const html=list.map(([k,W])=>{const left=Math.max(0,Math.ceil(((p.pw||{})[k]||0)-G.t)),poor=!I.canAfford(p,W.cost);
   return`<button class="panel qb pw${left?' cd':''}${poor?' poor':''}${pwmode===k?' on':''}" data-k="${k}" title="${esc(W.name)} · ${W.cost.gold} de oro · recarga ${W.cd} s. ${esc(W.desc)}"><span>${esc(W.name)}</span><b>${left?left+' s':W.cost.gold}</b></button>`}).join('');
  if(force||el.dataset.h!==html){el.dataset.h=html;el.innerHTML=html}}
-function refreshUI(){if(!G||mode!=='play')return;drawPowers();refreshTop();refreshInfo();refreshCmds();refreshGroups();
+// a partir de la Edad Industrial la piedra pasa a ser metal (mismo recurso, otro nombre e icono)
+const STONE_SVG=RICON.stone,METAL_SVG='<svg viewBox="0 0 16 16"><path fill="#9fb0c0" d="M2 11.5 4.2 6h7.6l2.2 5.5Z"/><path fill="#cfdbe6" d="M4.2 6h7.6l-.8 1.6H5Z"/><path fill="#6f7f8e" d="M2 11.5h12v1.4H2Z"/></svg>';
+function metalSync(){const m=!!(G&&G.players[ME()]&&G.players[ME()].age>=4);if(m===metalSync.m)return;metalSync.m=m;
+ RN.stone=m?'Metal':'Piedra';RDEF.stone.name=m?'Yacimiento de metal':'Cantera de piedra';RICON.stone=m?METAL_SVG:STONE_SVG;
+ const b=$('r-stone');if(b){const box=b.parentElement;box.title=RN.stone;const sv=box.querySelector('svg');if(sv)sv.outerHTML=RICON.stone}cmdSig=null}
+function refreshUI(){if(!G||mode!=='play')return;metalSync();drawPowers();refreshTop();refreshInfo();refreshCmds();refreshGroups();
  const o=own();R.setRally(o.length===1&&o[0].kind==='bld'&&o[0].rally?o[0].rally:null);
  let cur='default';if(bm||amode)cur='crosshair';else if(!mouse.down&&o.some(e=>e.kind==='unit')){const h=entAtScreen(mouse.x,mouse.y);if(h&&h.owner!=null&&I.isEnemy(ME(),h.owner))cur='crosshair';else if(h&&(h.kind==='res'||h.kind==='relic'||(h.kind==='bld'&&h.owner===ME())))cur='pointer'}cv.style.cursor=cur}
 
@@ -263,7 +268,7 @@ function clickSelect(shift,dbl){const e=entAtScreen(mouse.sx,mouse.sy);
  if(shift&&e.owner===ME()&&e.kind==='unit'&&own().every(x=>x.kind==='unit')){const s=sel.slice(),i=s.indexOf(e.id);if(i>=0)s.splice(i,1);else s.push(e.id);setSel(s);return}
  setSel([e.id]);sfx('click')}
 function boxSelect(shift){const x0=Math.min(mouse.sx,mouse.x),x1=Math.max(mouse.sx,mouse.x),y0=Math.min(mouse.sy,mouse.y),y1=Math.max(mouse.sy,mouse.y),ids=[];
- for(const e of G.ul){if(e.dead||e.gar||e.owner!==ME())continue;const p=R.project(e.x/T,.3+(U[e.type].naval?-.2:R.hAt(e.x/T,e.y/T)),e.y/T);if(p.x>=x0&&p.x<=x1&&p.y>=y0&&p.y<=y1)ids.push(e.id)}
+ for(const e of G.ul){if(e.dead||e.gar||e.owner!==ME())continue;const ay=U[e.type].air?R.entY(e):null,p=R.project(e.x/T,ay!=null?ay:.3+(U[e.type].naval?-.2:R.hAt(e.x/T,e.y/T)),e.y/T);if(p.x>=x0&&p.x<=x1&&p.y>=y0&&p.y<=y1)ids.push(e.id)}
  if(shift)setSel([...new Set(own().filter(e=>e.kind==='unit').map(e=>e.id).concat(ids))]);else setSel(ids);if(ids.length)sfx('click')}
 const inputBlocked=()=>mode!=='play'||(paused&&!mp())||G.over||!$('pause').hidden;
 cv.addEventListener('mousedown',ev=>{AU.init();if(inputBlocked())return;mouse.x=ev.clientX;mouse.y=ev.clientY;
