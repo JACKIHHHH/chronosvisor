@@ -278,6 +278,27 @@ table.tree td small,table.tree th small{display:block;color:var(--mut);font-size
 #replayBar select{background:#1b1915;color:var(--ink);border:1px solid rgba(240,212,147,.25);border-radius:6px;padding:4px}
 #powers{display:flex;flex-direction:column;gap:5px}#powers .qb.pw{padding:6px 10px;font-size:12px}#powers .qb.pw b{font-size:12px;color:var(--gold,#e2b84a)}#powers .qb.cd{opacity:.55}#powers .qb.poor b{color:var(--bad)}#powers .qb.on{border-color:#ff6a55;box-shadow:0 0 0 1px rgba(255,106,85,.5)}
 body.targeting #c3d{cursor:crosshair}
+.box.conq{max-width:1180px;width:min(1180px,96vw)}
+#cqMain{display:grid;grid-template-columns:1fr 290px;gap:16px;margin-top:12px}
+.cqmapw{background:radial-gradient(ellipse at 50% 40%,#16303f,#0b1820);border:1px solid rgba(240,212,147,.16);border-radius:4px 14px 4px 14px;overflow:hidden}
+#cqMap{display:block;width:100%;height:auto}
+#cqMap .land{fill:#2c3a2a;stroke:#3f5139;stroke-width:.8}
+#cqMap .lnk{stroke:rgba(240,212,147,.22);stroke-width:1.4;stroke-dasharray:4 4}
+#cqMap .lnk.hot{stroke:rgba(255,214,120,.85);stroke-dasharray:none;stroke-width:2}
+#cqMap .tr{cursor:default}#cqMap .tr.tgt{cursor:pointer}
+#cqMap .tr circle{stroke:#0b0f12;stroke-width:2.5}
+#cqMap .tr.mine circle{stroke:#fff3cf;stroke-width:3}
+#cqMap .tr.tgt circle{animation:cqp 1.4s ease-in-out infinite}
+#cqMap .tr.sel circle{stroke:#ffd36a;stroke-width:4.5}
+#cqMap .tr text{font:600 12px var(--sans,system-ui);fill:#f4ead2;paint-order:stroke;stroke:#0b0f12;stroke-width:3.5px;text-anchor:middle;pointer-events:none}
+@keyframes cqp{50%{stroke:#ffd36a;stroke-width:4}}
+#cqSide{display:flex;flex-direction:column;gap:10px;min-width:0}
+#cqInfo{padding:12px 14px;border:1px solid rgba(240,212,147,.16);border-radius:4px 12px 4px 12px;background:rgba(255,255,255,.03);font-size:13.5px;line-height:1.5}
+#cqInfo b{color:var(--acc)}#cqInfo .row{display:flex;align-items:center;gap:8px;margin:2px 0}#cqInfo i{width:10px;height:10px;border-radius:50%;display:inline-block}
+#cqLog{flex:1;max-height:300px;overflow:auto;font-size:12.5px;color:var(--mut);line-height:1.5;padding-right:4px}
+#cqLog div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}#cqLog div:first-child{color:var(--ink)}
+@media (max-width:900px){#cqMain{grid-template-columns:1fr}}
+
 /* cinemática de misión */
 #cine{position:fixed;inset:0;z-index:40;pointer-events:auto;cursor:pointer}
 #cine .bar{position:absolute;left:0;right:0;height:13vh;background:#000;transition:transform .9s cubic-bezier(.2,.7,.2,1)}
@@ -355,6 +376,7 @@ body.cine #hud,body.cine #msgs,body.cine #scnObj,body.cine #vig,body.cine #tut{o
   <nav class="mnav">
    <button class="mb pri" data-go="play"><span>Jugar</span><small>Partida contra la IA</small></button>
    <button class="mb" data-go="camp"><span>Campaña</span><small>9 misiones</small></button>
+   <button class="mb" data-go="conq"><span>Conquista del mundo</span><small>Territorios por turnos</small></button>
    <button class="mb" data-go="mp"><span>Multijugador</span><small>Internet y red local</small></button>
    <button class="mb" data-go="tut"><span>Tutorial</span><small>Aprende lo básico</small></button>
    <button class="mb" data-go="load"><span>Cargar partida</span><small>Ranuras guardadas</small></button>
@@ -475,6 +497,20 @@ body.cine #hud,body.cine #msgs,body.cine #scnObj,body.cine #vig,body.cine #tut{o
   <div class="actions"><button class="btn pri" id="campPlay">Jugar misión</button><button class="btn" id="campBack">Volver</button></div>
  </div>
 </div>
+<div id="conq" class="screen center" hidden>
+ <div class="box wide conq">
+  <div class="eyebrow">Conquista del mundo</div>
+  <h2 id="cqTitle">Domina las cinco civilizaciones</h2>
+  <div id="cqSetup">
+   <p class="hintline">Quince territorios repartidos entre las cinco civilizaciones. En cada turno atacas un territorio vecino y la batalla se juega en tiempo real en su mapa; después mueven los demás imperios y a veces te atacarán. La época avanza cada dos turnos.</p>
+   <div class="lab">Tu civilización</div><div class="seg" id="cq-civ"></div>
+   <div class="lab">Época de inicio</div><div class="seg" id="cq-era"></div>
+   <div class="lab">Dificultad</div><div class="seg" id="cq-diff"></div>
+  </div>
+  <div id="cqMain" hidden><div class="cqmapw"><svg id="cqMap" viewBox="0 0 1000 376"></svg></div><div id="cqSide"><div id="cqInfo"></div><div id="cqLog"></div></div></div>
+  <div class="actions"><button class="btn pri" id="cqGo">Empezar</button><button class="btn" id="cqNew" hidden>Nueva conquista</button><button class="btn" id="cqBack">Volver</button></div>
+ </div>
+</div>
 <div id="tree" class="screen center" hidden>
  <div class="box wide treebox">
   <div class="eyebrow">Durante la partida</div>
@@ -529,6 +565,7 @@ body.cine #hud,body.cine #msgs,body.cine #scnObj,body.cine #vig,body.cine #tut{o
 <script src="three.min.js"></script>
 <script src="maps_data.js"></script>
 <script src="campaign.js"></script>
+<script src="conquest.js"></script>
 <script src="game.js"></script>
 <script src="art.js"></script>
 <script src="art_eras.js"></script>

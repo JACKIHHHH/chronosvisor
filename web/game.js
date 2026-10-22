@@ -753,7 +753,8 @@ function updUnit(u,dt){
   case'amove':{if(U[u.type].atk>0){u.scan-=dt;if(u.scan<=0){u.scan=.3;const d=gd(u.type,u.owner);const e=nearestEnemy(u,d.sight*T,d.bldOnly?'bld':null);if(e&&!(d.splash&&e.kind==='unit'&&Math.hypot(e.x-u.x,e.y-u.y)<d.minr*T)){order(u,{t:'atk',id:e.id,auto:true,then:o});break}}}
    if(travel(u,dt,'m'+o.x+','+o.y,o.x/T,o.y/T,null,false,freeAtPx(o.x,o.y,u.owner,U[u.type].naval)?o.x:null,o.y))order(u,{t:'idle'});break}
   case'patrol':{if(U[u.type].atk>0){u.scan-=dt;if(u.scan<=0){u.scan=.3;const d=gd(u.type,u.owner);const e=nearestEnemy(u,d.sight*T,d.bldOnly?'bld':null);if(e&&!(d.splash&&e.kind==='unit'&&Math.hypot(e.x-u.x,e.y-u.y)<d.minr*T)){order(u,{t:'atk',id:e.id,auto:true,then:o});break}}}
-   const tx=o.leg?o.bx:o.ax,ty=o.leg?o.by:o.ay;if(travel(u,dt,'p'+o.leg+tx+','+ty,tx/T,ty/T,null,false,freeAtPx(tx,ty,u.owner,U[u.type].naval)?tx:null,ty)){o.leg=o.leg?0:1;u.gk=null}break}
+   if(!o.pts){o.pts=[[o.ax,o.ay],[o.bx,o.by]];o.i=o.leg?1:0}const pt=o.pts[o.i%o.pts.length],tx=pt[0],ty=pt[1];
+   if(travel(u,dt,'p'+o.i+':'+tx+','+ty,tx/T,ty/T,null,false,freeAtPx(tx,ty,u.owner,U[u.type].naval)?tx:null,ty)){o.i=(o.i+1)%o.pts.length;u.gk=null}break}
   case'gather':doGather(u,dt,o);break;
   case'build':doBuild(u,dt,o);break;
   case'atk':doAttack(u,dt,o);break;
@@ -1285,7 +1286,11 @@ function validCmd(pl,c){if(!c||typeof c!=='object'||typeof c.c!=='string'||!int(
 function exec(pl,c){if(!validCmd(pl,c))return false;const e=c.id!=null?G.ents.get(c.id):null;switch(c.c){
  case'right':return cmdRight(pl,c.ids,c.x,c.y,c.tgt?G.ents.get(c.tgt)||null:null,!!c.q);
  case'amove':return cmdAmove(pl,c.ids,c.x,c.y,!!c.q);
- case'patrol':{const us=selOwn(pl,c.ids).filter(e=>e.kind==='unit'&&U[e.type].atk>0&&e.type!=='villager');for(const u of us){u.oq=[];order(u,{t:'patrol',ax:u.x,ay:u.y,bx:c.x+(u.x-us[0].x)*.5,by:c.y+(u.y-us[0].y)*.5,leg:1})}return us.length>0}
+ case'patrol':{const us=selOwn(pl,c.ids).filter(e=>e.kind==='unit'&&U[e.type].atk>0&&e.type!=='villager');for(const u of us){const px=c.x+(u.x-us[0].x)*.5,py=c.y+(u.y-us[0].y)*.5;
+   // con Mayús se añaden puntos a la ruta de patrulla (máx. 8); sin ella se patrulla entre la posición actual y el punto
+   let po=u.o.t==='patrol'?u.o:(u.o.then&&u.o.then.t==='patrol'?u.o.then:null);
+   if(c.q&&po){if(!po.pts){po.pts=[[po.ax,po.ay],[po.bx,po.by]];po.i=po.leg?1:0}if(po.pts.length<8)po.pts.push([px,py]);continue}
+   u.oq=[];order(u,{t:'patrol',pts:[[u.x,u.y],[px,py]],i:1})}return us.length>0}
  case'stop':return cmdStop(pl,c.ids);
  case'del':return cmdDelete(pl,c.ids);
  case'stance':return setStance(pl,c.ids,c.s);

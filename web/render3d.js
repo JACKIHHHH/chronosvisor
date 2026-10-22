@@ -496,7 +496,8 @@ function wxBuild(){const g=new TH.BufferGeometry(),pos=new Float32Array(WXN*2*3)
  for(let i=0;i<WXN;i++){seed[i*3]=(Math.random()*2-1)*WXR;seed[i*3+1]=Math.random()*WXH;seed[i*3+2]=(Math.random()*2-1)*WXR}
  g.setAttribute('position',new TH.BufferAttribute(pos,3));const m=new TH.LineBasicMaterial({color:0xbfd0e6,transparent:true,opacity:0,depthWrite:false,fog:false});
  wxObj=new TH.LineSegments(g,m);wxObj.frustumCulled=false;wxObj.renderOrder=5;wxObj.userData.seed=seed;scene.add(wxObj);
- wxPts=new TH.Points(g,new TH.PointsMaterial({color:0xffffff,size:.16,transparent:true,opacity:0,depthWrite:false,fog:false}));wxPts.frustumCulled=false;wxPts.renderOrder=5;scene.add(wxPts)}
+ const cv=document.createElement('canvas');cv.width=cv.height=32;const cx=cv.getContext('2d'),gr=cx.createRadialGradient(16,16,0,16,16,16);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.45,'rgba(255,255,255,.8)');gr.addColorStop(1,'rgba(255,255,255,0)');cx.fillStyle=gr;cx.fillRect(0,0,32,32);
+ wxPts=new TH.Points(g,new TH.PointsMaterial({map:new TH.CanvasTexture(cv),color:0xffffff,size:.16,transparent:true,opacity:0,depthWrite:false,fog:false}));wxPts.frustumCulled=false;wxPts.renderOrder=5;scene.add(wxPts)}
 function updWeather(dt,G){const k=(G&&G.wx)||'clear';if(!wxObj)wxBuild();
  if(k!==wxCur){wxA-=dt*.6;if(wxA<=0){wxA=0;wxCur=k}}else wxA=Math.min(1,wxA+dt*.4);
  const w=wxCur,a=wxA,pts=w==='snow'||w==='sand',m=pts?wxPts.material:wxObj.material,on=w!=='clear'&&a>0&&quality!=='low';wxObj.visible=on&&!pts;wxPts.visible=on&&pts;
@@ -507,7 +508,7 @@ function updWeather(dt,G){const k=(G&&G.wx)||'clear';if(!wxObj)wxBuild();
  if(w==='storm'&&a>.5){wxNext-=dt;if(wxNext<=0){wxNext=5+Math.random()*9;wxFlash=1;if(R.onThunder)R.onThunder()}}
  if(wxFlash>0){const f=wxFlash>.75||(wxFlash<.55&&wxFlash>.45)?1:0;hemi.intensity+=2.2*f;sun.intensity+=1.5*f;wxFlash-=dt*2.2}
  if(!on)return;const cnt=Math.round(WXN*(w==='storm'?1:w==='snow'?.55:w==='sand'?.8:.6)*a),seed=wxObj.userData.seed,pos=wxObj.geometry.attributes.position.array,t=ART.timeU.value;
- if(pts)m.size=w==='snow'?.24:.1;const vy=w==='snow'?1.4:w==='sand'?.3:w==='storm'?24:17,wx=w==='sand'?9:w==='storm'?4:w==='snow'?.6:1.2,len=w==='snow'||w==='sand'?.07:w==='storm'?.9:.65;
+ if(pts)m.size=w==='snow'?.5:.3;const vy=w==='snow'?1.4:w==='sand'?.3:w==='storm'?24:17,wx=w==='sand'?9:w==='storm'?4:w==='snow'?.6:1.2,len=w==='snow'||w==='sand'?.07:w==='storm'?.9:.65;
  m.color.setHex(w==='sand'?0xc9a46a:w==='snow'?0xffffff:0xbfd0e6);m.opacity=(w==='snow'?.95:w==='sand'?.55:.42)*a;
  const cx=view.tx,cz=view.tz,cy=view.ty;
  for(let i=0;i<WXN;i++){const o=i*6;if(i>=cnt){pos[o]=pos[o+3]=0;pos[o+1]=pos[o+4]=-99;pos[o+2]=pos[o+5]=0;continue}
@@ -516,6 +517,16 @@ function updWeather(dt,G){const k=(G&&G.wx)||'clear';if(!wxObj)wxBuild();
   x=((x+WXR)%(2*WXR)+2*WXR)%(2*WXR)-WXR;const X=cx+x,Z=cz+z,Y=cy+y;
   pos[o]=X;pos[o+1]=Y;pos[o+2]=Z;pos[o+3]=X-wx*.04*(len>.1?1:0)-(w==='sand'?.25:0);pos[o+4]=Y+(w==='sand'?0:len);pos[o+5]=Z+(w==='snow'?.05:0)}
  wxObj.geometry.attributes.position.needsUpdate=true}
+
+// ruta de patrulla de las unidades seleccionadas (línea azul entre los puntos)
+let patLine=null;
+function updPatrol(G){if(frame%8)return;if(!patLine){const g=new TH.BufferGeometry();g.setAttribute('position',new TH.BufferAttribute(new Float32Array(16*2*3*6),3));patLine=new TH.LineSegments(g,new TH.LineDashedMaterial({color:0x8fd0ff,dashSize:.5,gapSize:.35,transparent:true,opacity:.85,depthTest:false}));patLine.renderOrder=6;patLine.frustumCulled=false;world.add(patLine)}
+ const pos=patLine.geometry.attributes.position.array;let n=0;const seen=new Set();
+ for(const id of selSet){const e=G.ents.get(id);if(!e||e.dead||e.kind!=='unit'||e.owner!==ME())continue;const o=e.o.t==='patrol'?e.o:(e.o.then&&e.o.then.t==='patrol'?e.o.then:null);if(!o||!o.pts)continue;
+  const key=o.pts.map(p=>(p[0]|0)+','+(p[1]|0)).join(';');if(seen.has(key))continue;seen.add(key);const L=o.pts.length;
+  for(let i=0;i<L&&n<pos.length/6;i++){if(L===2&&i===1)break;const a=o.pts[i],b=o.pts[(i+1)%L],ax=a[0]/T,az=a[1]/T,bx=b[0]/T,bz=b[1]/T;pos.set([ax,hT(ax,az)+.15,az,bx,hT(bx,bz)+.15,bz],n*6);n++}
+  if(seen.size>=6)break}
+ patLine.geometry.setDrawRange(0,n*2);patLine.geometry.attributes.position.needsUpdate=true;if(n)patLine.computeLineDistances();patLine.visible=n>0}
 
 // ---------- API
 const R={};
@@ -570,7 +581,7 @@ R.build=function(G){
  fogData=new Uint8Array(MW*MH*4);fogCur=new Float32Array(MW*MH);if(fogTex)fogTex.dispose();fogTex=new TH.DataTexture(fogData,MW,MH);fogTex.magFilter=fogTex.minFilter=TH.LinearFilter;
  for(let i=0;i<MW*MH;i++)fogCur[i]=G.vis[i]?1:(G.exp[i]?.42:0);writeFog();fogU.value=fogTex;
  const b=G.bases[G.me||0]||G.bases[0];R.centerOn(b.cx,b.cy+1.5);view.dist=view.tdist=34;
- memObjs.clear();memRoot=new TH.Group();world.add(memRoot);
+ patLine=null;memObjs.clear();memRoot=new TH.Group();world.add(memRoot);
 };
 function writeFog(){for(let i=0;i<MW*MH;i++){const v=Math.round(fogCur[i]*255);fogData[i*4]=v;fogData[i*4+1]=v;fogData[i*4+2]=v;fogData[i*4+3]=255}fogTex.needsUpdate=true}
 function fwd(){return[-Math.sin(view.yaw),-Math.cos(view.yaw)]}
@@ -622,7 +633,7 @@ R.render=function(dt,G){frame++;dynRes(dt);ART.timeU.value+=dt;{const tr=tierOf(
   for(const [id,o] of objs){if(o.seen!==frame&&o.dying===undefined)o.dying=0;if(o.dying!==undefined){if(animDying(o,dt)){dropObj(o);objs.delete(id)}}}
   if(CHR&&CHR.ok)CHR.frame(view.dist>48);
   if(frame%6===0)natLod();if(falls.length&&frame%5===0){for(let k=0;k<2;k++){const f=falls[Math.floor(Math.random()*falls.length)];if(Math.abs(f[0]-view.tx)<view.dist&&Math.abs(f[2]-view.tz)<view.dist)puff(f[0],f[1]+.05,f[2],0xe8f2f4,1,{spread:.5,vy:.25,life:.9,grow:2.4,size:.9})}}
-  drawProj(G);updFx(dt);updFx2(dt);
+  drawProj(G);updFx(dt);updFx2(dt);updPatrol(G);
   let ch=false;const n=MW*MH;const rv=R.reveal;for(let i=0;i<n;i++){const tgt=rv||G.vis[i]?1:(G.exp[i]?.42:0),c=fogCur[i];if(c!==tgt){const d=tgt-c,s=dt*3.5;fogCur[i]=Math.abs(d)<s?tgt:c+Math.sign(d)*s;ch=true}}if(ch)writeFog();
   const a=flagGeo.attributes.position;for(let i=0;i<a.count;i++){const x=flagBase[i*3];a.setZ(i,Math.sin(x*9-frame*.12)*.05*x*2)}a.needsUpdate=true;
   if(waterMat){waterMat.normalMap.offset.x=(frame*.0004)%1;waterMat.normalMap.offset.y=(frame*.00025)%1}

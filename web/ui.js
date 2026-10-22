@@ -91,7 +91,7 @@ function commands(){const o=own();if(!o.length)return[];const p=PME(),L=[],me=ME
   L.push({id:'stop',slot:11,icon:'x:stop',name:'Detener',desc:'Cancela la orden actual y las encadenadas.',act:()=>cmd({c:'stop',ids:sel})});L.push(del);return L}
  if(units.length){const mil=units.filter(isMil);
   if(mil.length)L.push({id:'amove',slot:5,icon:'x:amove',name:'Atacar y avanzar',desc:'Haz clic en el mapa: tus tropas avanzan en formación y atacan a todo enemigo que encuentren. Con Mayús encadenas puntos.',act:()=>{amode=true;bm=null;cmdSig=null}});
-  if(mil.length)L.push({id:'patrol',slot:8,icon:'x:patrol',name:'Patrullar',desc:'Haz clic en el mapa: tus tropas van y vienen entre su posición y ese punto, atacando a los enemigos que encuentren.',act:()=>{amode=false;bm=null;pmode=true;cmdSig=null}});
+  if(mil.length)L.push({id:'patrol',slot:8,icon:'x:patrol',name:'Patrullar',desc:'Haz clic en el mapa: tus tropas van y vienen entre su posición y ese punto, atacando a los enemigos que encuentren. Con Mayús añades más puntos a la ruta (hasta 8).',act:()=>{amode=false;bm=null;pmode=true;cmdSig=null}});
   L.push({id:'stop',slot:6,icon:'x:stop',name:'Detener',desc:'Cancela la orden actual y las encadenadas.',act:()=>cmd({c:'stop',ids:sel})});
   const tr=units.filter(u=>u.type==='transport'&&u.cargo&&u.cargo.length);
   if(tr.length)L.push({id:'unload',slot:7,icon:'x:unload',name:'Desembarcar',desc:'Haz clic derecho en la costa con el transporte seleccionado para desembarcar allí. Este botón desembarca en la orilla más cercana.',act:()=>{for(const s of tr)cmd({c:'right',ids:[s.id],x:s.x,y:s.y+T})}});
@@ -271,7 +271,7 @@ cv.addEventListener('mousedown',ev=>{AU.init();if(inputBlocked())return;mouse.x=
  if(ev.button!==0)return;
  if(bm){if(B[bm].wall&&!B[bm].gate){wallDrag=tileAtMouse();return}place(ev.shiftKey);return}
  if(pwmode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'power',k:pwmode,x:w.x*T,y:w.z*T});R.marker(w.x,w.z,0xff6a55)}pwmode=null;document.body.classList.remove('targeting');drawPowers(true);return}
- if(pmode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'patrol',ids:sel,x:w.x*T,y:w.z*T});R.marker(w.x,w.z,0x8fd0ff);sfx('cmd');ackFor('move')}pmode=false;cmdSig=null;return}
+ if(pmode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'patrol',ids:sel,x:w.x*T,y:w.z*T,q:ev.shiftKey});R.marker(w.x,w.z,0x8fd0ff);sfx('cmd');ackFor('move')}if(!ev.shiftKey){pmode=false;cmdSig=null}return}
  if(amode){const w=R.screenToWorld(ev.clientX,ev.clientY);if(w){cmd({c:'amove',ids:sel,x:w.x*T,y:w.z*T,q:ev.shiftKey});R.marker(w.x,w.z,0xff6a55);sfx('cmd');ackFor('atk')}if(!ev.shiftKey){amode=false;pmode=false;cmdSig=null}return}
  mouse.down=true;mouse.sx=ev.clientX;mouse.sy=ev.clientY;mouse.drag=false});
 window.addEventListener('mousemove',ev=>{mouse.x=ev.clientX;mouse.y=ev.clientY;mouse.inside=true;if(mouse.down&&Math.hypot(mouse.x-mouse.sx,mouse.y-mouse.sy)>6)mouse.drag=true});
@@ -351,7 +351,7 @@ function tutCheck(){if(!tut.on)return;const s=TUT[tut.i];if(s&&s.ok()){tut.i++;s
 $('tutSkip').onclick=()=>{tut.on=false;for(const k in G.ai)G.ai[k].passive=false;$('tut').hidden=true;cmdSig=null};
 
 // ---------- flujo de partida
-function hideScreens(){for(const id of['menu','end','pause','slots','mp','lobby','opts','camp','tree'])$(id).hidden=true}
+function hideScreens(){for(const id of['menu','end','pause','slots','mp','lobby','opts','camp','tree','conq'])$(id).hidden=true}
 function setupHUD(){MW=I.MW;MH=I.MH;hideScreens();$('hud').hidden=false;$('replayBar').hidden=!(G&&(G.replay||G.spectate));if(G&&(G.replay||G.spectate))setTimeout(renderReplayBar,0);$('msgs').innerHTML='';$('info').dataset.s='';$('plist').dataset.s='';$('vict').dataset.h='';$('groups').dataset.h='';$('chat').hidden=true;
  mode='play';paused=false;sel=[];groups={};bm=null;amode=false;pmode=false;wallDrag=null;page=0;speed=1;$('spd').textContent='1×';$('spd').disabled=mp()&&Net.role!=='host';cmdSig=null;miniTerrain();AU.startMusic();
  $('saveBtn').hidden=mp();$('restart').hidden=mp();$('mpPause').hidden=!mp();$('resign').hidden=!mp()}
@@ -384,6 +384,7 @@ function showEnd(win,how){paused=true;if(!G.replay)recSave();sfx(win?'win':'lose
  if(M){$('endEye').textContent='Campaña · misión '+(CAMP.indexOf(M)+1)+' de '+CAMP.length+' · '+M.year;t.textContent=win?'Misión cumplida':'Misión fracasada';
   $('endText').textContent=win?M.title+': ¡objetivos cumplidos en '+fmtT(G.t).replace(':',' min ')+' s!':({scntime:'Se ha agotado el tiempo.',scnlost:'Has perdido tu centro urbano.'}[how]||'Tu reino ha caído.')+' Puedes volver a intentarlo.';
   if(win){campDone[M.id]=1;Store.write('campaign',JSON.stringify(campDone))}const nx=CAMP[CAMP.indexOf(M)+1];$('again').textContent=win?(nx?'Siguiente misión':'Ver la campaña'):'Reintentar'}
+ else if(G.cfg.conq&&cq){conqEnd(win);const T=Q.byId(G.cfg.conq.to);$('endEye').textContent='Conquista del mundo · turno '+cq.turn;t.textContent=win?(G.cfg.conq.kind==='def'?'Territorio defendido':'Territorio conquistado'):(G.cfg.conq.kind==='def'?'Territorio perdido':'Ataque rechazado');$('endText').textContent=T.name+(win?(G.cfg.conq.kind==='def'?' sigue en tu poder.':' ya forma parte de tu imperio.'):(G.cfg.conq.kind==='def'?' ha caído en manos enemigas.':' resiste.'))+' Los demás imperios ya han movido.';$('again').textContent='Volver al mapa'}
  else $('again').textContent='Jugar otra vez';
  $('end').hidden=false;$('pause').hidden=true;drawGraph()}
 // gráficas del final de partida
@@ -546,6 +547,41 @@ $('campList').onclick=ev=>{const b=ev.target.closest('.cm');if(!b||b.disabled)re
 $('campPlay').onclick=()=>{sfx('click');playMission(campSel)};$('campBack').onclick=()=>{sfx('click');showMenu()};
 function playMission(m){campSel=m;$('menu').classList.add('fade');hideScreens();setTimeout(()=>{startGame({map:m.map,size:m.size,diff:m.diff,startAge:m.startAge,reveal:m.reveal,win:'scn',scn:m.id,players:m.players,civ:m.players[0].civ,tutorial:false});
  startCine(m)},380)}
+
+// ---------- conquista del mundo
+const Q=window.CHRONO_CONQUEST,CQC={iberos:'#e3b04b',francos:'#4f8fe0',britanos:'#d9534f',teutones:'#9aa7b2',bizantinos:'#a678de'};
+let cq=null,cqSel=null;const cqSet={civ:'iberos',era:'0',diff:'normal'};
+const cqNames=()=>{const o={};for(const k in CIVS)o[k]=CIVS[k].name;return o};
+function cqSave(){Store.write('conquest',cq?JSON.stringify(cq):'')}
+function showConq(){AU.init();hideScreens();$('menu').hidden=true;$('conq').hidden=false;cqSel=null;renderConq()}
+function cqSeg(id,items,key){const el=$(id);el.innerHTML=items.map(([v,n])=>`<button data-v="${v}" class="${String(cqSet[key])===v?'on':''}">${n}</button>`).join('');
+ el.onclick=ev=>{const b=ev.target.closest('button');if(!b)return;cqSet[key]=b.dataset.v;sfx('click');cqSeg(id,items,key)}}
+function cqBattle(){if(!cq||cq.over)return null;if(cq.pending)return cq.pending;if(!cqSel)return null;return{kind:'atk',to:cqSel,from:Q.attackerFrom(cq,cqSel,cq.civ),civ:cq.own[cqSel]}}
+function renderConq(){const setup=!cq;$('cqSetup').hidden=!setup;$('cqMain').hidden=setup;$('cqNew').hidden=setup;
+ if(setup){$('cqTitle').textContent='Domina las cinco civilizaciones';cqSeg('cq-civ',Object.entries(CIVS).map(([k,v])=>[k,v.name]),'civ');cqSeg('cq-era',Q.ERAS.map(a=>[String(a),AGES[a]]),'era');
+  cqSeg('cq-diff',Object.entries(DIFF).map(([k,v])=>[k,v.name]),'diff');$('cqGo').textContent='Empezar';$('cqGo').disabled=false;return}
+ const N=cqNames(),era=Q.era(cq),tg=new Set(cq.over||cq.pending?[]:Q.targets(cq)),b=cqBattle();
+ $('cqTitle').textContent=cq.over==='win'?'¡El mundo es tuyo!':cq.over==='lose'?'Tu imperio ha caído':'Turno '+(cq.turn+1)+' · '+AGES[era];
+ let svg=`<path class="land" d="${Q.LAND}"/>`;
+ const seen=new Set();for(const t of Q.TER)for(const n of Q.adj[t.id]){const k=[t.id,n].sort().join();if(seen.has(k))continue;seen.add(k);const u=Q.byId(n);let x2=u.x;if(Math.abs(u.x-t.x)>500)x2=u.x<t.x?u.x+1000:u.x-1000;
+  const hot=b&&((b.to===t.id&&b.from===n)||(b.to===n&&b.from===t.id));svg+=`<line class="lnk${hot?' hot':''}" x1="${t.x}" y1="${t.y}" x2="${x2}" y2="${u.y}"/>`;if(x2!==u.x)svg+=`<line class="lnk${hot?' hot':''}" x1="${u.x}" y1="${u.y}" x2="${t.x+(x2>u.x?-1000:1000)}" y2="${t.y}"/>`}
+ for(const t of Q.TER){const o=cq.own[t.id],mine=o===cq.civ,sel=b&&b.to===t.id;svg+=`<g class="tr${mine?' mine':''}${tg.has(t.id)?' tgt':''}${sel?' sel':''}" data-id="${t.id}"><circle cx="${t.x}" cy="${t.y}" r="${mine?13:11}" fill="${CQC[o]||'#888'}"/><text x="${t.x}" y="${t.y-18}">${esc(t.name)}</text></g>`}
+ $('cqMap').innerHTML=svg;
+ const alive=Object.keys(CIVS).filter(c=>Q.count(cq,c));
+ let info=alive.map(c=>`<div class="row"><i style="background:${CQC[c]}"></i>${esc(N[c])}${c===cq.civ?' (tú)':''} · ${Q.count(cq,c)} territorio${Q.count(cq,c)>1?'s':''}</div>`).join('');
+ if(cq.over)info=`<b>${cq.over==='win'?'Has conquistado los quince territorios.':'Has perdido tu último territorio.'}</b>`+info;
+ else if(b){const T=Q.byId(b.to);info=`<div><b>${b.kind==='def'?'Defensa de ':'Ataque a '}${esc(T.name)}</b></div><div>${b.kind==='def'?'Atacante':'Defensor'}: ${esc(N[b.civ])} · mapa ${esc(MAPS[T.map]?MAPS[T.map].name:T.map)} · ${AGES[era]}</div><hr style="border:0;border-top:1px solid rgba(255,255,255,.08)">`+info}
+ else info=`<div><b>Elige un territorio vecino</b> (los que parpadean) para atacarlo.</div><hr style="border:0;border-top:1px solid rgba(255,255,255,.08)">`+info;
+ $('cqInfo').innerHTML=info;$('cqLog').innerHTML=cq.log.slice().reverse().map(l=>`<div>${esc(l)}</div>`).join('');
+ $('cqGo').textContent=cq.over?'Nueva conquista':b?(b.kind==='def'?'Defender':'Atacar'):'Atacar';$('cqGo').disabled=!cq.over&&!b}
+$('cqMap').onclick=ev=>{const g=ev.target.closest('.tr');if(!g||!cq||cq.pending||cq.over)return;const id=g.dataset.id;if(!Q.targets(cq).includes(id))return;cqSel=id;sfx('click');renderConq()};
+$('cqGo').onclick=()=>{sfx('click');if(!cq||cq.over){if(cq&&cq.over){cq=null;cqSave();renderConq();return}cq=Q.newState(cqSet.civ,cqSet.diff,+cqSet.era);cqSave();renderConq();return}
+ const b=cqBattle();if(!b)return;const T=Q.byId(b.to),N=cqNames(),strong=Q.count(cq,b.civ)>=5;
+ const players=[{civ:cq.civ,team:0,ai:false,name:'Tú'},{civ:b.civ,team:1,ai:true,name:N[b.civ]}];if(strong)players.push({civ:b.civ,team:1,ai:true,name:N[b.civ]+' (refuerzos)'});
+ $('menu').classList.add('fade');hideScreens();setTimeout(()=>{startGame({map:T.map,size:'medium',diff:cq.diff,startAge:Q.era(cq),win:'standard',civ:cq.civ,players,conq:b,reveal:'normal'});
+  toast((b.kind==='def'?'Defiende ':'Conquista ')+T.name+': destruye a '+N[b.civ]+(strong?' y sus refuerzos':'')+'.',false,'chatmsg');say((b.kind==='def'?'Defiende ':'Conquista ')+T.name,true)},380)};
+$('cqNew').onclick=()=>{sfx('click');cq=null;cqSave();renderConq()};$('cqBack').onclick=()=>{sfx('click');showMenu()};
+function conqEnd(win){if(!cq||!G.cfg.conq)return;const b=G.cfg.conq;if(cq.pending&&b.kind!=='def')return;Q.resolve(cq,b,win,cqNames());if(!cq.over)Q.aiTurn(cq,Math.random,cqNames());cqSel=null;cqSave()}
 // cinemática de inicio de misión: vuelo de cámara sobre el mapa con franjas de cine y el texto de la crónica
 let cine=null;
 function startCine(m){const el=$('cine'),b=G.bases[G.me||0]||G.bases[0];if(!el||!b){return}
@@ -585,7 +621,7 @@ $('revealDesc').textContent={normal:'Niebla de guerra: solo ves lo que exploran 
 $('start').onclick=()=>{AU.init();sfx('click');$('menu').classList.add('fade');setTimeout(()=>startGame(),380)};/* reveal viaja en cfg */
 {const nav=document.querySelector('#menu .mnav');const hasNative=!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.nativeApp);if(!hasNative)$('mQuit').hidden=true;
  nav.onclick=e=>{const b=e.target.closest('.mb');if(!b)return;AU.init();sfx('click');const g=b.dataset.go;
-  if(g==='play')menuStage('setup');else if(g==='mp')$('mpBtn').click();else if(g==='camp')showCamp();else if(g==='tut'){$('menu').classList.add('fade');setTimeout(()=>$('tutBtn').click(),380)}
+  if(g==='play')menuStage('setup');else if(g==='mp')$('mpBtn').click();else if(g==='camp')showCamp();else if(g==='conq')showConq();else if(g==='tut'){$('menu').classList.add('fade');setTimeout(()=>$('tutBtn').click(),380)}
   else if(g==='load')$('loadBtn').click();else if(g==='opt')$('optBtn').click();else if(g==='how'){menuStage('setup');$('how').hidden=false}else if(g==='quit')quitApp()};
  nav.addEventListener('mouseover',e=>{const b=e.target.closest('.mb');if(b&&b!==nav._h){nav._h=b;sfx('hover')}});nav.addEventListener('mouseleave',()=>{nav._h=null});
  $('mBack').onclick=()=>{sfx('click');menuStage('title')}}$('tutBtn').onclick=()=>startGame({tutorial:true,map:'continental',size:'small',nAI:1,teams:'ffa',diff:'easy',win:'conquest'});
@@ -594,7 +630,7 @@ $('howBtn').onclick=()=>{$('how').hidden=!$('how').hidden;AU.init();sfx('click')
 $('resume').onclick=resume;$('restart').onclick=()=>startGame(G.cfg.tutorial?{tutorial:true,map:'continental',size:'small',nAI:1,teams:'ffa',diff:'easy',win:'conquest'}:G.cfg);$('toMenu').onclick=showMenu;
 $('mpPause').onclick=()=>{Net.setPause(!Net.paused);resume()};
 $('resign').onclick=()=>{cmd({c:'resign'});resume();toast('Te has rendido',true)};
-$('again').onclick=()=>{if(mp()||G.cfg.mp){showMP();return}const M=G.cfg.scn&&campM(G.cfg.scn);if(M&&G.over&&G.winTeam===G.players[G.me].team){const nx=CAMP[CAMP.indexOf(M)+1];if(nx)playMission(nx);else showCamp();return}if(M){playMission(M);return}startGame(G.cfg)};$('endMenu').onclick=showMenu;$('endReplay').onclick=async()=>{sfx('click');await recSave();playReplay(1)};
+$('again').onclick=()=>{if(mp()||G.cfg.mp){showMP();return}if(G.cfg.conq){showMenu();showConq();return}const M=G.cfg.scn&&campM(G.cfg.scn);if(M&&G.over&&G.winTeam===G.players[G.me].team){const nx=CAMP[CAMP.indexOf(M)+1];if(nx)playMission(nx);else showCamp();return}if(M){playMission(M);return}startGame(G.cfg)};$('endMenu').onclick=showMenu;$('endReplay').onclick=async()=>{sfx('click');await recSave();playReplay(1)};
 // árbol de evolución: cada rama de unidades a lo largo de las nueve edades (con la unidad única de tu civilización)
 function showTree(){if(!G)return;const me=ME(),p=G.players[me],age=p.age,uu=CIVS[p.civ].uu;
  const lines=[['villager','Aldeano'],['militia','Infantería'],['spear','Antiinfantería y antitanque'],['archer','Tiradores'],['scout','Exploración'],['knight','Caballería y blindados'],['ram','Asedio pesado'],['mangonel','Artillería'],['monk','Monjes y médicos'],['galley','Buques de guerra'],['transport','Transporte naval'],[uu,'Única · '+CIVS[p.civ].name]];
@@ -643,6 +679,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)last=perfo
 async function boot(){R.init(cv);resize();window.addEventListener('resize',resize);
  try{const o=JSON.parse(await Store.read('options')||'null');if(o){const k=Object.assign(JSON.parse(JSON.stringify(DEFKEYS)),o.keys||{});Object.assign(opts,o);opts.keys=k;if(!Array.isArray(k.grid)||k.grid.length!==15)k.grid=DEFKEYS.grid.slice()}}catch(e){}
  try{campDone=JSON.parse(await Store.read('campaign')||'null')||{}}catch(e){}
+ try{cq=JSON.parse(await Store.read('conquest')||'null')||null}catch(e){cq=null}
  try{const s=JSON.parse(await Store.read('setup')||'null');if(s)for(const k in cfg)if(s[k]!=null&&(k!=='map'||MAPS[s[k]]))cfg[k]=s[k]}catch(e){}
  applyOpts();setupMenu();
  for(const t in U)R.icon('u:'+t);for(const t in B)R.icon('b:'+t);for(const t in RDEF)R.icon('r:'+t);R.icon('r:relic');for(const t in TECH)R.icon('t:'+t);
