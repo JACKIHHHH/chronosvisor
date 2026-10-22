@@ -3,7 +3,7 @@
 'use strict';
 let AC=null,master,mus,fx,rev,noiseBuf,musicOn=false,timer=null,nextT=0,step=0,chordI=0,tension=0,melo=4;
 const vol={music:.55,sfx:.8};const last={};
-function init(){if(AC){if(AC.state==='suspended')AC.resume();return}
+function init(){try{if(mEl&&mEl.paused&&scn!=='end')mEl.play().catch(()=>{})}catch(e){}if(AC){if(AC.state==='suspended')AC.resume();return}
  try{AC=new(root.AudioContext||root.webkitAudioContext)()}catch(e){return}
  master=AC.createGain();master.gain.value=1;master.connect(AC.destination);
  mus=AC.createGain();fx=AC.createGain();mus.connect(master);fx.connect(master);apply();
@@ -11,7 +11,7 @@ function init(){if(AC){if(AC.state==='suspended')AC.resume();return}
  const len=AC.sampleRate*2.2,ir=AC.createBuffer(2,len,AC.sampleRate);for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6)}
  rev=AC.createConvolver();rev.buffer=ir;const rg=AC.createGain();rg.gain.value=.32;rev.connect(rg).connect(mus);
  const nl=AC.sampleRate;noiseBuf=AC.createBuffer(1,nl,AC.sampleRate);const nd=noiseBuf.getChannelData(0);for(let i=0;i<nl;i++)nd[i]=Math.random()*2-1}
-function apply(){if(!AC)return;mus.gain.value=vol.music*.9;fx.gain.value=vol.sfx}
+function apply(){if(mEl)try{mEl.volume=Math.min(1,vol.music*.85)}catch(e){}if(ambEl)try{ambEl.volume=Math.min(1,vol.sfx*.32)}catch(e){}if(!AC)return;mus.gain.value=vol.music*.9;fx.gain.value=vol.sfx}
 function setVolumes(m,s){vol.music=m;vol.sfx=s;apply()}
 const mtof=m=>440*Math.pow(2,(m-69)/12);
 function tone(f,d,type,v,o){o=o||{};const t=AC.currentTime+(o.delay||0),os=AC.createOscillator(),g=AC.createGain();os.type=type;os.frequency.setValueAtTime(f,t);if(o.f2)os.frequency.exponentialRampToValueAtTime(o.f2,t+d);
@@ -19,7 +19,8 @@ function tone(f,d,type,v,o){o=o||{};const t=AC.currentTime+(o.delay||0),os=AC.cr
  if(o.lp){const f2=AC.createBiquadFilter();f2.type='lowpass';f2.frequency.value=o.lp;n=g.connect(f2)}n.connect(o.dest||fx);os.start(t);os.stop(t+d+.05)}
 function noise(d,v,freq,o){o=o||{};const t=AC.currentTime+(o.delay||0),s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=true;const f=AC.createBiquadFilter();f.type=o.type||'bandpass';f.frequency.setValueAtTime(freq,t);if(o.f2)f.frequency.exponentialRampToValueAtTime(o.f2,t+d);f.Q.value=o.q||1.1;
  const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+(o.a||.004));g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f).connect(g).connect(o.dest||fx);s.start(t,Math.random()*.5);s.stop(t+d+.05)}
-function sfx(k,v){if(!AC||vol.sfx<=0)return;v=v==null?1:v;const now=AC.currentTime,gap={hit:.07,shoot:.09,chop:.05,mine:.05,farm:.08,forage:.08,build:.05,die:.12,lob:.2,impact:.15,gun:.05,mg:.12,cannon:.2,rocket:.15,laser:.06,plasma:.08,boom:.12}[k]||.04;if(last[k]&&now-last[k]<gap)return;last[k]=now;
+function sfx(k,v){if(!AC||vol.sfx<=0)return;v=v==null?1:v;loadSamples();const now=AC.currentTime,gap={hit:.07,shoot:.09,chop:.05,mine:.05,farm:.08,forage:.08,build:.05,die:.12,lob:.2,impact:.15,gun:.05,mg:.12,cannon:.2,rocket:.15,laser:.06,plasma:.08,boom:.12}[k]||.04;if(last[k]&&now-last[k]<gap)return;last[k]=now;
+ if(!SYN_ONLY[k]&&playSample(k,v))return;
  switch(k){
  case'click':tone(720,.05,'triangle',.04*v);break;case'hover':tone(1320,.03,'sine',.018*v);tone(1980,.02,'sine',.008*v);break;
  case'cmd':tone(470,.07,'triangle',.045*v,{f2:640});break;
@@ -51,7 +52,8 @@ function sfx(k,v){if(!AC||vol.sfx<=0)return;v=v==null?1:v;const now=AC.currentTi
  case'die':tone(210,.25,'triangle',.035*v,{f2:120});noise(.12,.08*v,400);break;
  case'collapse':noise(1.3,.28*v,420,{type:'lowpass',f2:80,a:.02});tone(55,1,'sine',.1*v,{f2:35});break;
  case'win':[523,659,784,1046].forEach((f,i)=>tone(f,1,'sine',.06*v,{delay:i*.17}));break;
- case'lose':[392,330,262].forEach((f,i)=>tone(f,1.1,'sine',.06*v,{delay:i*.26}));break}}
+ case'lose':[392,330,262].forEach((f,i)=>tone(f,1.1,'sine',.06*v,{delay:i*.26}));break
+ case'jet':case'prop':noise(2.4,.12*v,900,{type:'lowpass',f2:300,a:.8});break;case'bomb':tone(1400,1,'sine',.03*v,{f2:500});noise(.9,.3*v,380,{type:'lowpass',f2:70,delay:1});break;case'torpedo':noise(.9,.3*v,300,{type:'lowpass',f2:70});break;case'thunder':noise(2.5,.3*v,300,{type:'lowpass',f2:60,a:.05});break}}
 // música: pad + laúd + tambor de marco, en re dórico
 const SCALE=[62,64,65,67,69,71,72,74,76,77,79,81];
 const PROG=[{r:50,n:[0,3,7]},{r:48,n:[0,4,7]},{r:43,n:[0,4,7]},{r:50,n:[0,3,7]},{r:45,n:[0,3,7]},{r:48,n:[0,4,7]},{r:41,n:[0,4,7]},{r:45,n:[0,4,7]}];
@@ -76,6 +78,38 @@ function schedule(){const spb=60/(tension>0?96:72)/2;
  if(tension>0)tension-=.2}
 function startMusic(){if(!AC||musicOn)return;musicOn=true;nextT=AC.currentTime+.2;step=0;timer=setInterval(()=>{if(AC.state==='running')schedule()},200)}
 function stopMusic(){musicOn=false;clearInterval(timer)}
-function setTension(sec){tension=Math.max(tension,sec)}
-root.ImperiaAudio={init,sfx,setVolumes,startMusic,stopMusic,setTension,get ready(){return!!AC}};
+function setTension(sec){tension=Math.max(tension,sec);if(MUS()&&scn==='game')battleUntil=Math.max(battleUntil,Date.now()+Math.max(20,sec)*1000)}
+
+// ---------- efectos grabados (Stable Audio Open): sfx/index.js define window.CHRONO_SFX={b:{clave:[base64 mp3...]},amb:{clave:'sfx/amb_x.mp3'}}
+const SB={},SYN_ONLY={click:1,hover:1,cmd:1,err:1,train:1,tech:1,convert:1};let sbLoaded=false;
+function loadSamples(){const D=root.CHRONO_SFX;if(sbLoaded||!D||!D.b||!AC)return;sbLoaded=true;
+ for(const k in D.b)for(const b64 of D.b[k]){try{const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  AC.decodeAudioData(u.buffer,buf=>{(SB[k]||(SB[k]=[])).push(buf)},()=>{})}catch(e){}}}
+const SGAIN={hit:.55,shoot:.5,gun:.5,mg:.5,cannon:.7,rocket:.6,laser:.45,plasma:.5,boom:.75,lob:.55,impact:.6,chop:.45,mine:.4,farm:.35,forage:.35,build:.45,die:.45,collapse:.7,ram:.6,built:.55,alert:.6,age:.7,jet:.6,prop:.55,bomb:.7,torpedo:.7,thunder:.75};
+function playSample(k,v){const L=SB[k];if(!L||!L.length)return false;const b=L[Math.floor(Math.random()*L.length)],src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.value=.94+Math.random()*.12;
+ g.gain.value=(SGAIN[k]??.5)*v;src.connect(g).connect(fx);src.start();return true}
+// ambiente en bucle (día, lluvia, viento, ciudad) con fundido
+let ambEl=null,ambK=null;
+function ambient(k){const D=root.CHRONO_SFX;if(!D||!D.amb)return;if(k===ambK)return;const old=ambEl;ambK=k;ambEl=null;
+ if(k&&D.amb[k]){const el=new Audio(D.amb[k]);el.loop=true;el.volume=0;el.play().catch(()=>{});ambEl=el;fadeTo(el,Math.min(1,vol.sfx*.32),3000)}
+ if(old)fadeTo(old,0,3000,()=>old.pause());if(!mTimer)mTimer=setInterval(()=>{tickFades();sync()},100)}
+
+// ---------- música grabada (ACE-Step): tema del menú, una pista por época, combate y fanfarrias.
+// musica/index.js define window.CHRONO_MUSICA={clave:['musica/x_a.mp3','musica/x_b.mp3']}. Sin archivos se usa la música procedural.
+const ERA_T=['e_oscura','e_oscura','e_castillos','e_imperial','e_industrial','e_mundial','e_atomica','e_informacion','e_futuro'];
+let mEl=null,mK=null,scn='none',scnAge=0,battleUntil=0,mTimer=null,fades=[];
+const MUS=()=>root.CHRONO_MUSICA||null;
+function wantTrack(){if(scn==='menu')return'menu';if(scn!=='game')return null;if(Date.now()<battleUntil)return scnAge<=3?'combate_antiguo':'combate_moderno';return ERA_T[Math.min(8,scnAge)]}
+function fadeTo(el,v,ms,done){const f={el,v0:el.volume,v,t0:Date.now(),ms,done};fades=fades.filter(x=>x.el!==el);fades.push(f)}
+function tickFades(){const now=Date.now();fades=fades.filter(f=>{const k=Math.min(1,(now-f.t0)/f.ms);try{f.el.volume=Math.max(0,Math.min(1,f.v0+(f.v-f.v0)*k))}catch(e){}if(k>=1){if(f.done)f.done();return false}return true})}
+function mVol(){return Math.min(1,vol.music*.85)}
+function playK(k){const M=MUS();if(!M||!M[k])return false;const list=[].concat(M[k]);const src=list[Math.floor(Math.random()*list.length)];
+ const old=mEl;const el=new Audio(src);el.volume=0;el.preload='auto';el.onended=()=>{if(mEl===el){mK=null;sync()}};el.play().catch(()=>{});mEl=el;mK=k;fadeTo(el,mVol(),k.startsWith('combate')?1200:2500);
+ if(old)fadeTo(old,0,k.startsWith('combate')?1200:2500,()=>{old.pause();old.src=''});return true}
+function sync(){if(!MUS())return;const k=wantTrack();if(k===mK)return;if(!k){if(mEl){const o=mEl;fadeTo(o,0,1500,()=>{o.pause()});mEl=null;mK=null}return}playK(k)}
+function scene(s,age){scn=s;scnAge=age|0;if(MUS()){stopMusic();sync();if(!mTimer)mTimer=setInterval(()=>{tickFades();sync()},100)}else if(s==='game')startMusic();else stopMusic()}
+function stinger(win){const M=MUS();if(!M)return false;const k=win?'victoria':'derrota';if(!M[k])return false;scn='end';if(mEl){const o=mEl;fadeTo(o,0,800,()=>o.pause());mEl=null;mK=null}
+ const el=new Audio([].concat(M[k])[0]);el.volume=mVol();el.play().catch(()=>{});return true}
+
+root.ImperiaAudio={init,sfx,setVolumes,startMusic,stopMusic,setTension,scene,stinger,ambient,get track(){return mK},get samples(){return Object.keys(SB).length},get ready(){return!!AC}};
 })(window);

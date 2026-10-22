@@ -11,11 +11,13 @@ fetch(){ local f=cache/electron-v$EV-$1.zip; [ -s $f ] || { echo "› Descargand
 fetch win32-x64
 
 echo "› Preparando la aplicación $VER"
-rm -rf app && mkdir -p app/web/voces
+rm -rf app && mkdir -p app/web/voces app/web/musica app/web/sfx
 sed "s/\"version\": \"[^\"]*\"/\"version\": \"$VER.0\"/" package.json > app/package.json
 cp main.js preload.js app/
 cp ../web/index.html ../web/three.min.js ../web/game.js ../web/art.js ../web/art_eras.js ../web/art_units.js ../web/chars_data.js ../web/chars.js ../web/maps_data.js ../web/nature_data.js ../web/nature.js ../web/terrain_data.js ../web/render3d.js ../web/audio.js ../web/net.js ../web/ui.js ../web/campaign.js ../web/conquest.js ../web/menu_bg.jpg app/web/
 cp -R ../web/voces/ app/web/voces/ 2>/dev/null || true
+cp -R ../web/musica/ app/web/musica/ 2>/dev/null || true
+cp -R ../web/sfx/ app/web/sfx/ 2>/dev/null || true
 [ -f ../build/icon_1024.png ] || (cd .. && swift icon.swift build/icon_1024.png >/dev/null)
 sips -z 512 512 ../build/icon_1024.png --out app/icon.png >/dev/null
 (cd app && npm install --omit=dev --no-audit --no-fund --silent)

@@ -11,6 +11,10 @@
 - **Ríos y lagos**: [Natural Earth](https://www.naturalearthdata.com) — dominio público.
 - **Color del suelo**: NASA *Blue Marble: Next Generation* (NASA Earth Observatory) — dominio público.
 
+## Música y efectos de sonido
+- **Música**: generada con [ACE-Step 1.5](https://github.com/ACE-Step/ACE-Step-1.5) (licencia MIT) en local.
+- **Efectos de sonido y ambientes**: generados con Stable Audio Open 1.0 de Stability AI, bajo la Stability AI Community License. Powered by Stability AI.
+
 ## Software
 - [three.js](https://threejs.org) — licencia MIT, © 2010-2023 three.js authors.
 - [meshoptimizer](https://github.com/zeux/meshoptimizer) (solo herramientas) — licencia MIT, © Arseny Kapoulkine.

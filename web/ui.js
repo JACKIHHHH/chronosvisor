@@ -9,7 +9,7 @@ const AGEDESC=['Desbloquea arqueros, caballería, mercado, herrería, torres, mu
  'Era atómica: carros de combate, lanzacohetes múltiples, cruceros lanzamisiles y torres de misiles.',
  'Era de la información: drones de ataque, misiles guiados, tanques de batalla y torretas automáticas.',
  'Año 2100: exosoldados, mechs de asalto, cañones de riel y de plasma, aerodeslizadores y torres láser.'];
-const SHOTS={bullet:'gun',ball:'cannon',shell:'cannon',rocket:'rocket',laser:'laser',plasma:'plasma',grenade:'gun'};
+const SHOTS={bomb:'bomb',torpedo:'torpedo',bullet:'gun',ball:'cannon',shell:'cannon',rocket:'rocket',laser:'laser',plasma:'plasma',grenade:'gun'};
 const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX'];
 const {AGEYEAR,T,U,B,RDEF,AGES,AGECOST,AGETIME,RN,BPAGES,TECH,RES,CIVS,MAPS,SIZES,DIFF,PCOLORS,GAR,WONDER_T,RELIC_T}=I;
 const $=id=>document.getElementById(id);
@@ -193,7 +193,7 @@ const STONE_SVG=RICON.stone,METAL_SVG='<svg viewBox="0 0 16 16"><path fill="#9fb
 function metalSync(){const m=!!(G&&G.players[ME()]&&G.players[ME()].age>=4);if(m===metalSync.m)return;metalSync.m=m;
  RN.stone=m?'Metal':'Piedra';RDEF.stone.name=m?'Yacimiento de metal':'Cantera de piedra';RICON.stone=m?METAL_SVG:STONE_SVG;
  const b=$('r-stone');if(b){const box=b.parentElement;box.title=RN.stone;const sv=box.querySelector('svg');if(sv)sv.outerHTML=RICON.stone}cmdSig=null}
-function refreshUI(){if(!G||mode!=='play')return;metalSync();drawPowers();refreshTop();refreshInfo();refreshCmds();refreshGroups();
+function refreshUI(){if(!G||mode!=='play')return;metalSync();{const a=PME().age;if(a!==refreshUI.age){refreshUI.age=a;AU.scene('game',a)}const w=G.wx||'clear';AU.ambient(w==='rain'||w==='storm'?'rain':w==='sand'||w==='snow'?'wind':a>=5?'city':'day')}drawPowers();refreshTop();refreshInfo();refreshCmds();refreshGroups();
  const o=own();R.setRally(o.length===1&&o[0].kind==='bld'&&o[0].rally?o[0].rally:null);
  let cur='default';if(bm||amode)cur='crosshair';else if(!mouse.down&&o.some(e=>e.kind==='unit')){const h=entAtScreen(mouse.x,mouse.y);if(h&&h.owner!=null&&I.isEnemy(ME(),h.owner))cur='crosshair';else if(h&&(h.kind==='res'||h.kind==='relic'||(h.kind==='bld'&&h.owner===ME())))cur='pointer'}cv.style.cursor=cur}
 
@@ -358,7 +358,7 @@ $('tutSkip').onclick=()=>{tut.on=false;for(const k in G.ai)G.ai[k].passive=false
 // ---------- flujo de partida
 function hideScreens(){for(const id of['menu','end','pause','slots','mp','lobby','opts','camp','tree','conq'])$(id).hidden=true}
 function setupHUD(){MW=I.MW;MH=I.MH;hideScreens();$('hud').hidden=false;$('replayBar').hidden=!(G&&(G.replay||G.spectate));if(G&&(G.replay||G.spectate))setTimeout(renderReplayBar,0);$('msgs').innerHTML='';$('info').dataset.s='';$('plist').dataset.s='';$('vict').dataset.h='';$('groups').dataset.h='';$('chat').hidden=true;
- mode='play';paused=false;sel=[];groups={};bm=null;amode=false;pmode=false;wallDrag=null;page=0;speed=1;$('spd').textContent='1×';$('spd').disabled=mp()&&Net.role!=='host';cmdSig=null;miniTerrain();AU.startMusic();
+ mode='play';paused=false;sel=[];groups={};bm=null;amode=false;pmode=false;wallDrag=null;page=0;speed=1;$('spd').textContent='1×';$('spd').disabled=mp()&&Net.role!=='host';cmdSig=null;miniTerrain();refreshUI.age=PME().age;AU.scene('game',PME().age);
  $('saveBtn').hidden=mp();$('restart').hidden=mp();$('mpPause').hidden=!mp();$('resign').hidden=!mp()}
 function startGame(extra){AU.init();const c=Object.assign({},cfg,extra||{});const sd=(Date.now()%2147483647)|0||7;G=I.newGame(c,sd);recStart(c,sd);R.build(G);setupHUD();
  tut.on=!!c.tutorial;tut.i=0;showTut();
@@ -377,9 +377,9 @@ function placeMenuArt(){const W=innerWidth,H=innerHeight,iw=2576,ih=1438,s=Math.
 window.addEventListener('resize',placeMenuArt);
 function menuStage(st){$('mTitle').hidden=st!=='title';$('mSetup').hidden=st!=='setup';$('menu').classList.remove('fade');$('menu').classList.toggle('insetup',st==='setup');placeMenuArt()}
 function quitApp(){try{window.webkit.messageHandlers.nativeApp.postMessage({cmd:'quit'})}catch(e){window.close()}}
-function showMenu(){menuStage('title');if(cine){cine=null;R.reveal=false;document.body.classList.remove('cine');$('cine').classList.remove('on');$('cine').hidden=true}if(Net&&Net.role)Net.leave();mode='menu';paused=false;tut.on=false;$('tut').hidden=true;$('hud').hidden=true;hideScreens();$('menu').hidden=false;$('tip').hidden=true;
+function showMenu(){menuStage('title');AU.scene('menu');AU.ambient(null);if(cine){cine=null;R.reveal=false;document.body.classList.remove('cine');$('cine').classList.remove('on');$('cine').hidden=true}if(Net&&Net.role)Net.leave();mode='menu';paused=false;tut.on=false;$('tut').hidden=true;$('hud').hidden=true;hideScreens();$('menu').hidden=false;$('tip').hidden=true;
  if(!G||!G.menuDemo){G=I.newGame({map:'continental',size:'small',nAI:1,diff:'normal',civ:cfg.civ},Math.floor(Math.random()*1e9));G.menuDemo=true;MW=I.MW;MH=I.MH;G.vis.fill(1);G.exp.fill(1);R.build(G);R.view.tdist=R.view.dist=21}sel=[];R.setSelection([]);R.setGhost(null)}
-function showEnd(win,how){paused=true;if(!G.replay)recSave();sfx(win?'win':'lose');const M=G.cfg.scn&&campM(G.cfg.scn);say(M?(win?'Misión cumplida':'Misión fracasada'):win?'¡Victoria!':'Hemos sido derrotados',true);
+function showEnd(win,how){paused=true;if(!G.replay)recSave();AU.ambient(null);if(!AU.stinger(win))sfx(win?'win':'lose');const M=G.cfg.scn&&campM(G.cfg.scn);say(M?(win?'Misión cumplida':'Misión fracasada'):win?'¡Victoria!':'Hemos sido derrotados',true);
  $('endEye').textContent='Fin de la partida · '+DIFF[G.cfg.diff].name+' · '+MAPS[G.cfg.map].name+(mp()?' · en red':'');
  const t=$('endTitle');t.textContent=win?'Victoria':'Derrota';t.className=win?'win':'lose';
  const hw={wonder:'por la maravilla',relics:'por las reliquias',conquest:'por conquista'}[how]||'';
@@ -414,7 +414,7 @@ function handleEvents(){for(const e of G.ev){switch(e.ev){
  case'hit':sfxAt(e.k==='ram'?'ram':'hit',e.x,e.y,.8);break;
  case'shoot':case'lob':R.onEvent(e,G);sfxAt(SHOTS[e.k]||e.ev,e.x,e.y,.8);break;
  case'boom':R.onEvent(e,G);sfxAt('boom',e.x,e.y,.8);break;
- case'flyover':R.onEvent(e,G);sfx('alert');break;
+ case'flyover':R.onEvent(e,G);sfx(PME().age>=6?'jet':'prop');break;
  case'emp':R.onEvent(e,G);sfxAt('boom',e.x,e.y,1);break;
  case'elim':pings.push({x:MW/2,z:MH/2,t:0,c:'240,212,147'});break;
  case'scnmsg':toast(e.text,false,'chatmsg');if(e.say)say(e.text,true);break;
@@ -681,7 +681,7 @@ let nativeT=0;window.__nativeTick=()=>{nativeT=performance.now();if(document.hid
 // si la ventana queda tapada, WebKit deja de dar fotogramas: la simulación sigue con temporizadores
 setInterval(()=>{if(performance.now()-lastLoopT>300){rafOK=false;chain++;loop(performance.now(),chain)}if(!rafOK)requestAnimationFrame(()=>{if(!rafOK){rafOK=true;chain++;requestAnimationFrame(t=>loop(t,chain))}})},400);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)last=performance.now()});
-async function boot(){R.init(cv);resize();window.addEventListener('resize',resize);
+async function boot(){R.init(cv);R.onThunder=()=>{if(mode==='play')setTimeout(()=>sfx('thunder',.9),300+Math.random()*900)};resize();window.addEventListener('resize',resize);
  try{const o=JSON.parse(await Store.read('options')||'null');if(o){const k=Object.assign(JSON.parse(JSON.stringify(DEFKEYS)),o.keys||{});Object.assign(opts,o);opts.keys=k;if(!Array.isArray(k.grid)||k.grid.length!==15)k.grid=DEFKEYS.grid.slice()}}catch(e){}
  try{campDone=JSON.parse(await Store.read('campaign')||'null')||{}}catch(e){}
  try{cq=JSON.parse(await Store.read('conquest')||'null')||null}catch(e){cq=null}

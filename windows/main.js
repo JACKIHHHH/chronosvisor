@@ -20,7 +20,7 @@ function createWindow(){
  Menu.setApplicationMenu(null);
  win=new BrowserWindow({width:1440,height:900,minWidth:1024,minHeight:640,backgroundColor:'#07080a',title:'Chronosvisor: La guerra de las eras',show:false,fullscreen:!WINDOWED,autoHideMenuBar:true,
   icon:path.join(__dirname,'icon.png'),
-  webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false,spellcheck:false}});
+  webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false,spellcheck:false,autoplayPolicy:'no-user-gesture-required'}});
  win.once('ready-to-show',()=>win.show());
  win.loadFile(path.join(__dirname,'web','index.html'));
  // F11 o Alt+Intro: pantalla completa; Ctrl+Mayús+I: herramientas de depuración
