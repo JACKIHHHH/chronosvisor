@@ -110,7 +110,7 @@ const RDEF={tree:{r:'wood',amt:100,name:'Árbol'},gold:{r:'gold',amt:750,name:'M
 // La dificultad cambia cómo juega la IA, no le da recursos extra.
 const ALLT=Object.keys(TECH);
 const DIFF={
- easy:{name:'Fácil',tick:2,vil:20,bar:12,ageV:18,first:720,interval:300,wave:4,towers:0,techs:['wheel','forge','axe','gillnets'],counter:false,maxAge:3,siege:false,raid:false,monks:0,fish:2,galleys:2,castle:false,market:false,wonder:false,relics:false,bell:false},
+ easy:{name:'Fácil',tick:2.5,vil:18,bar:13,ageV:17,first:900,interval:360,wave:3,wgrow:1,gb:.85,towers:0,techs:['wheel','forge','axe','gillnets'],counter:false,maxAge:3,siege:false,raid:false,monks:0,fish:2,galleys:2,castle:false,market:false,wonder:false,relics:false,bell:false},
  normal:{name:'Normal',tick:1,vil:28,bar:10,ageV:20,first:480,interval:220,wave:7,towers:1,techs:['wheel','handcart','plow','axe','pick','gillnets','forge','fletch','mail','masonry','u_militia','u_archer','u_galley'],counter:true,maxAge:6,siege:true,raid:false,monks:1,fish:4,galleys:5,castle:true,market:true,wonder:false,relics:true,bell:true},
  hard:{name:'Difícil',tick:.6,vil:34,bar:8,ageV:22,first:380,interval:170,wave:9,towers:2,techs:ALLT,counter:true,maxAge:8,siege:true,raid:true,monks:3,fish:6,galleys:8,castle:true,market:true,wonder:true,relics:true,bell:true},
  expert:{name:'Muy difícil',tick:.4,vil:40,bar:7,ageV:24,first:330,interval:145,wave:10,towers:3,techs:ALLT,counter:true,maxAge:8,siege:true,raid:true,monks:3,fish:7,galleys:9,castle:true,market:true,wonder:true,relics:true,bell:true,gb:1.2}
@@ -118,7 +118,7 @@ const DIFF={
 for(const k in DIFF)DIFF[k].key=k;
 // personalidades de la IA: cambian el ritmo y el estilo de cada rival
 const PERS={bal:{name:'Equilibrado'},rush:{name:'Agresivo',first:.6,interval:.75,wave:-4,vil:-4,towers:-9,raid:true,rush:true},boom:{name:'Económico',first:1.35,interval:1.1,wave:4,vil:6,ageV:-2},turtle:{name:'Defensivo',first:1.25,wave:2,towers:3,castle:true,interval:1.15,turtle:true}};
-function persD(D,k){const P_=PERS[k];if(!P_||k==='bal')return D;const o=Object.assign({},D);if(P_.first)o.first=D.first*P_.first;if(P_.interval)o.interval=D.interval*P_.interval;
+function persD(D,k){const P_=PERS[k];if(!P_||k==='bal')return D;const o=Object.assign({},D);if(P_.first)o.first=D.first*(D.key==='easy'?Math.max(.9,P_.first):P_.first);if(P_.interval)o.interval=D.interval*P_.interval;
  if(P_.wave)o.wave=Math.max(3,D.wave+P_.wave);if(P_.vil)o.vil=D.vil+P_.vil;if(P_.ageV)o.ageV=D.ageV+P_.ageV;if(P_.towers)o.towers=Math.max(0,D.towers+P_.towers);if(P_.raid&&D.key!=='easy')o.raid=true;if(P_.castle&&D.key!=='easy')o.castle=true;if(P_.turtle)o.turtle=true;if(P_.rush)o.rush=true;return o}
 const CONVT=4.5;
 // poderes de era: ataques especiales con coste en oro y tiempo de recarga (s)
@@ -1017,7 +1017,7 @@ function aiThink(p,A){
   if(tg){if(!sameLand(anchor,tg)){const there=army.filter(a=>(a.o.t==='idle'||a.o.t==='move')&&sameLand(a,tg));if(there.length)formMove(there,tg.x,tg.y,true);
     if(dock&&p.age>=1){const needT=Math.min(4,Math.ceil(army.length/10));if(transports.length<needT){if(dock.q.filter(q=>q.k==='transport').length+transports.length<needT&&canAfford(p,U.transport.cost))enqueue(dock,'transport')}
      else A.inv={st:'load',t0:G.t,tg:{x:tg.x,y:tg.y}}}}
-   else{formMove(army.concat(monks),tg.x,tg.y,true);A.next=G.t+D.interval;A.wave=Math.min(26,A.wave+2);A.attacking=true;
+   else{formMove(army.concat(monks),tg.x,tg.y,true);A.next=G.t+D.interval;A.wave=Math.min(26,A.wave+(D.wgrow||2));A.attacking=true;
     if(tg.owner===ME()&&isEnemy(ME(),me)){msg('¡Un ejército de '+p.name+' avanza hacia tu aldea!',true);sfx('alert')}}
    if(galleys.length>=2){const ct=coastTarget(galleys[0],tg);if(ct)formMove(galleys,ct.wx,ct.wy,true)}}}
  else if(A.attacking){const far=army.filter(a=>a.o.t==='idle'&&Math.hypot(a.x-home.x,a.y-home.y)>20*T);
@@ -1037,7 +1037,7 @@ function aiInvasion(p,A,army,transports,dock,galleys){const I=A.inv,D=persD(DIFF
  else if(I.st==='sail'){const landed=army.filter(a=>!a.gar&&G.land[tidx(a)]===G.land[idx(clampT(I.tg.x/T,MW),clampT(I.tg.y/T,MH))]);
   if(transports.every(s=>!s.cargo.length||s.o.t==='idle')){if(landed.length){const tg=playerTarget({x:I.ct.lx,y:I.ct.ly},p.i)||I.tg;formMove(landed,tg.x,tg.y,true)}
    for(const s of transports){if(s.cargo.length)ungarrison(s,I.ct.lx,I.ct.ly);order(s,{t:'move',x:dock.x,y:dock.y+T*2})}
-   A.inv=null;A.attacking=true;A.next=G.t+D.interval;A.wave=Math.min(26,A.wave+2)}}}
+   A.inv=null;A.attacking=true;A.next=G.t+D.interval;A.wave=Math.min(26,A.wave+(D.wgrow||2))}}}
 // casilla de agua pegada a tierra transitable de nuestra isla, cerca del muelle: ahí esperan los transportes para embarcar
 function shoreWait(dock,landId){let best=null,bd=1e9;const cx=dock.x/T,cy=dock.y/T;
  for(let y=Math.max(1,(cy|0)-10);y<Math.min(MH-1,(cy|0)+10);y++)for(let x=Math.max(1,(cx|0)-10);x<Math.min(MW-1,(cx|0)+10);x++){const i=idx(x,y);if(G.ter[i]!==1)continue;
