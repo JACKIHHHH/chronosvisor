@@ -67,7 +67,7 @@ const B={
  farm:{name:'Granja',size:2,hp:100,cost:{wood:60},time:10,sight:2,farm:true,food:400,desc:'Fuente de comida estable: 400 por granja. Un aldeano por granja.'},
  store:{name:'Almacén',size:2,hp:600,cost:{wood:100},time:18,sight:4,drop:true,techs:['axe','pick'],desc:'Punto de entrega de recursos e investigaciones de recolección. Constrúyelo junto a bosques y minas.'},
  market:{name:'Mercado',size:3,hp:2100,cost:{wood:175},time:40,sight:5,trains:['trade'],market:true,age:1,desc:'Compra y vende recursos a cambio de oro y entrena carretas comerciales.'},
- dock:{name:'Muelle',size:3,hp:1800,cost:{wood:150},time:35,sight:6,trains:['fishship','galley','sub','battleship','transport'],techs:['gillnets','u_galley'],drop:'fish',coast:true,desc:'Se construye en la costa. Recibe el pescado y construye barcos.'},
+ dock:{name:'Muelle',size:3,hp:1800,cost:{wood:150},time:35,sight:6,trains:['fishship','galley','sub','battleship','transport'],techs:['gillnets','u_galley'],drop:'fish',coast:true,desc:'Se construye sobre el agua, pegado a la orilla (se ajusta solo al acercarlo a la costa). Recibe el pescado y construye barcos.'},
  barracks:{name:'Cuartel',size:3,hp:1000,cost:{wood:150},time:30,sight:5,trains:['militia','spear'],techs:['u_militia','u_spear'],desc:'Entrena hombres de armas y piqueros.'},
  range:{name:'Galería de tiro',size:3,hp:1000,cost:{wood:150},time:30,sight:5,trains:['archer'],techs:['u_archer'],age:1,desc:'Entrena arqueros.'},
  stable:{name:'Establo',size:3,hp:1000,cost:{wood:150},time:30,sight:5,trains:['scout','knight'],techs:['u_scout','u_knight'],age:1,desc:'Entrena exploradores y caballeros.'},
@@ -83,7 +83,10 @@ const B={
  gate:{name:'Puerta',size:1,hp:1100,armor:3,cost:{stone:25},time:15,sight:2,wall:true,gate:true,age:1,desc:'Deja pasar a tus unidades y a las de tus aliados; bloquea al enemigo.'}
 };
 const BPAGES=[['house','farm','store','tc','market','dock','tower','palisade','wall','gate'],['barracks','range','stable','smith','siege','monastery','castle','wonder','airfield']];
-const GAR={tc:{n:15,cls:['vil','inf','arc','monk']},tower:{n:5,cls:['vil','inf','arc','monk']},castle:{n:20,cls:['vil','inf','arc','monk','cav']},transport:{n:10,cls:['vil','inf','arc','monk','cav','siege','trade']}};
+const GAR={tc:{n:15,cls:['vil','inf','arc','monk']},tower:{n:5,cls:['vil','inf','arc','monk']},castle:{n:20,cls:['vil','inf','arc','monk','cav']},
+ // refugio: casas y edificios militares también acogen unidades (sin disparar)
+ house:{n:5,cls:['vil','inf','arc','monk'],shelter:1},barracks:{n:10,cls:['vil','inf','arc'],shelter:1},range:{n:10,cls:['vil','inf','arc'],shelter:1},stable:{n:10,cls:['cav','vil','inf'],shelter:1},siege:{n:8,cls:['siege','vil'],shelter:1},
+ monastery:{n:10,cls:['monk','vil','inf','arc'],shelter:1},market:{n:8,cls:['vil','inf','arc','monk','trade'],shelter:1},store:{n:5,cls:['vil'],shelter:1},smith:{n:5,cls:['vil','inf'],shelter:1},transport:{n:10,cls:['vil','inf','arc','monk','cav','siege','trade']}};
 const TECH={
  wheel:{name:'Carretilla',at:'tc',cost:{food:175,wood:50},time:30,age:1,desc:'Aldeanos un 10 % más rápidos; cargan 5 recursos más.'},
  handcart:{name:'Carro de mano',at:'tc',req:'wheel',cost:{food:300,wood:200},time:45,age:2,desc:'Aldeanos otro 10 % más rápidos; cargan 5 recursos más. Requiere la carretilla.'},
@@ -135,7 +138,7 @@ const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
 const idx=(x,y)=>y*MW+x;
 const inb=(x,y)=>x>=0&&y>=0&&x<MW&&y<MH;
 const free=(x,y)=>inb(x,y)&&!G.block[y*MW+x];
-const navOK=(x,y)=>inb(x,y)&&G.ter[y*MW+x]===1;
+const navOK=(x,y)=>inb(x,y)&&G.ter[y*MW+x]===1&&!(G.wb&&G.wb[y*MW+x]);
 const P=o=>G.players[o];
 function isAlly(a,b){return a!=null&&b!=null&&(a===b||G.players[a].team===G.players[b].team)}
 function isEnemy(a,b){return a!=null&&b!=null&&a!==b&&G.players[a].team!==G.players[b].team}
@@ -280,7 +283,7 @@ function ringSearch(g,x,y,maxD,f){const cx=gcell(x),cy=gcell(y),CP=T*GC,R=Math.c
     for(let k=0;k<c.length;k++){const d=f(c[k]);if(d>=0&&d<bd){bd=d;best=c[k]}}}}}
  return best}
 function setOcc(e,on){const s=e.size||1;const d=e.kind==='bld'?B[e.type]:null;const farm=d&&d.farm;
- for(let y=e.ty;y<e.ty+s;y++)for(let x=e.tx;x<e.tx+s;x++){if(!inb(x,y))continue;const i=idx(x,y);G.occ[i]=on?e.id:0;G.block[i]=(G.ter[i]===1||(on&&!farm))?1:0;G.gate[i]=on&&d&&d.gate?e.owner+1:0}}
+ for(let y=e.ty;y<e.ty+s;y++)for(let x=e.tx;x<e.tx+s;x++){if(!inb(x,y))continue;const i=idx(x,y);G.occ[i]=on?e.id:0;G.block[i]=(G.ter[i]===1||(on&&!farm))?1:0;if(e.kind==='bld'&&G.ter[i]===1){if(!G.wb)G.wb=new Uint8Array(NN);G.wb[i]=on?1:0}G.gate[i]=on&&d&&d.gate?e.owner+1:0}}
 function mkRes(type,tx,ty){const d=RDEF[type];const e=addEnt({kind:'res',type,tx,ty,size:1,amt:d.amt,max:d.amt,v:rnd(),x:(tx+.5)*T,y:(ty+.5)*T});setOcc(e,true);return e}
 
 // ---------- la ciudad crece: viviendas decorativas (2×2) alrededor de cada centro urbano, más y más grandes con cada edad.
@@ -621,13 +624,23 @@ function ungarrison(c,gx,gy,only){const l=contents(c),keep=[];
   if(!t){keep.push(id);continue}u.gar=0;u.x=(t[0]+.5)*T+(rnd()-.5)*8;u.y=(t[1]+.5)*T+(rnd()-.5)*8;
   if(u.bell&&u.prev){order(u,u.prev)}u.bell=false;u.prev=null}
  if(c.kind==='unit')c.cargo=keep;else c.gar=keep;return l.length-keep.length}
+
+// «Refugiar a todos»: todas las unidades de tierra se meten en el edificio libre más cercano; al repetir salen y vuelven a lo que hacían
+function shelterAll(pl){const p=P(pl);const conts=G.bl.filter(e=>!e.dead&&e.owner===pl&&e.kind==='bld'&&e.bp>=1&&GAR[e.type]);
+ if(!p.shel){if(!conts.length)return false;const room=new Map(conts.map(c=>[c.id,garCap(c)-c.gar.length]));let n=0,out=0;
+  const us=G.ul.filter(u=>act(u)&&u.owner===pl&&!U[u.type].naval&&!U[u.type].air&&!inGar(u));
+  for(const u of us){const cls=gd(u.type,u.owner).cls;let best=null,bd=60*T;for(const c of conts){if(room.get(c.id)<=0||!GAR[c.type].cls.includes(cls))continue;const d=entDist(u,c);if(d<bd){bd=d;best=c}}
+   if(!best){out++;continue}room.set(best.id,room.get(best.id)-1);if(!u.bell)u.prev=u.o.t==='gather'||u.o.t==='build'?u.o:null;u.bell=true;u.oq=[];order(u,{t:'gar',id:best.id});n++}
+  p.shel=true;p.bell=true;if(pl===ME()){msg('¡A refugio! '+n+' unidades se ponen a cubierto'+(out?' ('+out+' sin sitio)':''),!!out);sfx('alert')}return true}
+ for(const c of conts)ungarrison(c,c.x,c.y+T*3,u=>u.bell);for(const u of G.ul)if(act(u)&&u.owner===pl&&u.bell){u.bell=false;if(u.o.t==='gar')order(u,u.prev||{t:'idle'});u.prev=null}
+ p.shel=false;p.bell=false;if(pl===ME()){msg('Todos fuera: vuelven a sus tareas');sfx('click')}return true}
 function ringBell(pl){const p=P(pl);const conts=G.bl.filter(e=>!e.dead&&e.owner===pl&&e.kind==='bld'&&e.bp>=1&&GAR[e.type]);
  if(!p.bell){if(!conts.length)return;const room=new Map(conts.map(c=>[c.id,garCap(c)-c.gar.length]));
   for(const u of G.ul){if(!act(u)||u.owner!==pl||u.type!=='villager')continue;let best=null,bd=26*T;for(const c of conts){if(room.get(c.id)<=0)continue;const d=entDist(u,c);if(d<bd){bd=d;best=c}}
    if(!best)continue;room.set(best.id,room.get(best.id)-1);u.prev=u.o.t==='gather'||u.o.t==='build'?u.o:null;u.bell=true;u.oq=[];order(u,{t:'gar',id:best.id})}
   p.bell=true;if(pl===ME()){msg('¡Campana! Los aldeanos se refugian');sfx('alert')}}
  else{for(const c of conts)ungarrison(c,c.x,c.y+T*3,u=>u.bell);for(const u of G.ul)if(act(u)&&u.owner===pl&&u.bell){u.bell=false;if(u.o.t==='gar')order(u,u.prev||{t:'idle'});u.prev=null}
-  p.bell=false;if(pl===ME()){msg('Todos a trabajar');sfx('click')}}}
+  p.bell=false;p.shel=false;if(pl===ME()){msg('Todos a trabajar');sfx('click')}}}
 
 // ---------- unidades
 function deposit(u,p){if(u.carry.a>0&&u.carry.t){p.res[u.carry.t]+=u.carry.a;p.stats.gathered+=u.carry.a}u.carry.a=0;u.carry.t=null}
@@ -643,13 +656,18 @@ function doGather(u,dt,o){
  let r=G.ents.get(o.id);
  const isF=r&&r.kind==='bld';
  const bad=!r||r.dead||r.amt<=0||(isF&&(r.bp<1||r.owner!==u.owner||(r.wk&&r.wk!==u.id&&workerOn(r))));
- if(bad||(o.fail||0)>2.5){
+ // granjero fijo: vuelve siempre a su granja; si se agotó la resiembra y, si no hay madera, espera allí
+ if(bad&&u.farmAt&&o.rt==='food'&&!fishing&&(o.fail||0)<=2.5){const [fx,fy]=u.farmAt,fe=G.ents.get(G.occ[idx(fx,fy)]);
+  if(fe&&fe.kind==='bld'&&B[fe.type].farm&&fe.owner===u.owner){if(fe.bp<1){order(u,{t:'build',id:fe.id});return}if(!(fe.wk&&fe.wk!==u.id&&workerOn(fe))){o.id=fe.id;o.fail=0;u.gk=null;r=fe}}
+  else if(!fe&&P(u.owner).autoFarm&&canPlace('farm',fx,fy,u.owner)){if(u.carry.a>0){o.s='ret';return}if(reseedFarm(u.owner,fx,fy,u))return;u.walk=false;return}}
+ const bad2=!r||r.dead||r.amt<=0||(r.kind==='bld'&&(r.bp<1||r.owner!==u.owner||(r.wk&&r.wk!==u.id&&workerOn(r))));
+ if((bad&&bad2)||(o.fail||0)>2.5){
   if((o.fail||0)>2.5){o.rf=(o.rf||0)+1;if(o.rf>3){u.stuckT=G.t;order(u,{t:'idle'});return}}
   const nr=findRes(o.rt,u.x,u.y,(fishing?16:12)*T,u.owner,!fishing&&o.rt==='food',(o.fail||0)>2.5?o.id:0,fishing);o.fail=0;
   if(!nr){if(u.carry.a>0){o.s='ret';return}order(u,{t:'idle'});return}
   o.id=nr.id;u.gk=null;r=nr}
  if(u.carry.a>0&&u.carry.t!==o.rt){o.s='ret';return}
- const farm=r.kind==='bld';
+ const farm=r.kind==='bld';if(farm&&u.type==='villager')u.farmAt=[r.tx,r.ty];
  const near=farm?(u.x>r.tx*T+2&&u.x<(r.tx+r.size)*T-2&&u.y>r.ty*T+2&&u.y<(r.ty+r.size)*T-2):entDist(u,r)<=T*(fishing?.95:1.02);
  if(near){
   u.path=[];u.pi=0;u.gk=null;u.work=true;u.task=farm?'farm':fishing?'fish':(r.type==='tree'?'chop':r.type==='berry'?'forage':'mine');if(!farm)u.dir=Math.atan2(r.y-u.y,r.x-u.x);else r.wk=u.id;
@@ -1081,6 +1099,10 @@ function updMemory(){if(!G.vis)return;const me=ME();
  for(const [id,m] of G.mem){const e=G.ents.get(id);if((!e||e.dead)&&anyVis(m))G.mem.delete(id)}}
 function isVisible(e){if(e.kind==='unit')return !e.gar&&(isAlly(e.owner,ME())||G.vis[tidx(e)]===1&&(!U[e.type].sub||subSeen(e,P(ME()).team)));if(e.kind==='relic')return G.exp[tidx(e)]===1&&!e.holder;if(e.kind==='res')return G.exp[idx(e.tx,e.ty)]===1;return isAlly(e.owner,ME())||anyVis(e)}
 function canPlace(type,tx,ty,owner){const s=B[type].size;let hmin=99,hmax=-99;
+ if(B[type].coast){let water=0,land=0;for(let y=ty;y<ty+s;y++)for(let x=tx;x<tx+s;x++){if(!inb(x,y))return false;const i=idx(x,y),t=G.ter[i];if(t!==0&&t!==1)return false;if(G.occ[i])return false;if(G.wb&&G.wb[i])return false;if(!P(owner).ai&&!expOf(owner)[i])return false;if(t===1)water++;else land++}
+  // al menos la mitad en el agua y pegado a tierra (en el propio muelle o justo al lado) para que los aldeanos puedan construirlo
+  if(water<Math.ceil(s*s/2))return false;if(!land){let shore=false;for(let y=ty-1;y<=ty+s&&!shore;y++)for(let x=tx-1;x<=tx+s;x++){if((x>=tx&&x<tx+s&&y>=ty&&y<ty+s)||!inb(x,y))continue;if(G.ter[idx(x,y)]===0&&!G.block[idx(x,y)]){shore=true;break}}if(!shore)return false}
+  return coastOK(tx,ty,s)}
  for(let y=ty;y<ty+s;y++)for(let x=tx;x<tx+s;x++){if(!inb(x,y))return false;const i=idx(x,y);if(G.ter[i]!==0)return false;if(G.occ[i]&&!(relaxH&&isTreeAt(i)))return false;if(!P(owner).ai&&!expOf(owner)[i])return false;const h=G.hgt?G.hgt[i]:0;if(h<hmin)hmin=h;if(h>hmax)hmax=h}
  if(hmax-hmin>(relaxH||.6)&&!B[type].wall)return false;
  if(B[type].coast&&!coastOK(tx,ty,s))return false;return true}
@@ -1280,7 +1302,7 @@ function cmdRight(pl,ids,wx,wy,tgt,q){const own=selOwn(pl,ids);if(!own.length)re
   if(vills.length&&B[tgt.type].farm){for(const v of vills)issue(v,{t:'gather',id:tgt.id,rt:'food',s:'go'},q);formMove(mil.concat(monks),wx,wy,false,q);return'gather'}
   const carriers=vills.filter(v=>v.carry.a>0);
   if(B[tgt.type].drop===true&&carriers.length){for(const v of carriers)issue(v,{t:'dep',id:tgt.id},q);formMove(rest.filter(u=>!carriers.includes(u)&&u.type!=='trade').concat(monks),wx,wy,false,q);return'move'}
-  if(GAR[tgt.type]&&tgt.bp>=1){const out=[];for(const u of land){if(u.type==='trade')continue;if(canEnter(u,tgt))issue(u,{t:'gar',id:tgt.id},q);else out.push(u)}formMove(out,wx,wy,false,q);return'gar'}
+  if(GAR[tgt.type]&&!GAR[tgt.type].shelter&&tgt.bp>=1){const out=[];for(const u of land){if(u.type==='trade')continue;if(canEnter(u,tgt))issue(u,{t:'gar',id:tgt.id},q);else out.push(u)}formMove(out,wx,wy,false,q);return'gar'}
  }
  formMove(land.filter(u=>!(u.type==='trade'&&tgt&&tgt.type==='market')),wx,wy,false,q);return'move'}
 function cmdAmove(pl,ids,wx,wy,q){const us=selOwn(pl,ids).filter(e=>e.kind==='unit');formMove(us,wx,wy,true,q);return us.length>0}
@@ -1316,7 +1338,7 @@ function validCmd(pl,c){if(!c||typeof c!=='object'||typeof c.c!=='string'||!int(
   case'queue':return int(c.id)&&typeof c.k==='string'&&(c.n==null||(int(c.n)&&c.n>0&&c.n<=10))&&(c.k==='age'||(c.k.startsWith('t:')?Object.prototype.hasOwnProperty.call(TECH,c.k.slice(2)):Object.prototype.hasOwnProperty.call(U,c.k)));
   case'cancel':return int(c.id)&&int(c.i);
   case'ungar':return int(c.id);
-  case'bell':case'resign':return true;
+  case'bell':case'shelter':case'resign':return true;
   case'autofarm':return typeof c.on==='boolean';
   case'form':return Array.isArray(c.ids)&&typeof c.f==='string'&&!!FORMS[c.f];
   case'power':return typeof c.k==='string'&&!!POWERS[c.k]&&fin(c.x)&&fin(c.y);
@@ -1325,7 +1347,7 @@ function validCmd(pl,c){if(!c||typeof c!=='object'||typeof c.c!=='string'||!int(
   case'drop':return int(c.pl)&&!!G.players[c.pl];
   case'rejoin':return int(c.pl)&&!!G.players[c.pl];
   default:return false}}
-function exec(pl,c){if(!validCmd(pl,c))return false;const e=c.id!=null?G.ents.get(c.id):null;switch(c.c){
+function exec(pl,c){if(!validCmd(pl,c))return false;if(Array.isArray(c.ids)&&(c.c==='right'||c.c==='stop'||c.c==='amove'||c.c==='patrol'||c.c==='build'||c.c==='wall'||c.c==='del'))for(const id of c.ids){const e=G.ents.get(id);if(e&&e.owner===pl&&e.farmAt)e.farmAt=null}const e=c.id!=null?G.ents.get(c.id):null;switch(c.c){
  case'right':return cmdRight(pl,c.ids,c.x,c.y,c.tgt?G.ents.get(c.tgt)||null:null,!!c.q);
  case'amove':return cmdAmove(pl,c.ids,c.x,c.y,!!c.q);
  case'patrol':{const us=selOwn(pl,c.ids).filter(e=>e.kind==='unit'&&U[e.type].atk>0&&e.type!=='villager');for(const u of us){const px=c.x+(u.x-us[0].x)*.5,py=c.y+(u.y-us[0].y)*.5;
@@ -1342,6 +1364,7 @@ function exec(pl,c){if(!validCmd(pl,c))return false;const e=c.id!=null?G.ents.ge
  case'cancel':if(e&&e.owner===pl)cancelQ(e,c.i);return;
  case'ungar':if(e&&e.owner===pl)ungarrison(e,e.x,e.y+T*(e.size||1));return;
  case'bell':return ringBell(pl);
+ case'shelter':return shelterAll(pl);
  case'power':return usePower(pl,c.k,Math.max(0,Math.min(MW*T,c.x)),Math.max(0,Math.min(MH*T,c.y)));
  case'form':return setForm(pl,c.ids,c.f);
  case'autofarm':{const p=P(pl);if(p){p.autoFarm=c.on;if(pl===ME())msg(c.on?'Resembrado automático de granjas: activado':'Resembrado automático de granjas: desactivado')}return true}
