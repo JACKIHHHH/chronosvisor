@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Imperia para Windows: empaqueta el mismo juego web con Electron (portable, Windows 10/11 x64). Se ejecuta en el Mac.
-# Uso: windows/build_win.sh            → ~/Desktop/Imperia-<versión>-Windows.zip
+# Uso: windows/build_win.sh            → ../versiones/Chronosvisor-<versión>-Windows.zip (o el Escritorio si no existe esa carpeta)
 #      windows/build_win.sh mac        → además prepara una copia de Electron para Mac (pruebas locales)
 set -e
 cd "$(dirname "$0")"
@@ -52,9 +52,9 @@ Partidas guardadas y opciones: %APPDATA%\Imperia
 Red local: compatible con la versión de Mac (puerto TCP 47800).
 TXT
 echo "› Comprimiendo"
-OUT=~/Desktop/Chronosvisor-$VER-Windows.zip; rm -f $OUT
-(cd dist && zip -qry -X $OUT Chronosvisor)
-ls -lh $OUT
+VD="$(cd ../.. && pwd)/versiones";[ -d "$VD" ] || VD=~/Desktop;OUT="$VD/Chronosvisor-$VER-Windows.zip"; rm -f "$OUT"
+(cd dist && zip -qry -X "$OUT" Chronosvisor)
+ls -lh "$OUT"
 
 if [ "$1" = "mac" ]; then
   fetch darwin-arm64
